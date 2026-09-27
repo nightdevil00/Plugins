@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "id": "terminal.2048",
+  "name": "2048",
+  "version": "1.0.0",
+  "author": "Custom DHH Distro 2048",
+  "license": "MIT",
+  "description": "Theme-aware terminal 2048 that fills the screen. Pick a board size and join the tiles.",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "2048",
+    "description": "Play 2048 in a terminal that follows the current Custom DHH Distro theme.",
+    "category": "Fun",
+    "aliases": [
+      "2048",
+      "game"
+    ],
+    "allowMultiple": false,
+    "defaultSection": "left"
+  }
+}

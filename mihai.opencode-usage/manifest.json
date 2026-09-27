@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "mihai.opencode-usage",
+  "name": "opencode usage",
+  "version": "1.0.0",
+  "author": "mihai",
+  "license": "MIT",
+  "description": "opencode session usage in a native Custom DHH Distro bar panel: today's prompts, sessions, and tokens, a seven-day chart, the per-model and per-agent breakdown, and all-time totals.",
+  "kinds": ["bar-widget"],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "opencode usage",
+    "description": "One bar icon and one panel: today's opencode token usage with a weekly chart and model/agent breakdown.",
+    "category": "AI",
+    "aliases": ["opencode", "oc-usage", "model-usage"],
+    "allowMultiple": false,
+    "defaults": {
+      "refreshIntervalSec": 60
+    },
+    "schema": [
+      { "key": "refreshIntervalSec", "type": "integer", "label": "Refresh interval (seconds)", "min": 15, "max": 3600, "step": 15, "defaultValue": 60 },
+      { "key": "showTokens", "type": "boolean", "label": "Show today's tokens in the bar", "defaultValue": true }
+    ]
+  }
+}

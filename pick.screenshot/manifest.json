@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "pick.screenshot",
+  "name": "Screenshot Picker",
+  "version": "1.0.0",
+  "author": "You",
+  "description": "Quick screenshot region, fullscreen, or window",
+  "kinds": ["bar-widget"],
+  "entryPoints": {
+    "barWidget": "ScreenshotMenu.qml"
+  },
+  "barWidget": {
+    "displayName": "Screenshot Picker",
+    "description": "Pick screenshot mode: region, fullscreen, or window",
+    "category": "Utilities",
+    "allowMultiple": false
+  }
+}

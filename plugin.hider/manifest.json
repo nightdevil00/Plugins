@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "plugin.hider",
+  "name": "Hider",
+  "version": "1.0.0",
+  "author": "nightdevil00",
+  "description": "Hide and show bar plugins with a single click",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "Hider.qml"
+  },
+  "barWidget": {
+    "displayName": "Right Section Hider",
+    "description": "Manage visibility of right bar plugins",
+    "category": "Layout",
+    "allowMultiple": false
+  }
+}

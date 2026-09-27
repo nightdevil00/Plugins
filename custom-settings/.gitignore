@@ -1,0 +1,21 @@
+# Local-only: these files drive or install the upstream desktop software
+# by its vendor name. Kept on disk, out of git, so the published repo
+# only carries Custom DHH Distro branding.
+*.qslog
+BarWidget.qml
+README.md
+SettingsApp.qml
+SettingsPanel.qml
+components/Sidebar.qml
+manifest.json
+model/Lua.js
+model/Omarchy.qml
+model/Schema.js
+model/SettingsStore.qml
+model/qmldir
+pages/AboutPage.qml
+pages/BarPage.qml
+pages/DisplayPage.qml
+pages/IdlePage.qml
+pages/NightlightPage.qml
+pages/UpdatesPage.qml

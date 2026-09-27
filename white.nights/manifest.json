@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "white.nights",
+  "name": "No Sleep",
+  "version": "1.0.0",
+  "author": "nightdevil00",
+  "description": "Block suspend and hibernate so the system stays on with the screen off. The idle cycle (screensaver, lock, display off) keeps running normally.",
+  "kinds": [
+    "service",
+    "bar-widget"
+  ],
+  "keepLoaded": true,
+  "entryPoints": {
+    "service": "Service.qml",
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "No Sleep",
+    "description": "Toggle sleep blocking (system stays on, screen still goes off)",
+    "category": "System",
+    "allowMultiple": false,
+    "defaultSection": "right"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "simple.dock",
+  "name": "Simple Dock",
+  "version": "1.0.0",
+  "author": "mihai",
+  "description": "Centered autohiding app dock with pinned and running apps",
+  "kinds": [
+    "overlay"
+  ],
+  "keepLoaded": true,
+  "entryPoints": {
+    "overlay": "Dock.qml"
+  }
+}

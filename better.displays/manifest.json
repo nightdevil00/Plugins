@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "better.displays",
+  "name": "Better Displays",
+  "version": "1.0.0",
+  "author": "nightdevil00",
+  "description": "Per-monitor resolution, scale, position, transform and per-terminal font sizes from the bar",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "Panel.qml"
+  },
+  "barWidget": {
+    "displayName": "Better Displays",
+    "description": "Granular display and terminal settings",
+    "category": "System",
+    "allowMultiple": false,
+    "defaultSection": "right"
+  }
+}
