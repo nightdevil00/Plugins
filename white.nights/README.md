@@ -2,6 +2,27 @@
 
 > Part of the **[Plugins](https://github.com/nightdevil00/Plugins)** collection — source: [`Plugins/white.nights`](https://github.com/nightdevil00/Plugins/white.nights/)
 
+## Installing
+
+This plugin lives in the [Plugins](https://github.com/nightdevil00/Plugins) collection. Each plugin has its own branch, so install it with the bundled script:
+
+```sh
+git clone https://github.com/nightdevil00/Plugins.git
+cd Plugins
+./install.sh white.nights
+```
+
+Or do it by hand — note the directory is named by the plugin **id** (`white.nights`), not the folder name:
+
+```sh
+git clone --depth 1 --branch white.nights \
+  https://github.com/nightdevil00/Plugins.git \
+  ~/.config/omarchy/plugins/white.nights
+omarchy-shell shell rescanPlugins
+omarchy plugin enable white.nights
+```
+
+
 An [Omarchy](https://omarchy.org/) shell plugin that blocks suspend and
 hibernate while leaving your normal idle cycle untouched: the screen still goes
 to the screensaver, locks, and turns off — the system just stays on underneath.
@@ -31,20 +52,18 @@ without the screen burning.
 
 ## Installation
 
-Install straight from this repository with the Omarchy plugin installer. The
-command clones the repo into `~/.config/omarchy/plugins/`, validates the
-manifest, and (with `--enable`) places the toggle in your bar:
+Install from this collection with `./install.sh white.nights` — it clones the
+plugin's branch into `~/.config/omarchy/plugins/`, validates the manifest, and
+tells you the command to enable it:
 
 ```bash
-omarchy plugin install https://github.com/nightdevil00/white.nights --enable
+omarchy plugin enable white.nights   # after installing, see Installing below
 ```
 
-`omarchy plugin install` is an alias for `omarchy plugin add`.
-
-If you would rather add it without enabling it right away, drop `--enable`:
+See [Installing](#installing) above for the full command.
 
 ```bash
-omarchy plugin install https://github.com/nightdevil00/white.nights
+omarchy plugin enable white.nights   # after installing, see Installing below
 # then, when you're ready:
 omarchy plugin enable white.nights
 ```

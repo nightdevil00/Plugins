@@ -2,6 +2,27 @@
 
 > Part of the **[Plugins](https://github.com/nightdevil00/Plugins)** collection — source: [`Plugins/mihai.ytmusic`](https://github.com/nightdevil00/Plugins/mihai.ytmusic/)
 
+## Installing
+
+This plugin lives in the [Plugins](https://github.com/nightdevil00/Plugins) collection. Each plugin has its own branch, so install it with the bundled script:
+
+```sh
+git clone https://github.com/nightdevil00/Plugins.git
+cd Plugins
+./install.sh mihai.ytmusic
+```
+
+Or do it by hand — note the directory is named by the plugin **id** (`mihai.ytmusic`), not the folder name:
+
+```sh
+git clone --depth 1 --branch mihai.ytmusic \
+  https://github.com/nightdevil00/Plugins.git \
+  ~/.config/omarchy/plugins/mihai.ytmusic
+omarchy-shell shell rescanPlugins
+omarchy plugin enable mihai.ytmusic
+```
+
+
 YouTube Music as a dropdown window anchored to the Omarchy bar (Chromium in app mode). Playback continues while the dropdown is hidden.
 
 - Click: shows/hides instantly (no animation, opens directly in position)
@@ -15,7 +36,7 @@ Fork of [wolften/omarchy-youtube-music](https://github.com/wolften/omarchy-youtu
 ## Install
 
 ```bash
-omarchy plugin add https://github.com/nightdevil00/mihai.ytmusic --enable
+omarchy plugin enable mihai.ytmusic   # after installing, see Installing below
 ```
 
 Then add it to the bar (`~/.config/omarchy/shell.json`, `right` section):

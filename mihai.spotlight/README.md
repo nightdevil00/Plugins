@@ -2,6 +2,27 @@
 
 > Part of the **[Plugins](https://github.com/nightdevil00/Plugins)** collection — source: [`Plugins/mihai.spotlight`](https://github.com/nightdevil00/Plugins/mihai.spotlight/)
 
+## Installing
+
+This plugin lives in the [Plugins](https://github.com/nightdevil00/Plugins) collection. Each plugin has its own branch, so install it with the bundled script:
+
+```sh
+git clone https://github.com/nightdevil00/Plugins.git
+cd Plugins
+./install.sh mihai.spotlight
+```
+
+Or do it by hand — note the directory is named by the plugin **id** (`mihai.spotlight`), not the folder name:
+
+```sh
+git clone --depth 1 --branch mihai.spotlight \
+  https://github.com/nightdevil00/Plugins.git \
+  ~/.config/omarchy/plugins/mihai.spotlight
+omarchy-shell shell rescanPlugins
+omarchy plugin enable mihai.spotlight
+```
+
+
 A Spotlight-style launcher for [Omarchy](https://omarchy.org) — fuzzy-search apps, find any file, run commands, do math, and open URLs, all from one overlay.
 
 Built as an [Omarchy plugin](https://github.com/basecamp/omarchy) on top of Quickshell/QML. It matches your current theme out of the box.
@@ -26,7 +47,7 @@ Built as an [Omarchy plugin](https://github.com/basecamp/omarchy) on top of Quic
 ## Installation
 
 ```sh
-omarchy plugin add https://github.com/nightdevil00/mihai.spotlight.git --enable
+omarchy plugin enable mihai.spotlight   # after installing, see Installing below
 ```
 
 Then add a keybind in `~/.config/hypr/bindings.lua`:

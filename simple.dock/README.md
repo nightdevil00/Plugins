@@ -2,6 +2,27 @@
 
 > Part of the **[Plugins](https://github.com/nightdevil00/Plugins)** collection — source: [`Plugins/simple.dock`](https://github.com/nightdevil00/Plugins/simple.dock/)
 
+## Installing
+
+This plugin lives in the [Plugins](https://github.com/nightdevil00/Plugins) collection. Each plugin has its own branch, so install it with the bundled script:
+
+```sh
+git clone https://github.com/nightdevil00/Plugins.git
+cd Plugins
+./install.sh simple.dock
+```
+
+Or do it by hand — note the directory is named by the plugin **id** (`simple.dock`), not the folder name:
+
+```sh
+git clone --depth 1 --branch simple.dock \
+  https://github.com/nightdevil00/Plugins.git \
+  ~/.config/omarchy/plugins/simple.dock
+omarchy-shell shell rescanPlugins
+omarchy plugin enable simple.dock
+```
+
+
 A minimal, autohiding app dock for [Omarchy](https://omarchy.org) (Quickshell).
 
 ![Preview](preview.png)
@@ -28,7 +49,7 @@ A minimal, autohiding app dock for [Omarchy](https://omarchy.org) (Quickshell).
 Install and enable with the official Omarchy plugin command:
 
 ```sh
-omarchy plugin add https://github.com/nightdevil00/simple.dock.git --enable
+omarchy plugin enable simple.dock   # after installing, see Installing below
 ```
 
 The command clones the repo into `~/.config/omarchy/plugins/simple.dock`,

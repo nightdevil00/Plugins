@@ -2,6 +2,27 @@
 
 > Part of the **[Plugins](https://github.com/nightdevil00/Plugins)** collection — source: [`Plugins/tlp.battery`](https://github.com/nightdevil00/Plugins/tlp.battery/)
 
+## Installing
+
+This plugin lives in the [Plugins](https://github.com/nightdevil00/Plugins) collection. Each plugin has its own branch, so install it with the bundled script:
+
+```sh
+git clone https://github.com/nightdevil00/Plugins.git
+cd Plugins
+./install.sh tlp.battery
+```
+
+Or do it by hand — note the directory is named by the plugin **id** (`tlp.battery`), not the folder name:
+
+```sh
+git clone --depth 1 --branch tlp.battery \
+  https://github.com/nightdevil00/Plugins.git \
+  ~/.config/omarchy/plugins/tlp.battery
+omarchy-shell shell rescanPlugins
+omarchy plugin enable tlp.battery
+```
+
+
 ![tlp.battery](preview.png)
 
 A user-owned clone of the Omarchy `omarchy.power` bar widget, rewired so that
@@ -134,7 +155,7 @@ See the [ArchWiki TLP page](https://wiki.archlinux.org/title/TLP) and
 ## Install
 
 ```bash
-omarchy plugin add https://github.com/nightdevil00/tlp.battery --enable
+omarchy plugin enable tlp.battery   # after installing, see Installing below
 ```
 
 ## Update

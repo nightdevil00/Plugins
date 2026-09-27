@@ -3,14 +3,14 @@
 Fifteen [Omarchy](https://omarchy.org/) shell plugins — bar widgets, panels,
 overlays and services, written in QML for Quickshell.
 
-Every plugin lives in its own subdirectory here, and is also published as a
-standalone repository so it can be installed with a single command (see
-[Installing](#installing)).
+All fifteen live in this one repository, on the `main` branch. Each plugin also
+has **its own branch of the same name**, whose root *is* that plugin — which is what
+the Omarchy plugin installer needs, since it clones a URL and reads
+`manifest.json` from the root of the clone.
 
 ## The map
 
-Each plugin appears under its primary kind; the table below lists
-every kind it registers.
+Each plugin appears under its primary kind; the table lists every kind it registers.
 
 ```mermaid
 graph TB
@@ -37,39 +37,63 @@ graph TB
   end
 ```
 
-| Plugin | Kind | What it does |
-| --- | --- | --- |
-| **Panels & overlays** | | |
-| [`custom-settings`](custom-settings/) · [Omarchy Settings](custom-settings/) | `bar-widget, panel` | A graphical settings hub for Omarchy: Hyprland behaviour and monitors, the shell bar and plugins, idle and night light, updates, and a system summary. |
-| [`simple.dock`](simple.dock/) · [Simple Dock](simple.dock/) | `overlay` | Centered autohiding app dock with pinned and running apps. |
-| [`mihai.spotlight`](mihai.spotlight/) · [Spotlight](mihai.spotlight/) | `overlay` | Spotlight-style launcher: fuzzy-search apps, find any file, and open URLs in your default browser. |
-| [`mihai.picker`](mihai.picker/) · [Wallpaper Picker](mihai.picker/) | `overlay, bar-widget` | Fullscreen grid overlay to pick a wallpaper from your Pictures folder. |
-| **Background services** | | |
-| [`white.nights`](white.nights/) · [No Sleep](white.nights/) | `service, bar-widget` | Block suspend and hibernate so the system stays on with the screen off. The idle cycle (screensaver, lock, display off) keeps running normally. |
-| [`mihai.ytmusic`](mihai.ytmusic/) · [YouTube Music](mihai.ytmusic/) | `service, bar-widget` | YouTube Music as a bar-anchored Chromium app window, with playback that continues while the dropdown is hidden. |
-| **Bar widgets** | | |
-| [`custom-2048`](custom-2048/) · [2048](custom-2048/) | `bar-widget` | Theme-aware terminal 2048 that fills the screen. Pick a board size and join the tiles. |
-| [`better.displays`](better.displays/) · [Better Displays](better.displays/) | `bar-widget` | Per-monitor resolution, scale, position, transform and per-terminal font sizes from the bar. |
-| [`bt.codecs`](bt.codecs/) · [Bluetooth codec](bt.codecs/) | `bar-widget` | Shift Bluetooth audio fidelity: pick the A2DP codec or headset profile for each connected Bluetooth audio device. |
-| [`setup.defaults`](setup.defaults/) · [Default Apps](setup.defaults/) | `bar-widget` | Set the default terminal, editor, browser, video player and mail client from any installed app — not just the ones Custom DHH Distro ships defaults for. |
-| [`plugin.hider`](plugin.hider/) · [Hider](plugin.hider/) | `bar-widget` | Hide and show bar plugins with a single click. |
-| [`yt-pony`](yt-pony/) · [OmaPony](yt-pony/) | `bar-widget` | Video & audio downloader with offline Whisper AI transcription, automatic subtitles, platform detection, and superkey link grab for Omarchy Linux. |
-| [`pick.screenshot`](pick.screenshot/) · [Screenshot Picker](pick.screenshot/) | `bar-widget` | Quick screenshot region, fullscreen, or window. |
-| [`tlp.battery`](tlp.battery/) · [TLP Battery](tlp.battery/) | `bar-widget` | TLP-backed battery, power profile, and charge limit. |
-| [`mihai.opencode-usage`](mihai.opencode-usage/) · [opencode usage](mihai.opencode-usage/) | `bar-widget` | opencode session usage in a native Custom DHH Distro bar panel: today's prompts, sessions, and tokens, a seven-day chart, the per-model and per-agent breakdown, and all-time totals. |
+| Plugin | Id | Kind | What it does |
+| --- | --- | --- | --- |
+| **Panels & overlays** | | | |
+| [`custom-settings`](custom-settings/) · [Omarchy Settings](custom-settings/) | `nightdevil00.custom-settings` | `bar-widget, panel` | A graphical settings hub for Omarchy: Hyprland behaviour and monitors, the shell bar and plugins, idle and night light, updates, and a system summary. |
+| [`simple.dock`](simple.dock/) · [Simple Dock](simple.dock/) | `simple.dock` | `overlay` | Centered autohiding app dock with pinned and running apps. |
+| [`mihai.spotlight`](mihai.spotlight/) · [Spotlight](mihai.spotlight/) | `mihai.spotlight` | `overlay` | Spotlight-style launcher: fuzzy-search apps, find any file, and open URLs in your default browser. |
+| [`mihai.picker`](mihai.picker/) · [Wallpaper Picker](mihai.picker/) | `wallpicker.grid` | `overlay, bar-widget` | Fullscreen grid overlay to pick a wallpaper from your Pictures folder. |
+| **Background services** | | | |
+| [`white.nights`](white.nights/) · [No Sleep](white.nights/) | `white.nights` | `service, bar-widget` | Block suspend and hibernate so the system stays on with the screen off. The idle cycle (screensaver, lock, display off) keeps running normally. |
+| [`mihai.ytmusic`](mihai.ytmusic/) · [YouTube Music](mihai.ytmusic/) | `mihai.ytmusic` | `service, bar-widget` | YouTube Music as a bar-anchored Chromium app window, with playback that continues while the dropdown is hidden. |
+| **Bar widgets** | | | |
+| [`custom-2048`](custom-2048/) · [2048](custom-2048/) | `terminal.2048` | `bar-widget` | Theme-aware terminal 2048 that fills the screen. Pick a board size and join the tiles. |
+| [`better.displays`](better.displays/) · [Better Displays](better.displays/) | `better.displays` | `bar-widget` | Per-monitor resolution, scale, position, transform and per-terminal font sizes from the bar. |
+| [`bt.codecs`](bt.codecs/) · [Bluetooth codec](bt.codecs/) | `bt.codecs` | `bar-widget` | Shift Bluetooth audio fidelity: pick the A2DP codec or headset profile for each connected Bluetooth audio device. |
+| [`setup.defaults`](setup.defaults/) · [Default Apps](setup.defaults/) | `setup.defaults` | `bar-widget` | Set the default terminal, editor, browser, video player and mail client from any installed app — not just the ones Custom DHH Distro ships defaults for. |
+| [`plugin.hider`](plugin.hider/) · [Hider](plugin.hider/) | `plugin.hider` | `bar-widget` | Hide and show bar plugins with a single click. |
+| [`yt-pony`](yt-pony/) · [OmaPony](yt-pony/) | `omapony` | `bar-widget` | Video & audio downloader with offline Whisper AI transcription, automatic subtitles, platform detection, and superkey link grab for Omarchy Linux. |
+| [`pick.screenshot`](pick.screenshot/) · [Screenshot Picker](pick.screenshot/) | `pick.screenshot` | `bar-widget` | Quick screenshot region, fullscreen, or window. |
+| [`tlp.battery`](tlp.battery/) · [TLP Battery](tlp.battery/) | `tlp.battery` | `bar-widget` | TLP-backed battery, power profile, and charge limit. |
+| [`mihai.opencode-usage`](mihai.opencode-usage/) · [opencode usage](mihai.opencode-usage/) | `mihai.opencode-usage` | `bar-widget` | opencode session usage in a native Custom DHH Distro bar panel: today's prompts, sessions, and tokens, a seven-day chart, the per-model and per-agent breakdown, and all-time totals. |
 
 ## Installing
 
-`omarchy plugin add` needs `manifest.json` at the **root** of the cloned repository,
-so a plugin cannot be installed straight from a subdirectory of this repo. Each
-plugin therefore has its own repository, and that is what the installer consumes:
-
 ```sh
-omarchy plugin add https://github.com/nightdevil00/better.displays.git --enable
+git clone https://github.com/nightdevil00/Plugins.git
+cd Plugins
+./install.sh better.displays      # or run ./install.sh with no arguments to pick
 ```
 
-Swap the repository for any of the fifteen above. The subdirectories here are the
-browsable source of truth; the standalone repositories are the installable units.
+`install.sh` clones that plugin's branch, reads the `id` from its `manifest.json`,
+and places it in `~/.config/omarchy/plugins/<id>` — the same thing
+`omarchy plugin add` does, then tells you the `omarchy plugin enable` command.
+
+The install directory is named by **id**, which is not always the folder name:
+`custom-2048` installs as `terminal.2048`, `custom-settings` as
+`nightdevil00.custom-settings`, `mihai.picker` as `wallpicker.grid`, and `yt-pony`
+as `omapony`. The script handles that; a manual clone needs the id, not the folder name.
+
+Doing it by hand:
+
+```sh
+git clone --depth 1 --branch better.displays \
+  https://github.com/nightdevil00/Plugins.git \
+  ~/.config/omarchy/plugins/better.displays
+omarchy-shell shell rescanPlugins
+omarchy plugin enable better.displays
+```
+
+## Branches
+
+`main` holds all fifteen plugins as subdirectories — this is the browsable copy.
+Each `<plugin>` branch holds that single plugin at its root, for installing.
+
+```
+Plugins/            <- main: all fifteen, side by side
+better.displays     <- branch better.displays: that plugin, at the root
+```
 
 ## Layout
 

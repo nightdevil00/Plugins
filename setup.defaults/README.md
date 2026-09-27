@@ -2,6 +2,27 @@
 
 > Part of the **[Plugins](https://github.com/nightdevil00/Plugins)** collection — source: [`Plugins/setup.defaults`](https://github.com/nightdevil00/Plugins/setup.defaults/)
 
+## Installing
+
+This plugin lives in the [Plugins](https://github.com/nightdevil00/Plugins) collection. Each plugin has its own branch, so install it with the bundled script:
+
+```sh
+git clone https://github.com/nightdevil00/Plugins.git
+cd Plugins
+./install.sh setup.defaults
+```
+
+Or do it by hand — note the directory is named by the plugin **id** (`setup.defaults`), not the folder name:
+
+```sh
+git clone --depth 1 --branch setup.defaults \
+  https://github.com/nightdevil00/Plugins.git \
+  ~/.config/omarchy/plugins/setup.defaults
+omarchy-shell shell rescanPlugins
+omarchy plugin enable setup.defaults
+```
+
+
 A plugin for [Omarchy](https://omarchy.org/) that lets you set the system
 default **terminal, editor, browser, video player, and mail client** — and
 crucially, it is not limited to the handful of apps Omarchy ships defaults
@@ -35,7 +56,7 @@ manager's "open with", and the rest of the desktop.
 ## Installation
 
 ```bash
-omarchy plugin add https://github.com/nightdevil00/setup.defaults.git --enable
+omarchy plugin enable setup.defaults   # after installing, see Installing below
 ```
 
 That clones the plugin into `~/.config/omarchy/plugins/setup.defaults` and

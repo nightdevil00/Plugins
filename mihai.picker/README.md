@@ -1,6 +1,27 @@
 # Wallpaper Picker
 
 > Part of the **[Plugins](https://github.com/nightdevil00/Plugins)** collection — source: [`Plugins/mihai.picker`](https://github.com/nightdevil00/Plugins/mihai.picker/)
+
+## Installing
+
+This plugin lives in the [Plugins](https://github.com/nightdevil00/Plugins) collection. Each plugin has its own branch, so install it with the bundled script:
+
+```sh
+git clone https://github.com/nightdevil00/Plugins.git
+cd Plugins
+./install.sh mihai.picker
+```
+
+Or do it by hand — note the directory is named by the plugin **id** (`wallpicker.grid`), not the folder name:
+
+```sh
+git clone --depth 1 --branch mihai.picker \
+  https://github.com/nightdevil00/Plugins.git \
+  ~/.config/omarchy/plugins/wallpicker.grid
+omarchy-shell shell rescanPlugins
+omarchy plugin enable wallpicker.grid
+```
+
 <img width="2560" height="1440" alt="Preview" src="Preview.png" />
 
 A fullscreen Omarchy overlay that grids out every image in your Pictures/Wallpapers/
@@ -11,7 +32,7 @@ keyboard focus, `keepLoaded`, bar-widget toggle.
 ## Install
 
 ```bash
-omarchy plugin add https://github.com/nightdevil00/mihai.picker.git --enable --yes
+omarchy plugin enable wallpicker.grid   # after installing, see Installing below
 ```
 
 Enable the **Wallpapers** bar widget from Setup → Bar if it doesn't show
