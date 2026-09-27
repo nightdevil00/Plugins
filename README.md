@@ -3,10 +3,7 @@
 Fifteen [Omarchy](https://omarchy.org/) shell plugins — bar widgets, panels,
 overlays and services, written in QML for Quickshell.
 
-All fifteen live in this one repository, on the `main` branch. Each plugin also
-has **its own branch of the same name**, whose root *is* that plugin — which is what
-the Omarchy plugin installer needs, since it clones a URL and reads
-`manifest.json` from the root of the clone.
+All fifteen live here, one subdirectory each.
 
 ## The map
 
@@ -63,36 +60,38 @@ graph TB
 ```sh
 git clone https://github.com/nightdevil00/Plugins.git
 cd Plugins
-./install.sh better.displays      # or run ./install.sh with no arguments to pick
+./install.sh better.displays      # or ./install.sh with no arguments to pick
+./install.sh --all                # install all fifteen
+./install.sh --all --enable       # install and enable all
 ```
 
-`install.sh` clones that plugin's branch, reads the `id` from its `manifest.json`,
-and places it in `~/.config/omarchy/plugins/<id>` — the same thing
-`omarchy plugin add` does, then tells you the `omarchy plugin enable` command.
+`install.sh` copies a plugin's subdirectory into `~/.config/omarchy/plugins/<id>` —
+the layout `omarchy plugin add` produces — then rescans the shell and prints the
+`omarchy plugin enable` command.
 
 The install directory is named by **id**, which is not always the folder name:
 `custom-2048` installs as `terminal.2048`, `custom-settings` as
 `nightdevil00.custom-settings`, `mihai.picker` as `wallpicker.grid`, and `yt-pony`
-as `omapony`. The script handles that; a manual clone needs the id, not the folder name.
+as `omapony`. The script handles that.
 
-Doing it by hand:
+Copying one by hand:
 
 ```sh
-git clone --depth 1 --branch better.displays \
-  https://github.com/nightdevil00/Plugins.git \
-  ~/.config/omarchy/plugins/better.displays
+git clone https://github.com/nightdevil00/Plugins.git
+cp -r Plugins/better.displays ~/.config/omarchy/plugins/better.displays
 omarchy-shell shell rescanPlugins
 omarchy plugin enable better.displays
 ```
 
-## Branches
+## Updating
 
-`main` holds all fifteen plugins as subdirectories — this is the browsable copy.
-Each `<plugin>` branch holds that single plugin at its root, for installing.
+`omarchy plugin update` does not work for these plugins — it runs
+`git fetch origin HEAD`, and an installed copy here has no git checkout of its own.
+Use the script instead, which replaces the installed directory:
 
-```
-Plugins/            <- main: all fifteen, side by side
-better.displays     <- branch better.displays: that plugin, at the root
+```sh
+./install.sh --update better.displays    # one
+./install.sh --all --update              # all fifteen
 ```
 
 ## Layout

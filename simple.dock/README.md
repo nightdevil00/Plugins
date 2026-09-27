@@ -4,7 +4,7 @@
 
 ## Installing
 
-This plugin lives in the [Plugins](https://github.com/nightdevil00/Plugins) collection. Each plugin has its own branch, so install it with the bundled script:
+This plugin lives in the [Plugins](https://github.com/nightdevil00/Plugins) collection. Install it with the bundled script:
 
 ```sh
 git clone https://github.com/nightdevil00/Plugins.git
@@ -12,20 +12,16 @@ cd Plugins
 ./install.sh simple.dock
 ```
 
-Or do it by hand — note the directory is named by the plugin **id** (`simple.dock`), not the folder name:
+Or copy it straight from a clone — note the install directory is named by the
+plugin **id** (`simple.dock`), not the folder name:
 
 ```sh
-git clone --depth 1 --branch simple.dock \
-  https://github.com/nightdevil00/Plugins.git \
-  ~/.config/omarchy/plugins/simple.dock
+git clone https://github.com/nightdevil00/Plugins.git
+cp -r Plugins/simple.dock ~/.config/omarchy/plugins/simple.dock
 omarchy-shell shell rescanPlugins
 omarchy plugin enable simple.dock
 ```
 
-
-A minimal, autohiding app dock for [Omarchy](https://omarchy.org) (Quickshell).
-
-![Preview](preview.png)
 
 ## Features
 
@@ -49,14 +45,14 @@ A minimal, autohiding app dock for [Omarchy](https://omarchy.org) (Quickshell).
 Install and enable with the official Omarchy plugin command:
 
 ```sh
-omarchy plugin enable simple.dock   # after installing, see Installing below
+omarchy plugin enable simple.dock
 ```
 
 The command clones the repo into `~/.config/omarchy/plugins/simple.dock`,
 validates the manifest, and enables the plugin. To update it later:
 
 ```sh
-omarchy plugin update simple.dock
+./install.sh --update simple.dock
 ```
 
 To uninstall:

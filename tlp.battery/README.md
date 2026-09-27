@@ -4,7 +4,7 @@
 
 ## Installing
 
-This plugin lives in the [Plugins](https://github.com/nightdevil00/Plugins) collection. Each plugin has its own branch, so install it with the bundled script:
+This plugin lives in the [Plugins](https://github.com/nightdevil00/Plugins) collection. Install it with the bundled script:
 
 ```sh
 git clone https://github.com/nightdevil00/Plugins.git
@@ -12,29 +12,16 @@ cd Plugins
 ./install.sh tlp.battery
 ```
 
-Or do it by hand — note the directory is named by the plugin **id** (`tlp.battery`), not the folder name:
+Or copy it straight from a clone — note the install directory is named by the
+plugin **id** (`tlp.battery`), not the folder name:
 
 ```sh
-git clone --depth 1 --branch tlp.battery \
-  https://github.com/nightdevil00/Plugins.git \
-  ~/.config/omarchy/plugins/tlp.battery
+git clone https://github.com/nightdevil00/Plugins.git
+cp -r Plugins/tlp.battery ~/.config/omarchy/plugins/tlp.battery
 omarchy-shell shell rescanPlugins
 omarchy plugin enable tlp.battery
 ```
 
-
-![tlp.battery](preview.png)
-
-A user-owned clone of the Omarchy `omarchy.power` bar widget, rewired so that
-every battery value **and** control is backed by
-[TLP](https://linrunner.de/tlp) instead of UPower /
-power-profiles-daemon.
-
-It exists because on this Lenovo ThinkBook (Omarchy, `ideapad_laptop` kernel
-driver) `power-profiles-daemon` has no profile interface
-(`/sys/firmware/acpi/platform_profile` is `not available`), so the stock
-profile picker is always empty. TLP is the power manager in use, so this clone
-routes battery data, power profiles, and the charge limit through it.
 
 ## What lives here
 
@@ -155,13 +142,13 @@ See the [ArchWiki TLP page](https://wiki.archlinux.org/title/TLP) and
 ## Install
 
 ```bash
-omarchy plugin enable tlp.battery   # after installing, see Installing below
+omarchy plugin enable tlp.battery
 ```
 
 ## Update
 
 ```bash
-omarchy plugin update tlp.battery
+./install.sh --update tlp.battery
 ```
 
 ## Uninstall

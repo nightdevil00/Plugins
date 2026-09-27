@@ -4,7 +4,7 @@
 
 ## Installing
 
-This plugin lives in the [Plugins](https://github.com/nightdevil00/Plugins) collection. Each plugin has its own branch, so install it with the bundled script:
+This plugin lives in the [Plugins](https://github.com/nightdevil00/Plugins) collection. Install it with the bundled script:
 
 ```sh
 git clone https://github.com/nightdevil00/Plugins.git
@@ -12,28 +12,16 @@ cd Plugins
 ./install.sh yt-pony
 ```
 
-Or do it by hand — note the directory is named by the plugin **id** (`omapony`), not the folder name:
+Or copy it straight from a clone — note the install directory is named by the
+plugin **id** (`omapony`), not the folder name:
 
 ```sh
-git clone --depth 1 --branch yt-pony \
-  https://github.com/nightdevil00/Plugins.git \
-  ~/.config/omarchy/plugins/omapony
+git clone https://github.com/nightdevil00/Plugins.git
+cp -r Plugins/yt-pony ~/.config/omarchy/plugins/omapony
 omarchy-shell shell rescanPlugins
 omarchy plugin enable omapony
 ```
 
-
-> **The high-octane media downloader & offline Whisper AI transcriber for Omarchy Linux.**
-
-A sleek, lightweight, and modern status bar widget and background download daemon for [Omarchy Linux](https://omarchy.org/) running Hyprland and Quickshell.
-
-Featuring automatic platform link detection, high-bitrate video/audio extraction, synchronized subtitle generation, and 100% offline speech recognition powered by local Whisper AI.
-
-<p align="center">
-  <img src="assets/screenshot.png" alt="OmaPony Interface Preview" width="680" />
-</p>
-
----
 
 ## ✨ Features
 
@@ -76,18 +64,19 @@ Powered by your favorite Discord troll Tonythepony ⚡️⚡️ ft. 🍻 Beers S
 ### One-Command Install (Omarchy Plugin Manager)
 
 ```bash
-omarchy plugin enable omapony   # after installing, see Installing below
+omarchy plugin enable omapony
 ln -sf ~/.config/omarchy/plugins/omapony/bin/omapony ~/.local/bin/omapony
 ```
 
 ### Manual Installation
 
-Clone directly into your Omarchy shell plugins directory:
+Copy it into your Omarchy shell plugins directory, then link the CLI:
 
 ```bash
-git clone --depth 1 --branch yt-pony \
-  https://github.com/nightdevil00/Plugins.git ~/.config/omarchy/plugins/omapony
+git clone https://github.com/nightdevil00/Plugins.git
+cp -r Plugins/yt-pony ~/.config/omarchy/plugins/omapony
 ln -sf ~/.config/omarchy/plugins/omapony/bin/omapony ~/.local/bin/omapony
+omarchy-shell shell rescanPlugins
 omarchy plugin enable omapony --section right
 ```
 

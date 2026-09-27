@@ -4,7 +4,7 @@
 
 ## Installing
 
-This plugin lives in the [Plugins](https://github.com/nightdevil00/Plugins) collection. Each plugin has its own branch, so install it with the bundled script:
+This plugin lives in the [Plugins](https://github.com/nightdevil00/Plugins) collection. Install it with the bundled script:
 
 ```sh
 git clone https://github.com/nightdevil00/Plugins.git
@@ -12,27 +12,21 @@ cd Plugins
 ./install.sh mihai.picker
 ```
 
-Or do it by hand — note the directory is named by the plugin **id** (`wallpicker.grid`), not the folder name:
+Or copy it straight from a clone — note the install directory is named by the
+plugin **id** (`wallpicker.grid`), not the folder name:
 
 ```sh
-git clone --depth 1 --branch mihai.picker \
-  https://github.com/nightdevil00/Plugins.git \
-  ~/.config/omarchy/plugins/wallpicker.grid
+git clone https://github.com/nightdevil00/Plugins.git
+cp -r Plugins/mihai.picker ~/.config/omarchy/plugins/wallpicker.grid
 omarchy-shell shell rescanPlugins
 omarchy plugin enable wallpicker.grid
 ```
 
-<img width="2560" height="1440" alt="Preview" src="Preview.png" />
-
-A fullscreen Omarchy overlay that grids out every image in your Pictures/Wallpapers/
-folder so you can click one to set it as your wallpaper. Built from the
-same overlay template as Soprano/Runway: `WlrLayer.Overlay`, exclusive
-keyboard focus, `keepLoaded`, bar-widget toggle.
 
 ## Install
 
 ```bash
-omarchy plugin enable wallpicker.grid   # after installing, see Installing below
+omarchy plugin enable wallpicker.grid
 ```
 
 Enable the **Wallpapers** bar widget from Setup → Bar if it doesn't show

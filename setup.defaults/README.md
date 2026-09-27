@@ -4,7 +4,7 @@
 
 ## Installing
 
-This plugin lives in the [Plugins](https://github.com/nightdevil00/Plugins) collection. Each plugin has its own branch, so install it with the bundled script:
+This plugin lives in the [Plugins](https://github.com/nightdevil00/Plugins) collection. Install it with the bundled script:
 
 ```sh
 git clone https://github.com/nightdevil00/Plugins.git
@@ -12,27 +12,16 @@ cd Plugins
 ./install.sh setup.defaults
 ```
 
-Or do it by hand — note the directory is named by the plugin **id** (`setup.defaults`), not the folder name:
+Or copy it straight from a clone — note the install directory is named by the
+plugin **id** (`setup.defaults`), not the folder name:
 
 ```sh
-git clone --depth 1 --branch setup.defaults \
-  https://github.com/nightdevil00/Plugins.git \
-  ~/.config/omarchy/plugins/setup.defaults
+git clone https://github.com/nightdevil00/Plugins.git
+cp -r Plugins/setup.defaults ~/.config/omarchy/plugins/setup.defaults
 omarchy-shell shell rescanPlugins
 omarchy plugin enable setup.defaults
 ```
 
-
-A plugin for [Omarchy](https://omarchy.org/) that lets you set the system
-default **terminal, editor, browser, video player, and mail client** — and
-crucially, it is not limited to the handful of apps Omarchy ships defaults
-for. It detects *whatever is actually installed* on your machine (by scanning
-`.desktop` files and `PATH`), so you can pick Vivaldi, gedit, VLC, or anything
-else directly from the bar. Browsers are discovered dynamically: every
-installed `.desktop` file registering an http/https handler or `text/html`
-shows up automatically, including Flatpak apps and niche browsers.
-
-![preview](preview.png)
 
 ## What it does
 
@@ -56,7 +45,7 @@ manager's "open with", and the rest of the desktop.
 ## Installation
 
 ```bash
-omarchy plugin enable setup.defaults   # after installing, see Installing below
+omarchy plugin enable setup.defaults
 ```
 
 That clones the plugin into `~/.config/omarchy/plugins/setup.defaults` and

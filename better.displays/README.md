@@ -4,7 +4,7 @@
 
 ## Installing
 
-This plugin lives in the [Plugins](https://github.com/nightdevil00/Plugins) collection. Each plugin has its own branch, so install it with the bundled script:
+This plugin lives in the [Plugins](https://github.com/nightdevil00/Plugins) collection. Install it with the bundled script:
 
 ```sh
 git clone https://github.com/nightdevil00/Plugins.git
@@ -12,21 +12,16 @@ cd Plugins
 ./install.sh better.displays
 ```
 
-Or do it by hand — note the directory is named by the plugin **id** (`better.displays`), not the folder name:
+Or copy it straight from a clone — note the install directory is named by the
+plugin **id** (`better.displays`), not the folder name:
 
 ```sh
-git clone --depth 1 --branch better.displays \
-  https://github.com/nightdevil00/Plugins.git \
-  ~/.config/omarchy/plugins/better.displays
+git clone https://github.com/nightdevil00/Plugins.git
+cp -r Plugins/better.displays ~/.config/omarchy/plugins/better.displays
 omarchy-shell shell rescanPlugins
 omarchy plugin enable better.displays
 ```
 
-
-A [Omarchy](https://omarchy.org/) shell plugin that puts **granular display and
-terminal control** in a bar widget you open directly from the status bar.
-
-![preview](preview.png)
 
 ## Features
 
@@ -51,8 +46,8 @@ terminal control** in a bar widget you open directly from the status bar.
 
 ### Using the bundled installer
 
-See [Installing](#installing) above — `./install.sh better.displays` clones the
-plugin, validates it, and enables the bar widget. When the
+See [Installing](#installing) above — `./install.sh better.displays` copies the
+plugin into place and enables the bar widget. When the
 shell loads the plugin it **auto-installs the backend scripts** onto `PATH`
 (`~/.local/bin`, falling back to `/usr/local/bin`), so the `omarchy display`
 CLI group and the Display menu submenu work immediately. No manual step needed.
@@ -60,9 +55,7 @@ CLI group and the Display menu submenu work immediately. No manual step needed.
 ### Manual
 
 ```bash
-git clone --depth 1 --branch better.displays \
-  https://github.com/nightdevil00/Plugins.git \
-  ~/.config/omarchy/plugins/better.displays
+cp -r Plugins/better.displays ~/.config/omarchy/plugins/better.displays
 cd ~/.config/omarchy/plugins/better.displays
 ./install                 # symlink the backend scripts into ~/.local/bin
 omarchy plugin enable better.displays

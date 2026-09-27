@@ -4,7 +4,7 @@
 
 ## Installing
 
-This plugin lives in the [Plugins](https://github.com/nightdevil00/Plugins) collection. Each plugin has its own branch, so install it with the bundled script:
+This plugin lives in the [Plugins](https://github.com/nightdevil00/Plugins) collection. Install it with the bundled script:
 
 ```sh
 git clone https://github.com/nightdevil00/Plugins.git
@@ -12,27 +12,21 @@ cd Plugins
 ./install.sh plugin.hider
 ```
 
-Or do it by hand — note the directory is named by the plugin **id** (`plugin.hider`), not the folder name:
+Or copy it straight from a clone — note the install directory is named by the
+plugin **id** (`plugin.hider`), not the folder name:
 
 ```sh
-git clone --depth 1 --branch plugin.hider \
-  https://github.com/nightdevil00/Plugins.git \
-  ~/.config/omarchy/plugins/plugin.hider
+git clone https://github.com/nightdevil00/Plugins.git
+cp -r Plugins/plugin.hider ~/.config/omarchy/plugins/plugin.hider
 omarchy-shell shell rescanPlugins
 omarchy plugin enable plugin.hider
 ```
 
 
-A bar widget for [Omarchy](https://omarchy.org/) that lets you hide and show all plugins in the right bar section with a single click.
-
-![preview](preview.png)
-
-![demo](demo.gif)
-
 ## Installation
 
 ```bash
-omarchy plugin enable plugin.hider   # after installing, see Installing below
+omarchy plugin enable plugin.hider
 ```
 
 When prompted, choose **right** as the bar section placement.

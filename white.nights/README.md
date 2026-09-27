@@ -4,7 +4,7 @@
 
 ## Installing
 
-This plugin lives in the [Plugins](https://github.com/nightdevil00/Plugins) collection. Each plugin has its own branch, so install it with the bundled script:
+This plugin lives in the [Plugins](https://github.com/nightdevil00/Plugins) collection. Install it with the bundled script:
 
 ```sh
 git clone https://github.com/nightdevil00/Plugins.git
@@ -12,25 +12,16 @@ cd Plugins
 ./install.sh white.nights
 ```
 
-Or do it by hand — note the directory is named by the plugin **id** (`white.nights`), not the folder name:
+Or copy it straight from a clone — note the install directory is named by the
+plugin **id** (`white.nights`), not the folder name:
 
 ```sh
-git clone --depth 1 --branch white.nights \
-  https://github.com/nightdevil00/Plugins.git \
-  ~/.config/omarchy/plugins/white.nights
+git clone https://github.com/nightdevil00/Plugins.git
+cp -r Plugins/white.nights ~/.config/omarchy/plugins/white.nights
 omarchy-shell shell rescanPlugins
 omarchy plugin enable white.nights
 ```
 
-
-An [Omarchy](https://omarchy.org/) shell plugin that blocks suspend and
-hibernate while leaving your normal idle cycle untouched: the screen still goes
-to the screensaver, locks, and turns off — the system just stays on underneath.
-
-A white night is a summer night when the sun barely dips below the horizon and
-it never gets fully dark. Your machine stays awake all night, screen off.
-
-![white.nights bar toggle](preview.png)
 
 ## What it does
 
@@ -52,18 +43,16 @@ without the screen burning.
 
 ## Installation
 
-Install from this collection with `./install.sh white.nights` — it clones the
-plugin's branch into `~/.config/omarchy/plugins/`, validates the manifest, and
-tells you the command to enable it:
+Install it with `./install.sh white.nights` from a clone of the collection:
 
 ```bash
-omarchy plugin enable white.nights   # after installing, see Installing below
+omarchy plugin enable white.nights
 ```
 
 See [Installing](#installing) above for the full command.
 
 ```bash
-omarchy plugin enable white.nights   # after installing, see Installing below
+omarchy plugin enable white.nights
 # then, when you're ready:
 omarchy plugin enable white.nights
 ```

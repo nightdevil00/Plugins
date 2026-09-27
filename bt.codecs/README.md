@@ -4,7 +4,7 @@
 
 ## Installing
 
-This plugin lives in the [Plugins](https://github.com/nightdevil00/Plugins) collection. Each plugin has its own branch, so install it with the bundled script:
+This plugin lives in the [Plugins](https://github.com/nightdevil00/Plugins) collection. Install it with the bundled script:
 
 ```sh
 git clone https://github.com/nightdevil00/Plugins.git
@@ -12,22 +12,16 @@ cd Plugins
 ./install.sh bt.codecs
 ```
 
-Or do it by hand — note the directory is named by the plugin **id** (`bt.codecs`), not the folder name:
+Or copy it straight from a clone — note the install directory is named by the
+plugin **id** (`bt.codecs`), not the folder name:
 
 ```sh
-git clone --depth 1 --branch bt.codecs \
-  https://github.com/nightdevil00/Plugins.git \
-  ~/.config/omarchy/plugins/bt.codecs
+git clone https://github.com/nightdevil00/Plugins.git
+cp -r Plugins/bt.codecs ~/.config/omarchy/plugins/bt.codecs
 omarchy-shell shell rescanPlugins
 omarchy plugin enable bt.codecs
 ```
 
-
-Omarchy bar widget that shifts your Bluetooth audio fidelity: pick the A2DP
-codec (AAC, SBC, SBC-XQ) or switch to a headset profile (CVSD, MSBC) for each
-connected Bluetooth audio device, straight from the bar.
-
-![Preview](preview.png)
 
 ## Requirements
 
@@ -40,16 +34,16 @@ connected Bluetooth audio device, straight from the bar.
 Plugins are installed from git with the `omarchy plugin` command:
 
 ```bash
-omarchy plugin enable bt.codecs   # after installing, see Installing below
+omarchy plugin enable bt.codecs
 ```
 
 `omarchy plugin enable` places the widget in your bar. It asks which bar
 section to use; pass `--section left|center|right` to skip the prompt.
 
-If you already have the plugin installed, update it with:
+If you already have the plugin installed, replace it with:
 
 ```bash
-omarchy plugin update bt.codecs
+./install.sh --update bt.codecs
 ```
 
 ## Usage

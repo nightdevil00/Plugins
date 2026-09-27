@@ -4,7 +4,7 @@
 
 ## Installing
 
-This plugin lives in the [Plugins](https://github.com/nightdevil00/Plugins) collection. Each plugin has its own branch, so install it with the bundled script:
+This plugin lives in the [Plugins](https://github.com/nightdevil00/Plugins) collection. Install it with the bundled script:
 
 ```sh
 git clone https://github.com/nightdevil00/Plugins.git
@@ -12,24 +12,16 @@ cd Plugins
 ./install.sh custom-settings
 ```
 
-Or do it by hand — note the directory is named by the plugin **id** (`nightdevil00.custom-settings`), not the folder name:
+Or copy it straight from a clone — note the install directory is named by the
+plugin **id** (`nightdevil00.custom-settings`), not the folder name:
 
 ```sh
-git clone --depth 1 --branch custom-settings \
-  https://github.com/nightdevil00/Plugins.git \
-  ~/.config/omarchy/plugins/nightdevil00.custom-settings
+git clone https://github.com/nightdevil00/Plugins.git
+cp -r Plugins/custom-settings ~/.config/omarchy/plugins/nightdevil00.custom-settings
 omarchy-shell shell rescanPlugins
 omarchy plugin enable nightdevil00.custom-settings
 ```
 
-
-A graphical settings hub for Omarchy, shipped as a **native shell plugin**: a gear on the bar and a panel window. It covers the parts a user is likely to touch — Hyprland behaviour, monitors, the shell bar and plugins, idle timing, night light, updates, and a read-only system summary.
-
-Because it is a plugin, it runs inside the Omarchy shell process, uses the same `qs.Commons` design tokens as every other panel, hot-reloads when its files change, and needs no root to install.
-
-```
-bar gear ──► omarchy-shell shell toggle nightdevil00.custom-settings '{}' ──► panel
-```
 
 ## Screenshots
 
@@ -46,15 +38,13 @@ bar gear ──► omarchy-shell shell toggle nightdevil00.custom-settings '{}' 
 With the Omarchy CLI (recommended):
 
 ```sh
-omarchy plugin enable nightdevil00.custom-settings   # after installing, see Installing below
+omarchy plugin enable nightdevil00.custom-settings
 ```
 
-Or from a checkout:
+Or copy it from a clone:
 
 ```sh
-git clone --depth 1 --branch custom-settings \
-  https://github.com/nightdevil00/Plugins.git \
-  ~/.config/omarchy/plugins/nightdevil00.custom-settings
+cp -r Plugins/custom-settings ~/.config/omarchy/plugins/nightdevil00.custom-settings
 ```
 
 Then run `omarchy-shell shell rescanPlugins` and `omarchy plugin enable nightdevil00.custom-settings`, or restart the shell.
