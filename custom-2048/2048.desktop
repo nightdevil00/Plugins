@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=2048
+Comment=Theme-aware terminal 2048
+Exec=sh -c 'omarchy-launch-or-focus-tui --app-id=org.omarchy.t2048 "$HOME/.config/omarchy/plugins/terminal.2048/omarchy-2048"'
+Icon=omarchy-2048
+Terminal=false
+Categories=Game;LogicGame;
+StartupNotify=true

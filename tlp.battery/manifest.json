@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "tlp.battery",
+  "name": "TLP Battery",
+  "version": "1.0.0",
+  "author": "nightdevil00",
+  "description": "TLP-backed battery, power profile, and charge limit",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "Panel.qml"
+  },
+  "barWidget": {
+    "displayName": "TLP Battery",
+    "description": "TLP-backed battery, power profile, and charge limit",
+    "category": "System",
+    "allowMultiple": false
+  },
+  "omarchy": {
+    "clonedFrom": "omarchy.power"
+  }
+}

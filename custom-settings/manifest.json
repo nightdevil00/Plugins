@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "nightdevil00.custom-settings",
+  "name": "Omarchy Settings",
+  "version": "1.0.0",
+  "author": "nightdevil00",
+  "license": "MIT",
+  "description": "A graphical settings hub for Omarchy: Hyprland behaviour and monitors, the shell bar and plugins, idle and night light, updates, and a system summary.",
+  "kinds": [
+    "bar-widget",
+    "panel"
+  ],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml",
+    "panel": "SettingsPanel.qml"
+  },
+  "barWidget": {
+    "displayName": "Omarchy Settings",
+    "description": "Open the Omarchy settings panel.",
+    "category": "System",
+    "allowMultiple": false,
+    "defaultSection": "center"
+  }
+}

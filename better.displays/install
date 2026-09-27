@@ -1,0 +1,46 @@
+#!/bin/bash
+# Install the better.displays backend scripts onto PATH so the `omarchy display`
+# CLI group and the Display menu submenu work (the bar widget itself already
+# calls the scripts by absolute path and needs no install).
+#
+# Idempotent: re-running is a no-op if the symlinks already point at this plugin.
+# Safe: an existing real file at the destination is backed up to <name>.bak
+# once before being replaced by a symlink.
+
+set -uo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BIN="$SCRIPT_DIR/bin"
+SILENT=0
+[[ "${1:-}" == "--silent" ]] && SILENT=1
+
+install_one() {
+  local dir="$1"
+  mkdir -p "$dir" 2>/dev/null || return 1
+  for f in "$BIN"/omarchy-display-*; do
+    [[ -e "$f" ]] || continue
+    local name; name="$(basename "$f")"
+    local target="$dir/$name"
+    if [[ -L $target ]]; then
+      [[ "$(readlink -f "$target")" == "$(readlink -f "$f")" ]] && continue
+      rm -f "$target"
+    elif [[ -e $target ]]; then
+      [[ -e $target.bak ]] || mv "$target" "$target.bak"
+    fi
+    ln -s "$f" "$target" || return 1
+  done
+  return 0
+}
+
+if install_one "$HOME/.local/bin"; then
+  (( SILENT )) || echo "Installed better.displays scripts into $HOME/.local/bin"
+  exit 0
+fi
+
+if sudo install_one /usr/local/bin 2>/dev/null; then
+  (( SILENT )) || echo "Installed better.displays scripts into /usr/local/bin"
+  exit 0
+fi
+
+echo "Could not install scripts (write access to ~/.local/bin or /usr/local/bin needed)" >&2
+exit 1

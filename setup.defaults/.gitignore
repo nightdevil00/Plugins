@@ -1,6 +1,2 @@
-# Quickshell / editor caches
 *.qmlc
 .qmlcache/
-Panel.qml
-README.md
-set-defaults.sh

@@ -1,0 +1,804 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import json
+import os
+import random
+import re
+import select
+import signal
+import sys
+import termios
+import time
+import tty
+from pathlib import Path
+from typing import Optional
+
+ROOT = Path(__file__).resolve().parent
+THEME_PATH = Path.home() / ".local/state/omarchy/current/theme/colors.toml"
+SCORE_PATH = Path.home() / ".local/share/omarchy-2048/scores.json"
+CONFIG_PATH = Path.home() / ".local/state/omarchy/2048.json"
+TICK = 1.0 / 30.0
+CARD_W = 46
+SIZE_OPTIONS = [4, 5, 6, 7, 8]
+WIN_VALUE = 2048
+
+FALLBACK = {
+    "mode": "dark",
+    "accent": "#7daea3",
+    "selection": "#504945",
+    "muted": "#665c54",
+    "background": "#282828",
+    "dark_background": "#1e1e1e",
+    "darker_background": "#161616",
+    "lighter_background": "#3c3836",
+    "foreground": "#d4be98",
+    "dark_foreground": "#7c6f64",
+    "light_foreground": "#bdae93",
+    "bright_foreground": "#d4be98",
+    "red": "#ea6962",
+    "yellow": "#d8a657",
+    "orange": "#e1875c",
+    "green": "#a9b665",
+    "cyan": "#89b482",
+    "blue": "#7daea3",
+    "magenta": "#d3869b",
+}
+
+
+def hex_rgb(value: str) -> tuple[int, int, int]:
+    text = value.strip().lstrip("#")
+    if len(text) == 3:
+        text = "".join(ch * 2 for ch in text)
+    if len(text) != 6:
+        return (128, 128, 128)
+    return (int(text[0:2], 16), int(text[2:4], 16), int(text[4:6], 16))
+
+
+def mix(a: tuple[int, int, int], b: tuple[int, int, int], t: float) -> tuple[int, int, int]:
+    return (
+        int(a[0] * t + b[0] * (1.0 - t)),
+        int(a[1] * t + b[1] * (1.0 - t)),
+        int(a[2] * t + b[2] * (1.0 - t)),
+    )
+
+
+def parse_toml_colors(path: Path) -> dict[str, str]:
+    data = dict(FALLBACK)
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return data
+    for match in re.finditer(r'^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*"([^"]*)"', text, re.M):
+        data[match.group(1)] = match.group(2)
+    return data
+
+
+class Theme:
+    def __init__(self) -> None:
+        self.mtime = -1.0
+        self.mode = "dark"
+        self.colors: dict[str, tuple[int, int, int]] = {}
+        self.reload(force=True)
+
+    def rgb(self, key: str) -> tuple[int, int, int]:
+        return self.colors.get(key, hex_rgb(FALLBACK.get(key, "#888888")))
+
+    def reload(self, force: bool = False) -> bool:
+        try:
+            mtime = THEME_PATH.stat().st_mtime if THEME_PATH.is_file() else -1.0
+        except OSError:
+            mtime = -1.0
+        if not force and mtime == self.mtime:
+            return False
+        raw = parse_toml_colors(THEME_PATH) if THEME_PATH.is_file() else dict(FALLBACK)
+        self.mtime = mtime
+        self.mode = raw.get("mode", "dark")
+        self.colors = {key: hex_rgb(value) for key, value in raw.items() if key != "mode"}
+        return True
+
+    @property
+    def bg(self) -> tuple[int, int, int]:
+        return self.rgb("background")
+
+    @property
+    def well(self) -> tuple[int, int, int]:
+        return self.rgb("dark_background")
+
+    @property
+    def fg(self) -> tuple[int, int, int]:
+        return self.rgb("foreground")
+
+    @property
+    def muted(self) -> tuple[int, int, int]:
+        return self.rgb("muted")
+
+    @property
+    def accent(self) -> tuple[int, int, int]:
+        return self.rgb("accent")
+
+    @property
+    def selection(self) -> tuple[int, int, int]:
+        return self.rgb("selection")
+
+    @property
+    def empty(self) -> tuple[int, int, int]:
+        return mix(self.rgb("lighter_background"), self.rgb("dark_background"), 0.5)
+
+    def tile_color(self, value: int) -> tuple[int, int, int]:
+        if value <= 0:
+            return self.empty
+        order = ["accent", "magenta", "blue", "cyan", "green", "yellow", "orange", "red"]
+        exp = value.bit_length() - 1
+        return self.rgb(order[(exp - 1) % len(order)])
+
+
+def tile_text_color(rgb: tuple[int, int, int], theme: Theme) -> tuple[int, int, int]:
+    lum = 0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]
+    if lum > 150:
+        return theme.rgb("darker_background")
+    return theme.rgb("bright_foreground")
+
+
+def slide_line(line: list[int]) -> tuple[list[int], int]:
+    nums = [v for v in line if v]
+    out: list[int] = []
+    gained = 0
+    i = 0
+    while i < len(nums):
+        if i + 1 < len(nums) and nums[i] == nums[i + 1]:
+            merged = nums[i] * 2
+            out.append(merged)
+            gained += merged
+            i += 2
+        else:
+            out.append(nums[i])
+            i += 1
+    while len(out) < len(line):
+        out.append(0)
+    return out, gained
+
+
+class Game:
+    def __init__(self, size: int, keep_going: bool = False) -> None:
+        self.size = size
+        self.keep_going = keep_going
+        self.grid: list[list[int]] = [[0] * size for _ in range(size)]
+        self.score = 0
+        self.best = 0
+        self.alive = True
+        self.won = False
+        self.saved = False
+        self.paused = False
+        self.banner = ""
+        self.banner_until = 0.0
+        self.spawn()
+        self.spawn()
+
+    def empty_cells(self) -> list[tuple[int, int]]:
+        return [(r, c) for r in range(self.size) for c in range(self.size) if self.grid[r][c] == 0]
+
+    def spawn(self) -> None:
+        cells = self.empty_cells()
+        if not cells:
+            return
+        r, c = random.choice(cells)
+        self.grid[r][c] = 4 if random.random() < 0.1 else 2
+
+    def can_move(self) -> bool:
+        if self.empty_cells():
+            return True
+        for r in range(self.size):
+            for c in range(self.size):
+                v = self.grid[r][c]
+                if c + 1 < self.size and self.grid[r][c + 1] == v:
+                    return True
+                if r + 1 < self.size and self.grid[r + 1][c] == v:
+                    return True
+        return False
+
+    def move(self, direction: str) -> bool:
+        if not self.alive or self.paused:
+            return False
+        size = self.size
+        before = [row[:] for row in self.grid]
+        gained = 0
+        if direction in ("left", "right"):
+            for r in range(size):
+                line = self.grid[r][:]
+                if direction == "right":
+                    line.reverse()
+                new_line, g = slide_line(line)
+                if direction == "right":
+                    new_line.reverse()
+                gained += g
+                self.grid[r] = new_line
+        else:
+            for c in range(size):
+                line = [self.grid[r][c] for r in range(size)]
+                if direction == "down":
+                    line.reverse()
+                new_line, g = slide_line(line)
+                if direction == "down":
+                    new_line.reverse()
+                gained += g
+                for r in range(size):
+                    self.grid[r][c] = new_line[r]
+        moved = any(
+            self.grid[r][c] != before[r][c]
+            for r in range(size)
+            for c in range(size)
+        )
+        if not moved:
+            return False
+        self.score += gained
+        if self.score > self.best:
+            self.best = self.score
+        for r in range(size):
+            for c in range(size):
+                if self.grid[r][c] >= WIN_VALUE and not self.won:
+                    self.won = True
+                    self.banner = "2048!"
+                    self.banner_until = time.monotonic() + 2.2
+        self.spawn()
+        if not self.can_move():
+            self.alive = False
+        return True
+
+    def toggle_pause(self) -> None:
+        if not self.alive:
+            return
+        self.paused = not self.paused
+
+
+def ansi_fg(rgb: tuple[int, int, int]) -> str:
+    return f"\x1b[38;2;{rgb[0]};{rgb[1]};{rgb[2]}m"
+
+
+def ansi_bg(rgb: tuple[int, int, int]) -> str:
+    return f"\x1b[48;2;{rgb[0]};{rgb[1]};{rgb[2]}m"
+
+
+def paint(text: str, fg: tuple[int, int, int], bg: Optional[tuple[int, int, int]] = None) -> str:
+    out = ansi_fg(fg)
+    if bg is not None:
+        out += ansi_bg(bg)
+    return out + text
+
+
+RESET = "\x1b[0m"
+
+
+def fmt_score(n: int) -> str:
+    return f"{n:,}".replace(",", " ")
+
+
+def player_name() -> str:
+    name = os.environ.get("USER") or os.environ.get("LOGNAME") or "player"
+    return name[:12]
+
+
+def fmt_when(stamp: str) -> str:
+    try:
+        parsed = time.strptime(stamp.strip(), "%Y-%m-%d %H:%M")
+        return time.strftime("%d %b %H:%M", parsed)
+    except ValueError:
+        return stamp[:14]
+
+
+def term_size() -> tuple[int, int]:
+    try:
+        size = os.get_terminal_size()
+        return size.columns, size.lines
+    except OSError:
+        return 80, 24
+
+
+class Screen:
+    def __init__(self, theme: Theme) -> None:
+        self.theme = theme
+        self.cols, self.rows = term_size()
+
+    def refresh_size(self) -> None:
+        self.cols, self.rows = term_size()
+
+    def fill_line(self, width: int, bg: tuple[int, int, int]) -> str:
+        return paint(" " * width, self.theme.fg, bg) + RESET
+
+
+class Scores:
+    def __init__(self) -> None:
+        self.data: dict[str, dict] = {}
+        self.load()
+
+    def load(self) -> None:
+        try:
+            raw = json.loads(SCORE_PATH.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return
+        if not isinstance(raw, dict):
+            return
+        for key, value in raw.items():
+            if isinstance(value, dict):
+                self.data[key] = value
+
+    def save(self) -> None:
+        SCORE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        tmp = SCORE_PATH.with_suffix(".json.tmp")
+        tmp.write_text(json.dumps(self.data, indent=2) + "\n", encoding="utf-8")
+        tmp.replace(SCORE_PATH)
+
+    def best(self, size: int) -> Optional[dict]:
+        return self.data.get(str(size))
+
+    def record(self, size: int, score: int, won: bool) -> tuple[int, bool]:
+        key = str(size)
+        current = self.data.get(key)
+        best_score = int(current.get("score", 0)) if current else 0
+        is_record = score > best_score
+        if is_record:
+            self.data[key] = {
+                "name": player_name(),
+                "score": score,
+                "won": bool(won),
+                "at": time.strftime("%Y-%m-%d %H:%M"),
+            }
+            self.save()
+        elif won and current and not current.get("won"):
+            current["won"] = True
+            self.save()
+        return best_score, is_record
+
+
+class Settings:
+    def __init__(self) -> None:
+        self.size = 4
+        self.keep_going = False
+        self.mtime = -1.0
+        self.load()
+
+    def load(self) -> bool:
+        try:
+            mtime = CONFIG_PATH.stat().st_mtime if CONFIG_PATH.is_file() else -1.0
+        except OSError:
+            mtime = -1.0
+        if mtime == self.mtime and mtime != -1.0:
+            return False
+        self.mtime = mtime
+        try:
+            raw = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            raw = {}
+        if not isinstance(raw, dict):
+            raw = {}
+        size = int(raw.get("size", 4))
+        self.size = size if size in SIZE_OPTIONS else 4
+        self.keep_going = bool(raw.get("keep_going", False))
+        return True
+
+    def save(self) -> None:
+        CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        tmp = CONFIG_PATH.with_suffix(".json.tmp")
+        tmp.write_text(
+            json.dumps({"size": self.size, "keep_going": self.keep_going}, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        tmp.replace(CONFIG_PATH)
+        try:
+            self.mtime = CONFIG_PATH.stat().st_mtime
+        except OSError:
+            pass
+
+
+class App:
+    def __init__(self) -> None:
+        self.theme = Theme()
+        self.screen = Screen(self.theme)
+        self.scores = Scores()
+        self.settings = Settings()
+        self.page = "menu"
+        self.menu_index = max(0, SIZE_OPTIONS.index(self.settings.size))
+        self.game: Optional[Game] = None
+        self.running = True
+        self.old_term: Optional[list] = None
+        self.buf = bytearray()
+        self.celebrate_size: Optional[int] = None
+        self.celebrate_until = 0.0
+
+    def start_mode(self, size: int) -> None:
+        self.game = Game(size, self.settings.keep_going)
+        self.page = "play"
+
+    def record_score(self) -> None:
+        game = self.game
+        if game is None or game.saved:
+            return
+        best_score, is_record = self.scores.record(game.size, game.score, game.won)
+        game.saved = True
+        game.best = max(game.best, best_score)
+        if is_record:
+            self.celebrate_size = game.size
+            self.celebrate_until = time.monotonic() + 6.0
+
+    def read_keys(self, timeout: float) -> list[str]:
+        keys: list[str] = []
+        ready, _, _ = select.select([sys.stdin], [], [], timeout)
+        if ready:
+            try:
+                chunk = os.read(sys.stdin.fileno(), 64)
+            except OSError:
+                chunk = b""
+            self.buf.extend(chunk)
+        data = bytes(self.buf)
+        self.buf.clear()
+        i = 0
+        while i < len(data):
+            b = data[i]
+            if b == 0x1B:
+                if i + 2 < len(data) and data[i + 1] == ord("["):
+                    code = data[i + 2]
+                    mapping = {ord("A"): "up", ord("B"): "down", ord("C"): "right", ord("D"): "left"}
+                    keys.append(mapping.get(code, "esc"))
+                    i += 3
+                    continue
+                keys.append("esc")
+                i += 1
+                continue
+            if b in (3,):
+                keys.append("quit")
+            elif b in (13, 10):
+                keys.append("enter")
+            elif b == 32:
+                keys.append("space")
+            elif b in (127, 8):
+                keys.append("back")
+            else:
+                ch = chr(b).lower()
+                names = {
+                    "a": "left",
+                    "d": "right",
+                    "s": "down",
+                    "w": "up",
+                    "h": "left",
+                    "l": "right",
+                    "j": "down",
+                    "k": "up",
+                    "p": "pause",
+                    "q": "quit",
+                    "r": "retry",
+                    "1": "1",
+                    "2": "2",
+                    "3": "3",
+                    "4": "4",
+                    "5": "5",
+                    "6": "6",
+                    "7": "7",
+                    "8": "8",
+                    "9": "9",
+                }
+                keys.append(names.get(ch, ch))
+            i += 1
+        return keys
+
+    def handle_menu(self, keys: list[str]) -> None:
+        for key in keys:
+            if key in ("up", "k", "left", "h"):
+                self.menu_index = (self.menu_index - 1) % len(SIZE_OPTIONS)
+            elif key in ("down", "j", "right", "l"):
+                self.menu_index = (self.menu_index + 1) % len(SIZE_OPTIONS)
+            elif key in ("1", "2", "3", "4", "5", "6", "7", "8"):
+                idx = int(key) - 1
+                if 0 <= idx < len(SIZE_OPTIONS):
+                    self.menu_index = idx
+            elif key in ("enter", "space"):
+                size = SIZE_OPTIONS[self.menu_index]
+                self.settings.size = size
+                self.settings.save()
+                self.start_mode(size)
+            elif key in ("quit", "esc", "q"):
+                self.running = False
+
+    def handle_play(self, keys: list[str]) -> None:
+        game = self.game
+        if game is None:
+            return
+        if not game.alive:
+            for key in keys:
+                if key in ("enter", "retry", "r", "space"):
+                    if not game.saved:
+                        self.record_score()
+                    self.start_mode(game.size)
+                    return
+                if key in ("quit", "esc", "q"):
+                    if not game.saved:
+                        self.record_score()
+                    self.page = "menu"
+                    return
+            return
+        for key in keys:
+            if key in ("quit", "esc", "q"):
+                if not game.saved:
+                    self.record_score()
+                self.page = "menu"
+                return
+            if key in ("pause", "p"):
+                game.toggle_pause()
+                continue
+            if game.paused:
+                if key in ("retry", "r"):
+                    self.start_mode(game.size)
+                    return
+                continue
+            if key in ("left", "a", "h"):
+                game.move("left")
+            elif key in ("right", "d", "l"):
+                game.move("right")
+            elif key in ("up", "w", "k"):
+                game.move("up")
+            elif key in ("down", "s", "j"):
+                game.move("down")
+            elif key in ("retry", "r"):
+                self.start_mode(game.size)
+                return
+
+    def min_size(self) -> tuple[int, int]:
+        return (44, 22)
+
+    def celebrating(self, size: int) -> bool:
+        return self.celebrate_size == size and time.monotonic() < self.celebrate_until
+
+    def paint_canvas(self, canvas: list[list[tuple[str, tuple[int, int, int], tuple[int, int, int]]]]) -> list[str]:
+        lines: list[str] = []
+        for y in range(len(canvas)):
+            parts: list[str] = []
+            last_fg = None
+            last_bg = None
+            run: list[str] = []
+
+            def flush() -> None:
+                if not run:
+                    return
+                parts.append(paint("".join(run), last_fg, last_bg))
+                run.clear()
+
+            for ch, fg, bgc in canvas[y]:
+                if fg != last_fg or bgc != last_bg:
+                    flush()
+                    last_fg, last_bg = fg, bgc
+                run.append(ch)
+            flush()
+            parts.append(RESET)
+            lines.append("".join(parts))
+        return lines
+
+    def draw(self) -> None:
+        self.screen.refresh_size()
+        cols, rows = self.screen.cols, self.screen.rows
+        need_w, need_h = self.min_size()
+        bg = self.theme.bg
+        lines: list[str] = []
+        if cols < need_w or rows < need_h:
+            msg = f"Need at least {need_w}x{need_h}  (now {cols}x{rows})"
+            for y in range(rows):
+                if y == rows // 2:
+                    pad = max(0, (cols - len(msg)) // 2)
+                    text = " " * pad + msg
+                    text = text[:cols].ljust(cols)
+                    lines.append(paint(text, self.theme.fg, bg) + RESET)
+                else:
+                    lines.append(self.screen.fill_line(cols, bg))
+            self.blit(lines)
+            return
+        if self.page == "menu":
+            lines = self.draw_menu(cols, rows, bg)
+        else:
+            lines = self.draw_play(cols, rows, bg)
+        self.blit(lines)
+
+    def blit(self, lines: list[str]) -> None:
+        rows = self.screen.rows
+        cols = self.screen.cols
+        while len(lines) < rows:
+            lines.append(self.screen.fill_line(cols, self.theme.bg))
+        sys.stdout.write("\x1b[H" + "\n".join(lines[:rows]))
+        sys.stdout.flush()
+
+    def draw_menu(self, cols: int, rows: int, bg: tuple[int, int, int]) -> list[str]:
+        theme = self.theme
+        card_w = min(CARD_W, max(36, cols - 4))
+        left = max(0, (cols - card_w) // 2)
+        selected_size = SIZE_OPTIONS[self.menu_index]
+        best = self.scores.best(selected_size)
+        height = 20
+        top = max(1, (rows - height) // 2)
+        canvas = [[(" ", theme.fg, bg) for _ in range(cols)] for _ in range(rows)]
+
+        def put(x: int, y: int, ch: str, fg: tuple[int, int, int], bgc: tuple[int, int, int]) -> None:
+            if 0 <= y < rows and 0 <= x < cols:
+                canvas[y][x] = (ch[:1], fg, bgc)
+
+        def put_str(x: int, y: int, text: str, fg: tuple[int, int, int], bgc: tuple[int, int, int]) -> None:
+            for i, ch in enumerate(text):
+                put(x + i, y, ch, fg, bgc)
+
+        def fill(x: int, y: int, width: int, fg: tuple[int, int, int], bgc: tuple[int, int, int]) -> None:
+            put_str(x, y, " " * max(0, width), fg, bgc)
+
+        title = "2048"
+        title_x = left + max(0, (card_w - len(title)) // 2)
+        for i, ch in enumerate(title):
+            put(title_x + i, top, ch, theme.accent, bg)
+
+        put_str(left, top + 2, "join the tiles, reach 2048".center(card_w), theme.muted, bg)
+
+        box_y = top + 4
+        box_h = 7
+        well = theme.well
+        put_str(left, box_y, "╭" + "─" * (card_w - 2) + "╮", theme.muted, well)
+        for row in range(1, box_h - 1):
+            put(left, box_y + row, "│", theme.muted, well)
+            fill(left + 1, box_y + row, card_w - 2, theme.fg, well)
+            put(left + card_w - 1, box_y + row, "│", theme.muted, well)
+        put_str(left, box_y + box_h - 1, "╰" + "─" * (card_w - 2) + "╯", theme.muted, well)
+
+        label = "BOARD SIZE"
+        put_str(left + max(0, (card_w - len(label)) // 2), box_y + 1, label, theme.muted, well)
+        size_text = "   ".join(f"{s}×{s}" for s in SIZE_OPTIONS)
+        st_x = left + max(0, (card_w - len(size_text)) // 2)
+        for i, s in enumerate(SIZE_OPTIONS):
+            seg = f"{s}×{s}"
+            seg_x = st_x + i * 5
+            selected = i == self.menu_index
+            color = theme.accent if selected else theme.fg
+            mark = "▸" if selected else " "
+            put_str(seg_x, box_y + 3, f"{mark}{seg}", color, well)
+            put_str(seg_x, box_y + 4, ("now" if selected else "   "), color, well)
+
+        board_y = box_y + box_h + 2
+        heading = f"best  ·  {selected_size}×{selected_size}"
+        put_str(left + max(0, (card_w - len(heading)) // 2), board_y, heading, theme.muted, bg)
+        if best:
+            line = f"  ♔ {best.get('name', 'player')[:12]}  {fmt_score(int(best.get('score', 0)))}  {fmt_when(str(best.get('at', '')))}"
+            put_str(left + 2, board_y + 1, line[: card_w - 2], theme.accent, bg)
+            if best.get("won"):
+                put_str(left + 2, board_y + 2, "reached 2048", theme.muted, bg)
+        else:
+            empty = "no games yet"
+            put_str(left + max(0, (card_w - len(empty)) // 2), board_y + 1, empty, theme.muted, bg)
+
+        hint = "← → choose   enter play   q quit"
+        put_str(left + max(0, (card_w - len(hint)) // 2), min(rows - 1, board_y + 5), hint, theme.muted, bg)
+        return self.paint_canvas(canvas)
+
+    def draw_play(self, cols: int, rows: int, bg: tuple[int, int, int]) -> list[str]:
+        game = self.game
+        assert game is not None
+        theme = self.theme
+        canvas = [[(" ", theme.fg, bg) for _ in range(cols)] for _ in range(rows)]
+
+        def put(x: int, y: int, ch: str, fg: tuple[int, int, int], bgc: tuple[int, int, int]) -> None:
+            if 0 <= y < rows and 0 <= x < cols:
+                canvas[y][x] = (ch[:1], fg, bgc)
+
+        def put_str(x: int, y: int, text: str, fg: tuple[int, int, int], bgc: tuple[int, int, int]) -> None:
+            for i, ch in enumerate(text):
+                put(x + i, y, ch, fg, bgc)
+
+        size = game.size
+        hud = 2
+        area_rows = rows - hud
+        cell_w = max(3, cols // size)
+        cell_h = max(2, area_rows // size)
+        board_w = cell_w * size
+        board_h = cell_h * size
+        ox = max(0, (cols - board_w) // 2)
+        oy = 1 + max(0, (area_rows - board_h) // 2)
+        gap = 1 if cell_w > 5 else 0
+
+        for r in range(size):
+            for c in range(size):
+                val = game.grid[r][c]
+                color = theme.tile_color(val)
+                x0 = ox + c * cell_w
+                y0 = oy + r * cell_h
+                for yy in range(y0 + gap, y0 + cell_h):
+                    for xx in range(x0 + gap, x0 + cell_w):
+                        if 0 <= yy < rows and 0 <= xx < cols:
+                            canvas[yy][xx] = (canvas[yy][xx][0], canvas[yy][xx][1], color)
+                if val:
+                    text = str(val)
+                    cx = x0 + cell_w // 2 - len(text) // 2
+                    cy = y0 + cell_h // 2
+                    if 0 <= cy < rows:
+                        put_str(cx, cy, text, tile_text_color(color, theme), color)
+
+        for x in range(cols):
+            put(x, 0, " ", theme.fg, theme.well)
+            put(x, rows - 1, " ", theme.fg, theme.well)
+
+        put_str(1, 0, f"2048   {size}×{size}", theme.accent, theme.well)
+        put_str(cols - 1 - len(f"SCORE {fmt_score(game.score)}"), 0, f"SCORE {fmt_score(game.score)}", theme.fg, theme.well)
+        best_text = f"BEST {fmt_score(max(game.best, game.score))}"
+        put_str(1, rows - 1, best_text, theme.muted, theme.well)
+        hint = "← → ↑ ↓ move   r retry   p pause   q menu"
+        put_str(max(0, (cols - len(hint)) // 2), rows - 1, hint, theme.muted, theme.well)
+
+        overlay = ""
+        sub = ""
+        record = self.celebrating(game.size)
+        if game.paused:
+            overlay = "PAUSED"
+            sub = "p resume   r retry   q menu"
+        elif not game.alive:
+            overlay = "GAME OVER"
+            sub = f"{fmt_score(game.score)}    enter retry   q menu"
+        elif record:
+            overlay = "RECORD!"
+            sub = f"{fmt_score(game.score)}    enter retry   q menu"
+        elif game.banner and time.monotonic() < game.banner_until:
+            overlay = game.banner
+            sub = "keep going!"
+        if overlay:
+            box_w = max(len(overlay), len(sub)) + 6
+            box_h = 5
+            bx = (cols - box_w) // 2
+            by = (rows - box_h) // 2
+            panel = mix(theme.rgb("darker_background"), theme.selection, 0.55)
+            for yy in range(box_h):
+                for xx in range(box_w):
+                    put(bx + xx, by + yy, " ", theme.fg, panel)
+            put_str(bx + (box_w - len(overlay)) // 2, by + 1, overlay, theme.accent, panel)
+            put_str(bx + (box_w - len(sub)) // 2, by + 3, sub, theme.fg, panel)
+        return self.paint_canvas(canvas)
+
+    def setup_term(self) -> None:
+        self.old_term = termios.tcgetattr(sys.stdin)
+        tty.setcbreak(sys.stdin.fileno())
+        sys.stdout.write("\x1b[?1049h\x1b[?25l\x1b[?7l\x1b]0;2048\x07")
+        sys.stdout.flush()
+
+    def restore_term(self) -> None:
+        sys.stdout.write("\x1b[?7h\x1b[?25h\x1b[?1049l")
+        sys.stdout.flush()
+        if self.old_term is not None:
+            termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self.old_term)
+
+    def run(self) -> int:
+        if not sys.stdin.isatty() or not sys.stdout.isatty():
+            sys.stderr.write("omarchy-2048 needs an interactive terminal\n")
+            return 1
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
+        self.setup_term()
+
+        def handle_int(_sig, _frame) -> None:
+            self.running = False
+
+        signal.signal(signal.SIGINT, handle_int)
+        signal.signal(signal.SIGTERM, handle_int)
+        try:
+            while self.running:
+                self.theme.reload()
+                self.settings.load()
+                self.draw()
+                keys = self.read_keys(TICK)
+                if self.page == "menu":
+                    self.handle_menu(keys)
+                else:
+                    self.handle_play(keys)
+        finally:
+            self.restore_term()
+        return 0
+
+
+def main() -> int:
+    if "-h" in sys.argv or "--help" in sys.argv:
+        sys.stdout.write("usage: omarchy-2048\n")
+        return 0
+    return App().run()
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,6 +1,1 @@
-# Local-only: these files drive or install the upstream desktop software
-# by its vendor name. Kept on disk, out of git, so the published repo
-# only carries Custom DHH Distro branding.
-BarWidget.qml
-README.md
-Service.qml
+

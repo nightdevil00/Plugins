@@ -1,0 +1,202 @@
+#!/bin/bash
+# omarchy:summary=Per-monitor resolution, scale, position, and transform
+# omarchy:group=display
+# omarchy:name=monitor
+# omarchy:args=[list|set <output> [--mode WxH@Hz] [--scale N] [--pos X,Y] [--transform N]]
+# omarchy:examples=omarchy display monitor list | omarchy display monitor set DP-1 --mode 2560x1440@144 --scale 1.6 --pos 0x0 --transform 0
+
+# Granular per-monitor display control. Applies changes live via hyprctl and
+# persists them to ~/.config/omarchy/displays.json (runtime state) and, when a
+# matching hl.monitor line exists, to ~/.config/hypr/monitors.lua (so the
+# layout survives a reboot). Terminal fonts are handled separately by
+# `omarchy display terminal`.
+
+set -euo pipefail
+
+CONFIG_DIR="$HOME/.config/omarchy"
+DISPLAYS_JSON="$CONFIG_DIR/displays.json"
+MONITORS_LUA="$HOME/.config/hypr/monitors.lua"
+
+# ---- input validation ----
+
+validate_output() {
+  # Hyprland output names: alphanumeric, hyphens, underscores, colons (e.g. DP-1, HDMI-A:0)
+  [[ $1 =~ ^[a-zA-Z0-9_-]+(:[a-zA-Z0-9_-]+)?$ ]] || { echo "Invalid monitor output name: $1" >&2; exit 1; }
+}
+
+validate_mode() {
+  # Mode format: WxH@R or WxH@RHz (e.g. 2560x1440@144, 2560x1440@144Hz)
+  [[ $1 =~ ^[0-9]+x[0-9]+@[0-9]+(\.[0-9]+)?(Hz)?$ ]] || { echo "Invalid mode format: $1" >&2; exit 1; }
+}
+
+validate_pos() {
+  # Position format: XxY or auto (e.g. 0x0, 1920x0)
+  [[ $1 == "auto" || $1 =~ ^-?[0-9]+x-?[0-9]+$ ]] || { echo "Invalid position format: $1" >&2; exit 1; }
+}
+
+validate_scale() {
+  # Scale: positive number (already cleaned by clean_scale, but double-check)
+  [[ $1 =~ ^[0-9]+(\.[0-9]+)?$ ]] || { echo "Invalid scale value: $1" >&2; exit 1; }
+}
+
+validate_transform() {
+  # Transform: integer 0-3
+  [[ $1 =~ ^[0-3]$ ]] || { echo "Invalid transform value: $1 (must be 0-3)" >&2; exit 1; }
+}
+
+# Escape a string for safe embedding in Lua double-quoted strings.
+lua_escape() {
+  printf '%s' "$1" | sed 's/[\\"]/\\&/g'
+}
+
+# ---- json helpers ----
+
+read_json_field() {
+  local key="$1" default="$2"
+  if [[ -f $DISPLAYS_JSON ]]; then
+    local v
+    v="$(jq -r --arg k "$key" '.[$k] // empty' "$DISPLAYS_JSON" 2>/dev/null || true)"
+    [[ -n $v && $v != "null" ]] && { echo "$v"; return; }
+  fi
+  echo "$default"
+}
+
+write_outputs_json() {
+  # Last arg = jq program; preceding args forwarded to jq (e.g. --arg/--argjson).
+  # Reads/writes displays.json atomically.
+  mkdir -p "$(dirname "$DISPLAYS_JSON")"
+  [[ -f $DISPLAYS_JSON ]] || echo '{"monitors":{},"terminals":{}}' >"$DISPLAYS_JSON"
+  local program="${!#}"
+  local tmp
+  tmp="$(mktemp)"
+  jq "${@:1:$(($# - 1))}" "$program" "$DISPLAYS_JSON" >"$tmp"
+  mv "$tmp" "$DISPLAYS_JSON"
+}
+
+# ---- live monitor read ----
+
+monitor_json() {
+  hyprctl monitors -j 2>/dev/null | jq -c --arg n "$1" '.[] | select(.name == $n)' 2>/dev/null || true
+}
+
+list_modes() {
+  local m="$1"
+  echo "$m" | jq -r '.modes[]? | "\(.width)x\(.height)@\(.refreshRate)"' 2>/dev/null | sort -u -V
+}
+
+clean_scale() {
+  # Mirror omarchy-hyprland-monitor-scaling: Hyprland only accepts scales where
+  # the mode divides into whole logical pixels (1/120 steps).
+  awk -v scale="$1" -v width="$2" -v height="$3" '
+    function gcd(a, b, t) { while (b) { t = a % b; a = b; b = t } return a }
+    BEGIN {
+      g = gcd(width * 120, height * 120)
+      k = int(scale * 120 + 0.5)
+      if (k > g) k = g
+      while (g % k != 0) k++
+      printf "%g\n", k / 120
+    }'
+}
+
+# ---- monitors.lua persistence ----
+
+persist_to_lua() {
+  local output="$1" mode="$2" pos="$3" scale="$4" transform="$5"
+  [[ -f $MONITORS_LUA ]] || return 0
+
+  local safe_output safe_mode safe_pos
+  safe_output="$(lua_escape "$output")"
+  safe_mode="$(lua_escape "$mode")"
+  safe_pos="$(lua_escape "$pos")"
+  local line="hl.monitor({ output = \"$safe_output\", mode = \"$safe_mode\", position = \"$safe_pos\", scale = $scale, transform = $transform })"
+  # Replace an existing hl.monitor line for this exact output, else append.
+  if grep -Eq "^hl\.monitor\(\{ output = \"$safe_output\"" "$MONITORS_LUA"; then
+    local tmp
+    tmp="$(mktemp)"
+    awk -v out="$safe_output" -v repl="$line" '
+      $0 ~ "^hl\\.monitor\\(\\{ output = \"" out "\"" {
+        print repl
+        next
+      }
+      { print }
+    ' "$MONITORS_LUA" >"$tmp"
+    mv "$tmp" "$MONITORS_LUA"
+  else
+    printf '\n%s\n' "$line" >>"$MONITORS_LUA"
+  fi
+}
+
+# ---- commands ----
+
+cmd_list() {
+  hyprctl monitors -j 2>/dev/null | jq -r '
+    .[] | "\(.name)\tmode=\(.width)x\(.height)@\(.refreshRate)\tscale=\(.scale)\tpos=\(.x),\(.y)\ttransform=\(.transform)\(if .focused then "\t[focused]" else "" end)"' \
+    2>/dev/null || { echo "hyprctl unavailable" >&2; exit 1; }
+}
+
+cmd_set() {
+  local output="${1:-}"
+  [[ -n $output ]] || { echo "Usage: omarchy display monitor set <output> [--mode WxH@Hz] [--scale N] [--pos X,Y] [--transform N]" >&2; exit 1; }
+  validate_output "$output"
+
+  local m
+  m="$(monitor_json "$output")"
+  [[ -n $m ]] || { echo "Monitor '$output' not found (see: omarchy display monitor list)" >&2; exit 1; }
+
+  local cur_mode cur_scale cur_pos cur_transform
+  cur_mode="$(echo "$m" | jq -r '"\(.width)x\(.height)@\(.refreshRate)"')"
+  cur_scale="$(echo "$m" | jq -r '.scale')"
+  cur_pos="$(echo "$m" | jq -r '"\(.x)x\(.y)"')"
+  cur_transform="$(echo "$m" | jq -r '.transform')"
+
+  local mode="$cur_mode" scale="$cur_scale" pos="$cur_pos" transform="$cur_transform"
+  shift || true
+  while (( $# > 0 )); do
+    case "$1" in
+      --mode) mode="$2"; shift 2 ;;
+      --scale) scale="$2"; shift 2 ;;
+      --pos|--position) pos="$2"; shift 2 ;;
+      --transform) transform="$2"; shift 2 ;;
+      *) echo "Unknown arg: $1" >&2; exit 1 ;;
+    esac
+  done
+
+  # Validate all inputs before use.
+  validate_mode "$mode"
+  validate_pos "$pos"
+  validate_scale "$scale"
+  validate_transform "$transform"
+
+  # Validate / clean scale against this monitor's current pixel size.
+  local w h
+  w="$(echo "$m" | jq -r '.width')"
+  h="$(echo "$m" | jq -r '.height')"
+  scale="$(clean_scale "$scale" "$w" "$h")"
+
+  # Apply live (escape values for Lua string embedding).
+  local safe_output safe_mode safe_pos
+  safe_output="$(lua_escape "$output")"
+  safe_mode="$(lua_escape "$mode")"
+  safe_pos="$(lua_escape "$pos")"
+  if ! out="$(hyprctl eval "hl.monitor({ output = \"$safe_output\", mode = \"$safe_mode\", position = \"$safe_pos\", scale = $scale, transform = $transform })" 2>&1)"; then
+    echo "Live apply failed: $out" >&2
+    exit 1
+  fi
+
+  # Persist runtime state.
+  write_outputs_json --arg out "$output" --arg mode "$mode" --arg pos "$pos" --argjson scale "$scale" --argjson transform "$transform" '
+    .monitors = (.monitors // {})
+    | .monitors[$out] = { mode: $mode, position: $pos, scale: $scale, transform: $transform }'
+
+  # Persist to monitors.lua when the user still keeps Omarchy monitor lines.
+  persist_to_lua "$output" "$mode" "$pos" "$scale" "$transform"
+
+  echo "Applied $output: mode=$mode scale=$scale pos=$pos transform=$transform"
+}
+
+case "${1:-}" in
+  ""|-h|--help) echo "Usage: omarchy display monitor [list|set <output> ...]" >&2 ;;
+  list) cmd_list ;;
+  set) shift; cmd_set "$@" ;;
+  *) echo "Unknown subcommand: $1" >&2; exit 1 ;;
+esac

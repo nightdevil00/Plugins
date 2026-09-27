@@ -1,0 +1,112 @@
+#!/bin/bash
+# omarchy:summary=Per-terminal font size (alacritty, kitty, ghostty, foot)
+# omarchy:group=display
+# omarchy:name=terminal
+# omarchy:args=[list|set <terminal> <size>|set-all <size>]
+# omarchy:examples=omarchy display terminal list | omarchy display terminal set ghostty 14 | omarchy display terminal set-all 13
+
+# Set font sizes independently per terminal emulator and persist them to
+# ~/.config/omarchy/displays.json. This is the granular alternative to the
+# coupled `omarchy display text size`, which rewrites every terminal at once.
+
+set -euo pipefail
+
+CONFIG_DIR="$HOME/.config/omarchy"
+DISPLAYS_JSON="$CONFIG_DIR/displays.json"
+
+TERMINALS=(alacritty kitty ghostty foot)
+
+conf_for() {
+  case "$1" in
+    alacritty) echo "$HOME/.config/alacritty/alacritty.toml" ;;
+    kitty)     echo "$HOME/.config/kitty/kitty.conf" ;;
+    ghostty)   echo "$HOME/.config/ghostty/config" ;;
+    foot)      echo "$HOME/.config/foot/foot.ini" ;;
+  esac
+}
+
+current_size() {
+  local term="$1" f
+  f="$(conf_for "$term")"
+  [[ -f $f ]] || { echo "n/a"; return; }
+  case "$term" in
+    alacritty) grep -oP '^size[[:space:]]*=[[:space:]]*\K[0-9.]+' "$f" | head -1 ;;
+    kitty)     grep -oP '^font_size[[:space:]]+\K[0-9.]+' "$f" | head -1 ;;
+    ghostty)   grep -oP '^font-size = \K[0-9.]+' "$f" | head -1 ;;
+    foot)      grep -oP ':size=\K[0-9.]+' "$f" | head -1 ;;
+  esac
+}
+
+apply_size() {
+  local term="$1" pt="$2" f
+  f="$(conf_for "$term")"
+  [[ -f $f ]] || { echo "  (no $term config at $f — skipped)" >&2; return; }
+  case "$term" in
+    alacritty)
+      sed -i -E "s/^size[[:space:]]*=.*/size = $pt/" "$f" ;;
+    kitty)
+      sed -i -E "s/^font_size[[:space:]]+.*/font_size $pt.0/" "$f"
+      pkill -USR1 kitty 2>/dev/null || true ;;
+    ghostty)
+      sed -i -E "s/^font-size = .*/font-size = $pt/" "$f"
+      pkill -SIGUSR2 ghostty 2>/dev/null || true ;;
+    foot)
+      sed -i -E "s/(:size=)[0-9.]+/\1$pt/" "$f" ;;
+  esac
+}
+
+persist_terminal() {
+  local term="$1" pt="$2"
+  mkdir -p "$(dirname "$DISPLAYS_JSON")"
+  [[ -f $DISPLAYS_JSON ]] || echo '{"monitors":{},"terminals":{}}' >"$DISPLAYS_JSON"
+  local tmp
+  tmp="$(mktemp)"
+  jq --arg t "$term" --argjson p "$pt" '.terminals = (.terminals // {}) | .terminals[$t] = $p' \
+    "$DISPLAYS_JSON" >"$tmp"
+  mv "$tmp" "$DISPLAYS_JSON"
+}
+
+cmd_list() {
+  if [[ "${1:-}" == "--json" ]]; then
+    local json='{}'
+    for t in "${TERMINALS[@]}"; do
+      json="$(echo "$json" | jq --arg t "$t" --arg s "$(current_size "$t")" '. + {($t): $s}')"
+    done
+    echo "$json"
+    return
+  fi
+  for t in "${TERMINALS[@]}"; do
+    printf '%-10s %s\n' "$t" "$(current_size "$t")"
+  done
+}
+
+cmd_set() {
+  local term="${1:-}" pt="${2:-}"
+  [[ -n $term && -n $pt ]] || { echo "Usage: omarchy display terminal set <terminal> <size>" >&2; exit 1; }
+  [[ " ${TERMINALS[*]} " == *" $term "* ]] || { echo "Unknown terminal: $term" >&2; exit 1; }
+  [[ $pt =~ ^[0-9]+(\.[0-9]+)?$ ]] || { echo "Size must be numeric" >&2; exit 1; }
+  apply_size "$term" "$pt"
+  persist_terminal "$term" "$pt"
+  echo "$term font size -> $pt"
+  omarchy restart terminal >/dev/null 2>&1 || true
+}
+
+cmd_set_all() {
+  local pt="${1:-}"
+  [[ -n $pt ]] || { echo "Usage: omarchy display terminal set-all <size>" >&2; exit 1; }
+  [[ $pt =~ ^[0-9]+(\.[0-9]+)?$ ]] || { echo "Size must be numeric" >&2; exit 1; }
+  for t in "${TERMINALS[@]}"; do
+    apply_size "$t" "$pt"
+    persist_terminal "$t" "$pt"
+    echo "$t font size -> $pt"
+  done
+  omarchy restart terminal >/dev/null 2>&1 || true
+}
+
+case "${1:-}" in
+  ""|-h|--help) echo "Usage: omarchy display terminal [list|set <term> <size>|set-all <size>]" >&2 ;;
+  list) shift; cmd_list "$@" ;;
+  set) shift; cmd_set "$@" ;;
+  set-all) shift; cmd_set_all "$@" ;;
+  *) echo "Unknown subcommand: $1" >&2; exit 1 ;;
+esac

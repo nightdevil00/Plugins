@@ -1,0 +1,135 @@
+#!/bin/bash
+# omarchy:summary=Interactive picker for per-monitor and per-terminal settings
+# omarchy:group=display
+# omarchy:name=pick
+# omarchy:args=[monitor <mode|scale|position|transform>|terminal]
+# omarchy:examples=omarchy display pick monitor scale | omarchy display pick monitor position | omarchy display pick terminal
+
+# Launches the Omarchy menu to choose a monitor/terminal and the value to apply,
+# then calls `omarchy display monitor|terminal set` to apply it live + persist.
+
+set -euo pipefail
+
+MON_ICON=$'\U000f0431'   # 󰀱 display
+SCALE_ICON=$'\U000f0878' # 󰡸
+POS_ICON=$'\U000f0a72'   # 󰩲
+TF_ICON=$'\U000f013a'    # 󰄺
+TERM_ICON=$'\U000f4898'  # 󱢘
+
+pick() { omarchy-menu-select "$@"; }
+
+list_monitors() {
+  hyprctl monitors -j 2>/dev/null | jq -r '.[] | "\(.name)\t\(.width)x\(.height)@\(.refreshRate) scale \(.scale)"' 2>/dev/null
+}
+
+pick_monitor() {
+  local sel
+  sel="$(pick "$MON_ICON Display" $(list_monitors))" || return 1
+  # Returned as "name\t subtext"; keep the name only.
+  cut -f1 <<<"$sel"
+}
+
+# ---- monitor sub-pickers ----
+
+pick_mode() {
+  local out="$1"
+  local modes
+  modes="$(hyprctl monitors -j | jq -r --arg o "$out" '.[] | select(.name==$o) | .modes[]? | "\(.width)x\(.height)@\(.refreshRate)"' | sort -u -V)"
+  [[ -n $modes ]] || { echo "No modes reported for $out" >&2; return 1; }
+  local sel
+  sel="$(pick "$MON_ICON Resolution for $out" $modes)" || return 1
+  echo "$sel" | cut -f1
+}
+
+pick_scale() {
+  local presets="1" "1.25" "1.6" "2" "3" "4"
+  local sel
+  sel="$(pick "$SCALE_ICON Scale" "${presets[@]}")" || return 1
+  echo "$sel" | cut -f1
+}
+
+pick_transform() {
+  local opts=(
+    "$TF_ICON Normal\t0"
+    "$TF_ICON Rotate right (90°)\t1"
+    "$TF_ICON Rotate 180°\t2"
+    "$TF_ICON Rotate left (270°)\t3"
+  )
+  local sel
+  sel="$(pick "$TF_ICON Orientation" "${opts[@]}")" || return 1
+  echo "$sel" | cut -f2
+}
+
+pick_position() {
+  local out="$1"
+  local info w h others opts
+  info="$(hyprctl monitors -j | jq -c --arg o "$out" '.[] | select(.name==$o)')"
+  w="$(echo "$info" | jq -r '.width')"
+  h="$(echo "$info" | jq -r '.height')"
+  others="$(hyprctl monitors -j | jq -c --arg o "$out" '.[] | select(.name!=$o)')"
+
+  opts=("$POS_ICON Auto\tauto")
+  while read -r o; do
+    [[ -n $o ]] || continue
+    local nm x y ow oh
+    nm="$(echo "$o" | jq -r '.name')"
+    x="$(echo "$o" | jq -r '.x')"
+    y="$(echo "$o" | jq -r '.y')"
+    ow="$(echo "$o" | jq -r '.width')"
+    oh="$(echo "$o" | jq -r '.height')"
+    opts+=("$POS_ICON Left of $nm\t$((x - w))x$y")
+    opts+=("$POS_ICON Right of $nm\t$((x + ow))x$y")
+    opts+=("$POS_ICON Above $nm\t${x}x$((y - h))")
+    opts+=("$POS_ICON Below $nm\t${x}x$((y + oh))")
+  done < <(echo "$others" | jq -c '.') 
+
+  local sel
+  sel="$(pick "$POS_ICON Position for $out" "${opts[@]}")" || return 1
+  echo "$sel" | cut -f2
+}
+
+cmd_monitor() {
+  local what="${1:-}"
+  [[ -n $what ]] || { echo "Usage: omarchy display pick monitor <mode|scale|position|transform>" >&2; exit 1; }
+  local out
+  out="$(pick_monitor)" || exit 0
+  local val
+  case "$what" in
+    mode)     val="$(pick_mode "$out")" || exit 0 ;;
+    scale)    val="$(pick_scale)" || exit 0 ;;
+    position) val="$(pick_position "$out")" || exit 0 ;;
+    transform) val="$(pick_transform)" || exit 0 ;;
+    *) echo "Unknown monitor picker: $what" >&2; exit 1 ;;
+  esac
+  [[ -n $val ]] || exit 0
+  omarchy display monitor set "$out" "--$what" "$val"
+}
+
+cmd_terminal() {
+  local terms=(alacritty kitty ghostty foot)
+  local opts=()
+  for t in "${terms[@]}"; do
+    opts+=("$TERM_ICON $t")
+  done
+  local term
+  term="$(pick "$TERM_ICON Terminal" "${opts[@]}")" || exit 0
+  term="$(echo "$term" | cut -f2)"
+
+  local sizes=(8 9 10 11 12 13 14 15 16 18 20)
+  local sopts=()
+  for s in "${sizes[@]}"; do
+    sopts+=("$TERM_ICON ${s}pt")
+  done
+  local sz
+  sz="$(pick "$TERM_ICON Font size for $term" "${sopts[@]}")" || exit 0
+  sz="$(echo "$sz" | grep -oP '\d+')"
+  [[ -n $sz ]] || exit 0
+  omarchy display terminal set "$term" "$sz"
+}
+
+case "${1:-}" in
+  monitor) shift; cmd_monitor "$@" ;;
+  terminal) cmd_terminal ;;
+  ""|-h|--help) echo "Usage: omarchy display pick [monitor <mode|scale|position|transform>|terminal]" >&2 ;;
+  *) echo "Unknown picker: $1" >&2; exit 1 ;;
+esac

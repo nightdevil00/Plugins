@@ -1,0 +1,18 @@
+#!/bin/bash
+# Remove the better.displays script symlinks from PATH. Run this before
+# `omarchy plugin remove better.displays` if you want a clean uninstall, or
+# after removing the plugin to drop any dangling symlinks.
+
+set -uo pipefail
+
+for name in omarchy-display-monitor omarchy-display-terminal omarchy-display-pick; do
+  for dir in "$HOME/.local/bin" /usr/local/bin; do
+    target="$dir/$name"
+    if [[ -L $target ]]; then
+      rm -f "$target"
+      echo "Removed $target"
+    fi
+  done
+done
+
+echo "Done. Then run: omarchy plugin remove better.displays"
