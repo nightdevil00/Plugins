@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "id": "mihai.llama",
+  "name": "local llama",
+  "version": "1.0.0",
+  "author": "mihai",
+  "license": "MIT",
+  "description": "Load and unload the local llama.cpp models (Qwen3-4B, 8B, 30B) from the Omarchy bar. Nothing occupies RAM or VRAM until you pick a model and click Load; the widget shows the model's load state so you know when opencode can talk to it.",
+  "kinds": ["bar-widget"],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "local llama",
+    "description": "Start/stop the local Qwen3 llama.cpp servers and show which model is currently loaded for opencode.",
+    "category": "AI",
+    "aliases": ["llama", "models", "llm", "local-models"],
+    "allowMultiple": false,
+    "defaults": {
+      "refreshIntervalSec": 3
+    },
+    "schema": [
+      { "key": "refreshIntervalSec", "type": "integer", "label": "Status refresh (seconds)", "min": 3, "max": 300, "step": 1, "defaultValue": 3 }
+    ]
+  }
+}

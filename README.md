@@ -1,9 +1,9 @@
 # Plugins
 
-Fifteen [Omarchy](https://omarchy.org/) shell plugins — bar widgets, panels,
+Sixteen [Omarchy](https://omarchy.org/) shell plugins — bar widgets, panels,
 overlays and services, written in QML for Quickshell.
 
-All fifteen live here, one subdirectory each.
+All sixteen live here, one subdirectory each.
 
 ## The map
 
@@ -21,7 +21,7 @@ graph TB
     white_nights["No Sleep"]
     mihai_ytmusic["YouTube Music"]
   end
-  subgraph bar["Bar widgets · 9"]
+  subgraph bar["Bar widgets · 10"]
     custom_2048["2048"]
     better_displays["Better Displays"]
     bt_codecs["Bluetooth codec"]
@@ -31,6 +31,7 @@ graph TB
     pick_screenshot["Screenshot Picker"]
     tlp_battery["TLP Battery"]
     mihai_opencode_usage["opencode usage"]
+    mihai_llama["local llama"]
   end
 ```
 
@@ -54,6 +55,7 @@ graph TB
 | [`pick.screenshot`](pick.screenshot/) · [Screenshot Picker](pick.screenshot/) | `pick.screenshot` | `bar-widget` | Quick screenshot region, fullscreen, or window. |
 | [`tlp.battery`](tlp.battery/) · [TLP Battery](tlp.battery/) | `tlp.battery` | `bar-widget` | TLP-backed battery, power profile, and charge limit. |
 | [`mihai.opencode-usage`](mihai.opencode-usage/) · [opencode usage](mihai.opencode-usage/) | `mihai.opencode-usage` | `bar-widget` | opencode session usage in a native Custom DHH Distro bar panel: today's prompts, sessions, and tokens, a seven-day chart, the per-model and per-agent breakdown, and all-time totals. |
+| [`mihai.llama`](mihai.llama/) · [local llama](mihai.llama/) | `mihai.llama` | `bar-widget` | Boot and stop local llama.cpp model servers for opencode on demand. Nothing occupies RAM or VRAM until you click Load; the widget shows which model is resident (needs llama.cpp + model GGUFs — see its README). |
 
 ## Installing
 
@@ -61,7 +63,7 @@ graph TB
 git clone https://github.com/nightdevil00/Plugins.git
 cd Plugins
 ./install.sh better.displays      # or ./install.sh with no arguments to pick
-./install.sh --all                # install all fifteen
+./install.sh --all                # install all sixteen
 ./install.sh --all --enable       # install and enable all
 ```
 
@@ -91,7 +93,7 @@ Use the script instead, which replaces the installed directory:
 
 ```sh
 ./install.sh --update better.displays    # one
-./install.sh --all --update              # all fifteen
+./install.sh --all --update              # all sixteen
 ```
 
 ## Layout
@@ -103,6 +105,7 @@ Plugins/
   custom-2048/
   custom-settings/
   mihai.opencode-usage/
+  mihai.llama/
   mihai.picker/
   mihai.spotlight/
   mihai.ytmusic/
@@ -117,6 +120,10 @@ Plugins/
 
 Each subdirectory is self-contained: `manifest.json`, its QML/JS sources, its own
 `README.md`, and a `preview.png` where one exists.
+
+`mihai.llama` additionally needs llama.cpp and model GGUFs before it is useful;
+its control script keeps all runtime state in `~/llama-serve`, outside the plugin
+folder, so the shell's plugin reload is never tripped.
 
 ---
 *`yt-pony` is a fork of [tonythesuperpony/omapony](https://github.com/tonythesuperpony) —
