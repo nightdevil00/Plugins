@@ -6,7 +6,7 @@ A bar widget + panel that boots and stops **local [llama.cpp](https://github.com
 
 Nothing occupies RAM or VRAM by itself — the widget reports **off** and every model is idle until you click **Load**. Pick a model in the panel, click Load, and once it reports **loaded** you can select it in opencode (`/models`). Unload frees the memory again.
 
-It ships with a three-model preset tuned for a **GTX 1650 Ti (4 GB class)** but the same flow and control script work for any llama.cpp build — edit the launchers in `~/llama-serve` to point at your own GGUFs and ports.
+It ships with a seven-model preset tuned for a **GTX 1650 Ti (4 GB class)** but the same flow and control script work for any llama.cpp build — edit the launchers in `~/llama-serve` to point at your own GGUFs and ports.
 
 ## Installing
 
@@ -54,8 +54,12 @@ Save the GGUFs into `~/models` with the exact filenames the launchers expect:
 
 | Model (GGUF) | File | Size | Port | VRAM |
 | --- | --- | --- | --- | --- |
+| Llama-3.2-3B-Instruct · Q4_K_M | `Llama-3.2-3B-Instruct-Q4_K_M.gguf` | 1.9 GB | 8085 | fits, `-ngl 99` |
 | Qwen3-4B-Instruct-2507 · Q4_K_M | `Qwen3-4B-Instruct-2507-Q4_K_M.gguf` | 2.5 GB | 8080 | fits, `-ngl 99` |
+| Gemma 4 E2B it · q4_0 | `gemma-4-E2B_q4_0-it.gguf` | 3.1 GB | 8083 | fits, `-ngl 99` |
 | Qwen3-8B · Q4_K_M | `Qwen3-8B-Q4_K_M.gguf` | 5.0 GB | 8081 | partial, `-ngl 16` |
+| LFM2.5-8B-A1B · Q4_K_M | `LFM2.5-8B-A1B-Q4_K_M.gguf` | 5.2 GB | 8088 | partial, `-ngl 16` |
+| Nemotron-Nano-9B-v2 · Q4_K_M | `nvidia_NVIDIA-Nemotron-Nano-9B-v2-Q4_K_M.gguf` | 5.5 GB | 8087 | partial, `-ngl 16` |
 | Qwen3-Coder-30B-A3B · Q2_K | `qwen3-coder-30b-a3b-Q2_K.gguf` | 11 GB | 8082 | low, `-ngl 8` |
 
 From Hugging Face (rename to the filenames above if the repo names differ):
@@ -69,9 +73,19 @@ wget -O Qwen3-8B-Q4_K_M.gguf \
   https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/Qwen3-8B-Q4_K_M.gguf
 wget -O qwen3-coder-30b-a3b-Q2_K.gguf \
   https://huggingface.co/unsloth/Qwen3-Coder-30B-A3B-GGUF/resolve/main/Qwen3-Coder-30B-A3B-Q2_K.gguf
+wget -O Llama-3.2-3B-Instruct-Q4_K_M.gguf \
+  https://huggingface.co/unsloth/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-Q4_K_M.gguf
+wget -O gemma-4-E2B_q4_0-it.gguf \
+  https://huggingface.co/google/gemma-4-E2B-it-qat-q4_0-gguf/resolve/main/gemma-4-E2B_q4_0-it.gguf
+wget -O LFM2.5-8B-A1B-Q4_K_M.gguf \
+  https://huggingface.co/LiquidAI/LFM2.5-8B-A1B-GGUF/resolve/main/LFM2.5-8B-A1B-Q4_K_M.gguf
+wget -O nvidia_NVIDIA-Nemotron-Nano-9B-v2-Q4_K_M.gguf \
+  https://huggingface.co/bartowski/nvidia_NVIDIA-Nemotron-Nano-9B-v2-GGUF/resolve/main/nvidia_NVIDIA-Nemotron-Nano-9B-v2-Q4_K_M.gguf
 ```
 
-The 4B GGUF needs nothing extra. The 8B ships without a chat template, so its launcher points at `~/models/qwen3-tool.jinja` (a copy is included in this plugin folder) and turns off thinking mode — without both, 8B rams its whole token budget into `thinking` instead of calling tools. Tool calling is **verified** on all three presets (~1.9s / ~4.9s / ~7.1s round trips on the 1650 Ti).
+The 4B GGUF needs nothing extra. The 8B ships without a chat template, so its launcher points at `~/models/qwen3-tool.jinja` (a copy is included in this plugin folder) and turns off thinking mode — without both, 8B rams its whole token budget into `thinking` instead of calling tools. Tool calling is **verified** on all seven presets on the 1650 Ti.
+
+> **Which models did *not* make the list, and why:** `microsoft_Phi-4-mini-instruct-Q4_K_M.gguf`, `Mistral-7B-Instruct-v0.3-Q4_K_M.gguf`, and `Qwen2.5-Coder-7B-Instruct-Q4_K_M.gguf` all fit the machine but fail tool calling through `llama-server` (this build silently drops the OpenAI `tools` block for them — prompts come out a few tokens long — and the Coder model answers in an unparseable `<function-call>` dialect). A custom `--chat-template-file` doesn't help: llama.cpp decides tool support per model and won't hand the tools to these templates. They're fine as plain chat models if you want the extra downloads.
 
 ### 3. Runtime directory (`~/llama-serve`)
 
@@ -82,6 +96,10 @@ The control script (`llama_ctl.py`) lives inside the plugin folder — but its *
   qwen3-4b.sh              launchers: copy the matching .sh from this plugin folder
   qwen3-8b.sh
   qwen3-coder-30b.sh
+  gemma4-e2b.sh
+  llama3.2-3b.sh
+  nemotron-nano.sh
+  lfm2.5-8b.sh
   stop.sh                  stop every llama-server
   logs/<model-id>.log      server stdout/stderr
   load.<model-id>.mark     "starting" marker, written on load, removed on unload
@@ -91,7 +109,7 @@ The control script (`llama_ctl.py`) lives inside the plugin folder — but its *
 
 ```sh
 mkdir -p ~/llama-serve
-cp ~/.config/omarchy/plugins/mihai.llama/{qwen3-4b.sh,qwen3-8b.sh,qwen3-coder-30b.sh,stop.sh} ~/llama-serve
+cp ~/.config/omarchy/plugins/mihai.llama/{qwen3-4b.sh,qwen3-8b.sh,qwen3-coder-30b.sh,gemma4-e2b.sh,llama3.2-3b.sh,nemotron-nano.sh,lfm2.5-8b.sh,stop.sh} ~/llama-serve
 ```
 
 This separation is deliberate: the control script and its files must **never** be written by the plugin's own folder, because the shell's plugin file-watcher hot-reloads the whole plugin on any change there and each reload leaks a stale duplicate widget.
@@ -109,7 +127,9 @@ The servers expose standard llama.cpp OpenAI-compatible endpoints (`http://127.0
       "options": { "baseURL": "http://127.0.0.1:8080/v1" },
       "models": { "qwen3-4b": { "name": "Qwen3-4B-Instruct-2507" } }
     }
-    // local-8b → 127.0.0.1:8081/v1, local-coder → 127.0.0.1:8082/v1
+    // local-8b → 127.0.0.1:8081/v1, local-coder → 127.0.0.1:8082/v1,
+    // local-gemma4 → 127.0.0.1:8083/v1, local-llama32 → 127.0.0.1:8085/v1,
+    // local-nemotron → 127.0.0.1:8087/v1, local-lfm → 127.0.0.1:8088/v1
   }
 }
 ```
@@ -137,7 +157,7 @@ python3 ~/.config/omarchy/plugins/mihai.llama/llama_ctl.py unload qwen3-8b
 python3 ~/.config/omarchy/plugins/mihai.llama/llama_ctl.py stop     # all servers
 ```
 
-Model ids: `qwen3-4b`, `qwen3-8b`, `qwen3-coder-30b`.
+Model ids: `qwen3-4b`, `qwen3-8b`, `qwen3-coder-30b`, `gemma4-e2b`, `llama3.2-3b`, `nemotron-nano`, `lfm2.5-8b`.
 
 ## Editing for your own hardware
 

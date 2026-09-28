@@ -29,6 +29,18 @@ MODELS = [
     {"id": "qwen3-coder-30b", "name": "Qwen3-Coder-30B-A3B", "tag": "30B",
      "size": "11 GB", "port": 8082, "script": "qwen3-coder-30b.sh",
      "opencode": "local-coder/qwen3-coder-30b"},
+    {"id": "gemma4-e2b", "name": "Gemma 4 E2B it", "tag": "Gemma",
+     "size": "3.1 GB", "port": 8083, "script": "gemma4-e2b.sh",
+     "opencode": "local-gemma4/gemma-4-e2b"},
+    {"id": "llama3.2-3b", "name": "Llama-3.2-3B-Instruct", "tag": "L3.2",
+     "size": "1.9 GB", "port": 8085, "script": "llama3.2-3b.sh",
+     "opencode": "local-llama32/llama-3.2-3b"},
+    {"id": "nemotron-nano", "name": "Nemotron-Nano-9B-v2", "tag": "Nano",
+     "size": "5.5 GB", "port": 8087, "script": "nemotron-nano.sh",
+     "opencode": "local-nemotron/nemotron-nano"},
+    {"id": "lfm2.5-8b", "name": "LFM2.5-8B-A1B", "tag": "LFM8",
+     "size": "5.2 GB", "port": 8088, "script": "lfm2.5-8b.sh",
+     "opencode": "local-lfm/lfm2.5-8b"},
 ]
 
 
