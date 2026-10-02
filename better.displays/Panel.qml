@@ -7,8 +7,8 @@ import qs.Commons
 
 Panel {
   id: root
-  moduleName: "mihai.displays"
-  ipcTarget: "mihai.displays"
+  moduleName: "better.displays"
+  ipcTarget: "better.displays"
   manageIpc: true
 
   property var monitors: []
