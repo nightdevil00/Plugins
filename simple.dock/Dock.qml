@@ -207,6 +207,58 @@ Item {
 
   readonly property var appLibrary: shell ? shell.appLibrary : null
 
+  // omarchy-shell only injects `shell.appLibrary` into plugins that declare
+  // kind "menu" (see shell.qml createScopedPluginShell). This manifest does,
+  // but keep a local DesktopEntries-backed stand-in so the dock still resolves
+  // names and icons if that grant ever changes again — an overlay with no
+  // library renders an empty dock.
+  QtObject {
+    id: desktopApi
+
+    function entryName(entry) {
+      return entry ? String(entry.name || "") : ""
+    }
+
+    function iconSource(icon) {
+      var value = String(icon || "")
+      if (value === "") return Quickshell.iconPath("application-x-executable", true)
+      if (value.indexOf("file://") === 0 || value.indexOf("image://") === 0) return value
+      if (value.charAt(0) === "/") return Util.fileUrl(value)
+      var themed = Quickshell.iconPath(value, true)
+      return themed.length > 0 ? themed : Quickshell.iconPath("application-x-executable", true)
+    }
+
+    // The dock never searches, so every visible entry is a candidate. Mirrors
+    // the { entry, ... } row shape appLibrary.sortedEntries() returns.
+    function sortedEntries(query) {
+      if (String(query || "").trim() !== "") return []
+      var values = DesktopEntries.applications.values || []
+      var rows = []
+      for (var i = 0; i < values.length; i++) {
+        var entry = values[i]
+        if (!entry || entry.noDisplay) continue
+        var name = entryName(entry)
+        if (!name) continue
+        rows.push({ entry: entry, name: name.toLowerCase() })
+      }
+      rows.sort(function(a, b) {
+        if (a.name < b.name) return -1
+        if (a.name > b.name) return 1
+        return 0
+      })
+      return rows
+    }
+
+    function launch(desktopId, name) {
+      var id = String(desktopId || "")
+      if (!id) return
+      // Keep the .desktop suffix: gtk-launch needs it to resolve the entry.
+      Quickshell.execDetached(["uwsm-app", "--", "gtk-launch", id + ".desktop"])
+    }
+  }
+
+  readonly property var appApi: root.appLibrary ? root.appLibrary : desktopApi
+
   // Sizing. The icon sits in a slightly padded slot; the card wraps the row.
   readonly property int iconSize: Math.max(28, Math.round(Style.bar.sizeHorizontal * 0.9))
   readonly property int iconSlot: root.iconSize + Style.space(10)
@@ -221,9 +273,15 @@ Item {
   readonly property var runningSection: root.dockModel.running
 
   function refreshDock() {
-    root.dockModel = root.shell && root.shell.appLibrary
-      ? DockModel.buildEntries(root.pinnedIds, ToplevelManager.toplevels.values, root.appRows, root.shell.appLibrary)
-      : { pinned: [], running: [] }
+    root.dockModel = DockModel.buildEntries(
+      root.pinnedIds, ToplevelManager.toplevels.values, root.appRows, root.appApi, root.iconForId)
+  }
+
+  // Chrome-style appIds (chrome-…__profile-Default) match no desktop entry, so
+  // fall back to treating the id itself as an icon name. DockItem substitutes
+  // a generic glyph if this comes back empty.
+  function iconForId(appId) {
+    return Quickshell.iconPath(appId, true)
   }
 
   readonly property string activeId: ToplevelManager.activeToplevel
@@ -315,6 +373,14 @@ Item {
     function onAppsChanged() { root.rescanApps() }
   }
 
+  // Only used when the shell withholds shell.appLibrary, so only rescan on a
+  // real change to the stand-in.
+  Connections {
+    target: DesktopEntries
+    enabled: root.appLibrary === null
+    function onApplicationsChanged() { root.rescanApps() }
+  }
+
   // ToplevelList exposes `values` (a V4Sequence) on a CONSTANT property, so
   // bindings through it never re-run. Listen explicitly to keep the running
   // section in sync as windows open/close.
@@ -345,21 +411,26 @@ Item {
   }
 
   function rescanApps() {
-    root.appRows = root.shell && root.shell.appLibrary ? root.shell.appLibrary.sortedEntries("") : []
+    root.appRows = root.appApi ? root.appApi.sortedEntries("") : []
     root.refreshDock()
   }
 
   function toggleAppsMenu() {
-    if (root.shell) root.shell.toggle("omarchy.menu", '{"menu":"apps"}')
+    // shell.toggle() only accepts the plugin's own id (and, for full-bar
+    // facades, a few first-party targets), so an overlay asking for
+    // omarchy.menu is rejected. Go through the shell's own IPC entry point
+    // instead, which routes the same call.
+    if (root.shell && root.shell.toggle("omarchy.menu", '{"menu":"apps"}')) return
+    Quickshell.execDetached(["omarchy-shell", "-q", "shell", "toggle", "omarchy.menu", '{"menu":"apps"}'])
   }
 
   function activate(appId) {
-    if (!root.shell || !root.shell.appLibrary) return
+    if (!root.appApi) return
     var entry = root.entryForId(appId)
     if (entry && entry.running) {
       DockModel.activateApp(ToplevelManager.toplevels.values, ToplevelManager.activeToplevel, appId)
     } else {
-      root.shell.appLibrary.launch(appId, entry ? entry.name : appId)
+      root.appApi.launch(appId, entry ? entry.name : appId)
     }
   }
 
@@ -516,8 +587,8 @@ Item {
           running: modelData.running
           windows: modelData.windows
           active: modelData.appId === root.activeId
-          onActivateRequested: root.activate(appId)
-          onMenuRequested: root.openContext(appId, x, y)
+          onActivateRequested: function(requestedId) { root.activate(requestedId) }
+          onMenuRequested: function(requestedId, atX, atY) { root.openContext(requestedId, atX, atY) }
         }
       }
 
@@ -539,8 +610,8 @@ Item {
           running: modelData.running
           windows: modelData.windows
           active: modelData.appId === root.activeId
-          onActivateRequested: root.activate(appId)
-          onMenuRequested: root.openContext(appId, x, y)
+          onActivateRequested: function(requestedId) { root.activate(requestedId) }
+          onMenuRequested: function(requestedId, atX, atY) { root.openContext(requestedId, atX, atY) }
         }
       }
     }
@@ -582,8 +653,7 @@ Item {
       ContextRow {
         text: "Launch"
         onTriggered: {
-          if (root.shell && root.shell.appLibrary)
-            root.shell.appLibrary.launch(root.contextAppId, root.contextName)
+          if (root.appApi) root.appApi.launch(root.contextAppId, root.contextName)
           root.closeContext()
         }
       }

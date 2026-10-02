@@ -107,7 +107,10 @@ live, no restart needed.
 
 ## Files
 
-- `manifest.json` — plugin manifest (`id: simple.dock`, `kind: overlay`, kept loaded).
+- `manifest.json` — plugin manifest (`id: simple.dock`, kinds `overlay` + `menu`, kept
+  loaded). The `menu` kind is what makes omarchy-shell inject `shell.appLibrary` into
+  the plugin; the shell resolves the entry kind to `overlay` regardless, so the dock
+  still mounts as an overlay.
 - `Dock.qml` — the dock UI (a full-screen overlay whose interactive region is
   limited to the dock card, the context menu, and the bottom reveal strip).
 - `DockModel.js` — pure helpers for the model and persistence.

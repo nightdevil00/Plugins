@@ -6,7 +6,8 @@
   "author": "mihai",
   "description": "Centered autohiding app dock with pinned and running apps",
   "kinds": [
-    "overlay"
+    "overlay",
+    "menu"
   ],
   "keepLoaded": true,
   "entryPoints": {

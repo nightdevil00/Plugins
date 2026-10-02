@@ -100,8 +100,10 @@ function entryFor(appRows, appId) {
 //
 // Returns { pinned: [...], running: [...] } where each entry is
 // { appId, name, icon, pinned, running, windows }.
-// `appLibrary` is shell.appLibrary, used for names, icons, and launch.
-function buildEntries(pinnedIds, toplevels, appRows, appLibrary) {
+// `appApi` is shell.appLibrary (or a DesktopEntries-backed stand-in) exposing
+// entryName(), iconSource(), and launch(). `iconForId` is an optional fallback
+// used for app ids with no matching desktop entry.
+function buildEntries(pinnedIds, toplevels, appRows, appApi, iconForId) {
   var pinned = Array.isArray(pinnedIds) ? pinnedIds : []
   var list = toArray(toplevels)
 
@@ -122,12 +124,15 @@ function buildEntries(pinnedIds, toplevels, appRows, appLibrary) {
   function enrich(list) {
     for (var j = 0; j < list.length; j++) {
       var entry = entryFor(appRows, list[j].appId)
-      if (entry && appLibrary) {
-        list[j].name = appLibrary.entryName(entry)
-        list[j].icon = appLibrary.iconSource(entry.icon)
+      if (entry && appApi) {
+        list[j].name = appApi.entryName(entry) || list[j].appId
+        list[j].icon = appApi.iconSource(entry.icon)
       } else {
         list[j].name = list[j].appId
         list[j].icon = ""
+      }
+      if (!list[j].icon && typeof iconForId === "function") {
+        list[j].icon = String(iconForId(list[j].appId) || "")
       }
     }
   }
