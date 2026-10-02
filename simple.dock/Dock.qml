@@ -500,19 +500,21 @@ Item {
       item: dockCard
       regions: [
         Region { item: contextMenu },
-        Region { item: root.autohide ? revealStrip : undefined }
+        Region { item: revealStrip }
       ]
     }
 
     // Bottom edge reveal strip. Part of the input mask at all times so the
     // compositor delivers pointer events when the cursor reaches the screen
-    // bottom; hovering it pops the dock up.
+    // bottom; hovering it pops the dock up. Collapsed to zero height while the
+    // dock is pinned (autohide off) so it stops claiming the screen edge, which
+    // also keeps its Region.item valid instead of assigning undefined.
     Item {
       id: revealStrip
       anchors.left: parent.left
       anchors.right: parent.right
       anchors.bottom: parent.bottom
-      height: root.revealHeight
+      height: root.autohide ? root.revealHeight : 0
 
       MouseArea {
         id: revealArea
