@@ -6,7 +6,7 @@ A bar widget + panel that boots and stops **local [llama.cpp](https://github.com
 
 Nothing occupies RAM or VRAM by itself — the widget reports **off** and every model is idle until you click **Load**. Pick a model in the panel, click Load, and once it reports **loaded** you can select it in opencode (`/models`). Unload frees the memory again.
 
-It ships with a seven-model preset tuned for a **GTX 1650 Ti (4 GB class)** but the same flow and control script work for any llama.cpp build — edit the launchers in `~/llama-serve` to point at your own GGUFs and ports.
+It ships with **eleven launchers tuned for a GTX 1650 Ti (4 GB class)** — seven usable as opencode models, four chat-only because they don't survive tool calling. The same flow and control script work for any llama.cpp build: edit the launchers in `~/llama-serve` to point at your own GGUFs and ports.
 
 ## Installing
 
@@ -52,40 +52,76 @@ CPU-only works too — the models are a bit slower, and the tool-calling tests b
 
 Save the GGUFs into `~/models` with the exact filenames the launchers expect:
 
-| Model (GGUF) | File | Size | Port | VRAM |
+Split into two groups, because **whether a model can call tools decides whether opencode can use it at all.** Only the first group is wired into the panel; the second is chat-only.
+
+**Tool calling verified — these are the panel presets:**
+
+| Model (GGUF) | File | Size | Port | VRAM | Measured on a 1650 Ti |
+| --- | --- | --- | --- | --- | --- |
+| Qwen3-1.7B · Q4_K_M | `Qwen3-1.7B-Q4_K_M.gguf` | 1.0 GB | 8084 | fits, `-ngl 99` | ~90 tok/s, fastest |
+| Qwen3-4B-Instruct-2507 · Q4_K_M | `Qwen3-4B-Instruct-2507-Q4_K_M.gguf` | 2.3 GB | 8080 | fits, `-ngl 99` | ~43 tok/s, good default |
+| Gemma 4 E2B it · q4_0 | `gemma-4-E2B_q4_0-it.gguf` | 3.1 GB | 8083 | fits, `-ngl 99` | ~62 tok/s |
+| Qwen3-8B · Q4_K_M | `Qwen3-8B-Q4_K_M.gguf` | 4.7 GB | 8081 | partial, `-ngl 16` | ~6 tok/s |
+| Qwen3-14B · Q4_K_M | `Qwen3-14B-Q4_K_M.gguf` | 8.4 GB | 8086 | partial, `-ngl 10`, `-c 8192` | ~2.7 tok/s |
+| Qwen3-Coder-30B-A3B · Q2_K | `qwen3-coder-30b-a3b-Q2_K.gguf` | 10.5 GB | 8082 | low, `-ngl 8` | ~11 tok/s, best tool caller |
+| gpt-oss-20b · MXFP4 | `gpt-oss-20b-MXFP4.gguf` | 11.3 GB | 8090 | **CPU only**, `-ngl 0`, `-c 8192` | ~4.8 tok/s |
+
+**No tool calling — chat-only, deliberately absent from the panel:**
+
+| Model (GGUF) | File | Size | Port | Symptom |
 | --- | --- | --- | --- | --- |
-| Llama-3.2-3B-Instruct · Q4_K_M | `Llama-3.2-3B-Instruct-Q4_K_M.gguf` | 1.9 GB | 8085 | fits, `-ngl 99` |
-| Qwen3-4B-Instruct-2507 · Q4_K_M | `Qwen3-4B-Instruct-2507-Q4_K_M.gguf` | 2.5 GB | 8080 | fits, `-ngl 99` |
-| Gemma 4 E2B it · q4_0 | `gemma-4-E2B_q4_0-it.gguf` | 3.1 GB | 8083 | fits, `-ngl 99` |
-| Qwen3-8B · Q4_K_M | `Qwen3-8B-Q4_K_M.gguf` | 5.0 GB | 8081 | partial, `-ngl 16` |
-| LFM2.5-8B-A1B · Q4_K_M | `LFM2.5-8B-A1B-Q4_K_M.gguf` | 5.2 GB | 8088 | partial, `-ngl 16` |
-| Nemotron-Nano-9B-v2 · Q4_K_M | `nvidia_NVIDIA-Nemotron-Nano-9B-v2-Q4_K_M.gguf` | 5.5 GB | 8087 | partial, `-ngl 16` |
-| Qwen3-Coder-30B-A3B · Q2_K | `qwen3-coder-30b-a3b-Q2_K.gguf` | 11 GB | 8082 | low, `-ngl 8` |
+| Llama-3.2-3B-Instruct · Q4_K_M | `Llama-3.2-3B-Instruct-Q4_K_M.gguf` | 1.9 GB | 8085 | **Dangerous.** Calls tools but ignores the request — asked only to *read* a file it issued `edit` (with an empty `oldString`), `grep`, then `write` over it. |
+| LFM2.5-8B-A1B · Q4_K_M | `LFM2.5-8B-A1B-Q4_K_M.gguf` | 4.8 GB | 8088 | Never emits a tool call; claims the file "does not exist". Ignores `enable_thinking:false` *and* `--reasoning off`. |
+| Nemotron-Nano-9B-v2 · Q4_K_M | `nvidia_NVIDIA-Nemotron-Nano-9B-v2-Q4_K_M.gguf` | 6.1 GB | 8087 | Never emits a tool call; spends the budget on `reasoning_content`. |
+| Gemma 3 12B it · Q4_K_M | `gemma-3-12b-it-Q4_K_M.gguf` | 6.8 GB | 8089 | Declines — "I am unable to access files on your local computer". |
+
+Their launchers still ship, so you can run them by hand for a plain OpenAI-compatible endpoint:
+
+```sh
+bash ~/llama-serve/llama3.2-3b.sh    # or lfm2.5-8b.sh, nemotron-nano.sh, gemma3-12b.sh
+```
 
 From Hugging Face (rename to the filenames above if the repo names differ):
 
 ```sh
 mkdir -p ~/models
 cd ~/models
+wget -O Qwen3-1.7B-Q4_K_M.gguf \
+  https://huggingface.co/unsloth/Qwen3-1.7B-GGUF/resolve/main/Qwen3-1.7B-Q4_K_M.gguf
 wget -O Qwen3-4B-Instruct-2507-Q4_K_M.gguf \
   https://huggingface.co/Qwen/Qwen3-4B-GGUF/resolve/main/Qwen3-4B-Instruct-2507-Q4_K_M.gguf
 wget -O Qwen3-8B-Q4_K_M.gguf \
   https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/Qwen3-8B-Q4_K_M.gguf
-wget -O qwen3-coder-30b-a3b-Q2_K.gguf \
-  https://huggingface.co/unsloth/Qwen3-Coder-30B-A3B-GGUF/resolve/main/Qwen3-Coder-30B-A3B-Q2_K.gguf
-wget -O Llama-3.2-3B-Instruct-Q4_K_M.gguf \
-  https://huggingface.co/unsloth/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-Q4_K_M.gguf
+wget -O Qwen3-14B-Q4_K_M.gguf \
+  https://huggingface.co/unsloth/Qwen3-14B-GGUF/resolve/main/Qwen3-14B-Q4_K_M.gguf
 wget -O gemma-4-E2B_q4_0-it.gguf \
   https://huggingface.co/google/gemma-4-E2B-it-qat-q4_0-gguf/resolve/main/gemma-4-E2B_q4_0-it.gguf
+wget -O qwen3-coder-30b-a3b-Q2_K.gguf \
+  https://huggingface.co/unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF/resolve/main/Qwen3-Coder-30B-A3B-Instruct-Q2_K.gguf
+wget -O gpt-oss-20b-MXFP4.gguf \
+  https://huggingface.co/ggml-org/gpt-oss-20b-GGUF/resolve/main/gpt-oss-20b-MXFP4.gguf
+# chat-only, optional
+wget -O Llama-3.2-3B-Instruct-Q4_K_M.gguf \
+  https://huggingface.co/unsloth/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-Q4_K_M.gguf
 wget -O LFM2.5-8B-A1B-Q4_K_M.gguf \
   https://huggingface.co/LiquidAI/LFM2.5-8B-A1B-GGUF/resolve/main/LFM2.5-8B-A1B-Q4_K_M.gguf
 wget -O nvidia_NVIDIA-Nemotron-Nano-9B-v2-Q4_K_M.gguf \
   https://huggingface.co/bartowski/nvidia_NVIDIA-Nemotron-Nano-9B-v2-GGUF/resolve/main/nvidia_NVIDIA-Nemotron-Nano-9B-v2-Q4_K_M.gguf
+wget -O gemma-3-12b-it-Q4_K_M.gguf \
+  https://huggingface.co/ggml-org/gemma-3-12b-it-GGUF/resolve/main/gemma-3-12b-it-Q4_K_M.gguf
 ```
 
-The 4B GGUF needs nothing extra. The 8B ships without a chat template, so its launcher points at `~/models/qwen3-tool.jinja` (a copy is included in this plugin folder) and turns off thinking mode — without both, 8B rams its whole token budget into `thinking` instead of calling tools. Tool calling is **verified** on all seven presets on the 1650 Ti.
+> The 30B URL is `Qwen3-Coder-30B-A3B-**Instruct**-GGUF`, not `Qwen3-Coder-30B-A3B-GGUF`. The ungated-looking name is a 401.
 
-> **Which models did *not* make the list, and why:** `microsoft_Phi-4-mini-instruct-Q4_K_M.gguf`, `Mistral-7B-Instruct-v0.3-Q4_K_M.gguf`, and `Qwen2.5-Coder-7B-Instruct-Q4_K_M.gguf` all fit the machine but fail tool calling through `llama-server` (this build silently drops the OpenAI `tools` block for them — prompts come out a few tokens long — and the Coder model answers in an unparseable `<function-call>` dialect). A custom `--chat-template-file` doesn't help: llama.cpp decides tool support per model and won't hand the tools to these templates. They're fine as plain chat models if you want the extra downloads.
+**Thinking must be off, per model, or tool calling silently fails.** This is the single most common failure and it does not look like a tool-calling failure: with a `tools` block present the model spends its *entire* `max_tokens` budget on `reasoning_content`, returns an empty `content`, and opencode surfaces it as a generic `Unexpected server error`. Three different mechanisms are needed:
+
+- **Qwen3 family** (`qwen3-8b`, `qwen3-14b`, `qwen3-1.7b`): `--chat-template-kwargs '{"enable_thinking": false}'`. The 8B additionally ships *no* chat template at all, so its launcher also points at `~/models/qwen3-tool.jinja` (a copy is in this plugin folder).
+- **Gemma** (`gemma4-e2b`): `--chat-template-kwargs '{"enable_thinking": false}'`.
+- **Anything else**: `--reasoning off` / `--reasoning-budget 0` do *not* reliably work — the template ignores them. Don't assume a model is fixable this way; test it (see below).
+
+> **Which other models did *not* make the list, and why:** `microsoft_Phi-4-mini-instruct-Q4_K_M.gguf`, `Mistral-7B-Instruct-v0.3-Q4_K_M.gguf`, and `Qwen2.5-Coder-7B-Instruct-Q4_K_M.gguf` all fit the machine but fail tool calling through `llama-server` (this build silently drops the OpenAI `tools` block for them — prompts come out a few tokens long — and the Coder model answers in an unparseable `<function-call>` dialect). A custom `--chat-template-file` doesn't help: llama.cpp decides tool support per model and won't hand the tools to these templates. They're fine as plain chat models if you want the extra downloads.
+
+> **Tool-calling results are build-specific.** The table above was verified against llama.cpp **b11344**. llama.cpp decides per model whether the OpenAI `tools` block reaches the template, so a different build can flip a model either way. Test any new preset before trusting it — see "Testing tool calling" below.
 
 ### 3. Runtime directory (`~/llama-serve`)
 
@@ -93,23 +129,28 @@ The control script (`llama_ctl.py`) lives inside the plugin folder — but its *
 
 ```
 ~/llama-serve/
-  qwen3-4b.sh              launchers: copy the matching .sh from this plugin folder
+  qwen3-1.7b.sh             launchers: copy the matching .sh from this plugin folder
+  qwen3-4b.sh
   qwen3-8b.sh
+  qwen3-14b.sh
   qwen3-coder-30b.sh
   gemma4-e2b.sh
-  llama3.2-3b.sh
-  nemotron-nano.sh
-  lfm2.5-8b.sh
-  stop.sh                  stop every llama-server
-  logs/<model-id>.log      server stdout/stderr
-  load.<model-id>.mark     "starting" marker, written on load, removed on unload
+  gpt-oss-20b.sh
+  llama3.2-3b.sh            chat-only, not in the panel
+  lfm2.5-8b.sh              chat-only, not in the panel
+  nemotron-nano.sh          chat-only, not in the panel
+  gemma3-12b.sh             chat-only, not in the panel
+  stop.sh                   stop every llama-server
+  logs/<model-id>.log       server stdout/stderr
+  load.<model-id>.mark      "starting" marker, written on load, removed on unload
 ```
 
 `install.sh` copies the launchers into `~/.config/omarchy/plugins/mihai.llama/`; copy them to `~/llama-serve` once:
 
 ```sh
 mkdir -p ~/llama-serve
-cp ~/.config/omarchy/plugins/mihai.llama/{qwen3-4b.sh,qwen3-8b.sh,qwen3-coder-30b.sh,gemma4-e2b.sh,llama3.2-3b.sh,nemotron-nano.sh,lfm2.5-8b.sh,stop.sh} ~/llama-serve
+cp ~/.config/omarchy/plugins/mihai.llama/*.sh ~/llama-serve
+chmod +x ~/llama-serve/*.sh
 ```
 
 This separation is deliberate: the control script and its files must **never** be written by the plugin's own folder, because the shell's plugin file-watcher hot-reloads the whole plugin on any change there and each reload leaks a stale duplicate widget.
@@ -127,14 +168,40 @@ The servers expose standard llama.cpp OpenAI-compatible endpoints (`http://127.0
       "options": { "baseURL": "http://127.0.0.1:8080/v1" },
       "models": { "qwen3-4b": { "name": "Qwen3-4B-Instruct-2507" } }
     }
-    // local-8b → 127.0.0.1:8081/v1, local-coder → 127.0.0.1:8082/v1,
-    // local-gemma4 → 127.0.0.1:8083/v1, local-llama32 → 127.0.0.1:8085/v1,
-    // local-nemotron → 127.0.0.1:8087/v1, local-lfm → 127.0.0.1:8088/v1
+    // local-17b → 8084, local-14b → 8086, local-oss → 8090,
+    // local-8b → 8081, local-coder → 8082, local-gemma4 → 8083
   }
 }
 ```
 
+Model ids match the panel's `opencode` field, so `llama_ctl.py status` always tells you the exact `provider/model` string to select.
+
 Models stay unloaded by default — opencode will show a connection error until you Load one in the panel. That is the point: nothing runs until you ask for it.
+
+## Testing tool calling
+
+A model that loads, answers `/health`, and chats can still be useless to opencode. Assert the tool call directly — this is much faster than a full `opencode run` and catches the thinking-budget trap:
+
+```sh
+python3 ~/.config/omarchy/plugins/mihai.llama/llama_ctl.py load qwen3-4b
+curl -s http://127.0.0.1:8080/v1/chat/completions -H 'Content-Type: application/json' -d '{
+  "messages":[{"role":"user","content":"What is in /tmp/x.txt?"}],
+  "tools":[{"type":"function","function":{"name":"read","description":"Read a file",
+    "parameters":{"type":"object","properties":{"filePath":{"type":"string"}},"required":["filePath"]}}}],
+  "max_tokens":200}' | python3 -m json.tool | grep -A5 tool_calls
+```
+
+Then confirm end-to-end through opencode itself, which also exercises the real ~7k-token system prompt and every tool schema:
+
+```sh
+opencode run -m local-4b/qwen3-4b "Read /tmp/x.txt with the read tool and reply with only its contents."
+```
+
+Read the failure modes carefully:
+
+- `content: ""` with a long `reasoning_content` → thinking ate the budget. Fix the launcher's thinking flag.
+- A well-formed answer like "the file does not exist" or "I cannot access files" → the model never got the tools at all. Not fixable with template flags; drop it from the panel.
+- Tool calls that don't match the request (e.g. `write` when asked to `read`) → treat as dangerous and drop it.
 
 ## Usage
 
@@ -157,8 +224,15 @@ python3 ~/.config/omarchy/plugins/mihai.llama/llama_ctl.py unload qwen3-8b
 python3 ~/.config/omarchy/plugins/mihai.llama/llama_ctl.py stop     # all servers
 ```
 
-Model ids: `qwen3-4b`, `qwen3-8b`, `qwen3-coder-30b`, `gemma4-e2b`, `llama3.2-3b`, `nemotron-nano`, `lfm2.5-8b`.
+Model ids (panel presets only): `qwen3-1.7b`, `qwen3-4b`, `qwen3-8b`, `qwen3-14b`, `qwen3-coder-30b`, `gemma4-e2b`, `gpt-oss-20b`. The chat-only models (`llama3.2-3b`, `lfm2.5-8b`, `nemotron-nano`, `gemma3-12b`) are intentionally absent — run their launchers by hand.
 
 ## Editing for your own hardware
 
-Everything model-specific lives in the launcher scripts under `~/llama-serve`: `-m` model path, `-ngl` VRAM layers, `-c` / KV quantization, and `--port`. Useful llama.cpp knobs used here: `--jinja` (Jinja templating), `--chat-template-file` (models that ship without a template), `--chat-template-kwargs '{"enable_thinking": false}'` (Qwen3 thinking off for fast tool calls), `-ctk q8_0 -ctv q4_0` (quantized KV cache so a long context fits in small VRAM). The control script reads the launch scripts + ports per model id — keep the ids and ports in sync with `llama_ctl.py` if you add models.
+Everything model-specific lives in the launcher scripts under `~/llama-serve`: `-m` model path, `-ngl` VRAM layers, `-c` / KV quantization, and `--port`. Useful llama.cpp knobs used here: `--jinja` (Jinja templating), `--chat-template-file` (models that ship without a template), `--chat-template-kwargs '{"enable_thinking": false}'` (Qwen3/Gemma thinking off for fast tool calls), `-ctk q8_0 -ctv q4_0` (quantized KV cache so a long context fits in small VRAM). The control script reads the launch scripts + ports per model id — keep the ids and ports in sync with `llama_ctl.py` if you add models.
+
+Two sizing rules that cost time to rediscover on a 4 GB card:
+
+- **Set `-ngl` low enough for the KV cache to fit too, not just the weights.** A model at `-ngl 16` may place weights fine and then die allocating the context (`failed to allocate buffer for kv cache`). If that happens, drop `-ngl` *and* `-c` together.
+- **MoE models can be impossible to offload entirely.** gpt-oss packs each expert into one ~8.8 GB tensor, so *any* nonzero `-ngl` requests a `cudaMalloc` larger than the whole card and the server exits at load. It must run `-ngl 0` on a 4 GB card. Qwen3-Coder-30B has the same shape but smaller experts, so `-ngl 8` works.
+
+If you add a model, add it to `MODELS` in `llama_ctl.py` (id, port and script must match the launcher), add a provider in `opencode.json`, and verify tool calling before you trust it.

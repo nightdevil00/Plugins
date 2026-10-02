@@ -19,28 +19,35 @@ HOME = os.path.expanduser("~")
 SERVE_DIR = os.path.join(HOME, "llama-serve")
 LOGS_DIR = os.path.join(SERVE_DIR, "logs")
 
+# Only models verified to emit real OpenAI tool calls are listed here. opencode
+# is an agent, so a model that cannot call tools is not usable as a provider -
+# keeping one in this list would only produce a confusing failure after a load.
+# Three presets that shipped with this plugin were removed for that reason, and
+# Llama-3.2-3B was removed because it issues destructive writes when asked only
+# to read. Their launchers still ship for plain `llama-cli` chat; see the
+# "No tool calling" table in README.md for the per-model symptoms.
 MODELS = [
+    {"id": "qwen3-1.7b", "name": "Qwen3-1.7B", "tag": "1.7B",
+     "size": "1.0 GB", "port": 8084, "script": "qwen3-1.7b.sh",
+     "opencode": "local-17b/qwen3-1.7b"},
     {"id": "qwen3-4b", "name": "Qwen3-4B-Instruct-2507", "tag": "4B",
-     "size": "2.5 GB", "port": 8080, "script": "qwen3-4b.sh",
+     "size": "2.3 GB", "port": 8080, "script": "qwen3-4b.sh",
      "opencode": "local-4b/qwen3-4b"},
     {"id": "qwen3-8b", "name": "Qwen3-8B", "tag": "8B",
-     "size": "5.0 GB", "port": 8081, "script": "qwen3-8b.sh",
+     "size": "4.7 GB", "port": 8081, "script": "qwen3-8b.sh",
      "opencode": "local-8b/qwen3-8b"},
+    {"id": "qwen3-14b", "name": "Qwen3-14B", "tag": "14B",
+     "size": "8.4 GB", "port": 8086, "script": "qwen3-14b.sh",
+     "opencode": "local-14b/qwen3-14b"},
+    {"id": "gpt-oss-20b", "name": "gpt-oss-20b", "tag": "OSS20",
+     "size": "11.3 GB", "port": 8090, "script": "gpt-oss-20b.sh",
+     "opencode": "local-oss/gpt-oss-20b"},
     {"id": "qwen3-coder-30b", "name": "Qwen3-Coder-30B-A3B", "tag": "30B",
-     "size": "11 GB", "port": 8082, "script": "qwen3-coder-30b.sh",
+     "size": "10.5 GB", "port": 8082, "script": "qwen3-coder-30b.sh",
      "opencode": "local-coder/qwen3-coder-30b"},
     {"id": "gemma4-e2b", "name": "Gemma 4 E2B it", "tag": "Gemma",
      "size": "3.1 GB", "port": 8083, "script": "gemma4-e2b.sh",
      "opencode": "local-gemma4/gemma-4-e2b"},
-    {"id": "llama3.2-3b", "name": "Llama-3.2-3B-Instruct", "tag": "L3.2",
-     "size": "1.9 GB", "port": 8085, "script": "llama3.2-3b.sh",
-     "opencode": "local-llama32/llama-3.2-3b"},
-    {"id": "nemotron-nano", "name": "Nemotron-Nano-9B-v2", "tag": "Nano",
-     "size": "5.5 GB", "port": 8087, "script": "nemotron-nano.sh",
-     "opencode": "local-nemotron/nemotron-nano"},
-    {"id": "lfm2.5-8b", "name": "LFM2.5-8B-A1B", "tag": "LFM8",
-     "size": "5.2 GB", "port": 8088, "script": "lfm2.5-8b.sh",
-     "opencode": "local-lfm/lfm2.5-8b"},
 ]
 
 
