@@ -6,7 +6,7 @@ A bar widget + panel that boots and stops **local [llama.cpp](https://github.com
 
 Nothing occupies RAM or VRAM by itself — the widget reports **off** and every model is idle until you click **Load**. Pick a model in the panel, click Load, and once it reports **loaded** you can select it in opencode (`/models`). Unload frees the memory again.
 
-It ships with **eleven launchers tuned for a GTX 1650 Ti (4 GB class)** — seven usable as opencode models, four chat-only because they don't survive tool calling. The same flow and control script work for any llama.cpp build: edit the launchers in `~/llama-serve` to point at your own GGUFs and ports.
+It ships with **thirteen launchers tuned for a GTX 1650 Ti (4 GB class)** — nine usable as opencode models, four chat-only because they don't survive tool calling. The same flow and control script work for any llama.cpp build: edit the launchers in `~/llama-serve` to point at your own GGUFs and ports.
 
 ## Installing
 
@@ -63,6 +63,8 @@ Split into two groups, because **whether a model can call tools decides whether 
 | Gemma 4 E2B it · q4_0 | `gemma-4-E2B_q4_0-it.gguf` | 3.1 GB | 8083 | fits, `-ngl 99` | ~62 tok/s |
 | Qwen3-8B · Q4_K_M | `Qwen3-8B-Q4_K_M.gguf` | 4.7 GB | 8081 | partial, `-ngl 16` | ~6 tok/s |
 | Qwen3-14B · Q4_K_M | `Qwen3-14B-Q4_K_M.gguf` | 8.4 GB | 8086 | partial, `-ngl 10`, `-c 8192` | ~2.7 tok/s |
+| Spark-X2.5-1.7B · Q4_K_M | `Spark-X2.5-1.7B-Q4_K_M.gguf` | 1.0 GB | 8092 | fits, `-ngl 99` | ~75 tok/s, best tool caller at this size |
+| Spark-X2.5-4B · Q4_K_M | `Spark-X2.5-4B-Q4_K_M.gguf` | 2.4 GB | 8091 | fits, `-ngl 99` | ~38 tok/s |
 | Qwen3-Coder-30B-A3B · Q2_K | `qwen3-coder-30b-a3b-Q2_K.gguf` | 10.5 GB | 8082 | low, `-ngl 8` | ~11 tok/s, best tool caller |
 | gpt-oss-20b · MXFP4 | `gpt-oss-20b-MXFP4.gguf` | 11.3 GB | 8090 | **CPU only**, `-ngl 0`, `-c 8192` | ~4.8 tok/s |
 
@@ -100,6 +102,10 @@ wget -O qwen3-coder-30b-a3b-Q2_K.gguf \
   https://huggingface.co/unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF/resolve/main/Qwen3-Coder-30B-A3B-Instruct-Q2_K.gguf
 wget -O gpt-oss-20b-MXFP4.gguf \
   https://huggingface.co/ggml-org/gpt-oss-20b-GGUF/resolve/main/gpt-oss-20b-MXFP4.gguf
+wget -O Spark-X2.5-1.7B-Q4_K_M.gguf \
+  https://huggingface.co/XHToken/Spark-X2.5-1.7B-GGUF/resolve/main/Spark-X2.5-1.7B-Q4_K_M.gguf
+wget -O Spark-X2.5-4B-Q4_K_M.gguf \
+  https://huggingface.co/XHToken/Spark-X2.5-4B-GGUF/resolve/main/Spark-X2.5-4B-Q4_K_M.gguf
 # chat-only, optional
 wget -O Llama-3.2-3B-Instruct-Q4_K_M.gguf \
   https://huggingface.co/unsloth/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-Q4_K_M.gguf
@@ -117,6 +123,7 @@ wget -O gemma-3-12b-it-Q4_K_M.gguf \
 
 - **Qwen3 family** (`qwen3-8b`, `qwen3-14b`, `qwen3-1.7b`): `--chat-template-kwargs '{"enable_thinking": false}'`. The 8B additionally ships *no* chat template at all, so its launcher also points at `~/models/qwen3-tool.jinja` (a copy is in this plugin folder).
 - **Gemma** (`gemma4-e2b`): `--chat-template-kwargs '{"enable_thinking": false}'`.
+- **Spark-X2.5** (`spark-x2.5-4b`, `spark-x2.5-1.7b`): same `enable_thinking:false`. Note this model emits a correct tool call *either way* — thinking-on is not a bug here, it's just slower in a tool loop. Their published agentic numbers are measured in thinking mode, so flip the flag if you want that trade.
 - **Anything else**: `--reasoning off` / `--reasoning-budget 0` do *not* reliably work — the template ignores them. Don't assume a model is fixable this way; test it (see below).
 
 > **Which other models did *not* make the list, and why:** `microsoft_Phi-4-mini-instruct-Q4_K_M.gguf`, `Mistral-7B-Instruct-v0.3-Q4_K_M.gguf`, and `Qwen2.5-Coder-7B-Instruct-Q4_K_M.gguf` all fit the machine but fail tool calling through `llama-server` (this build silently drops the OpenAI `tools` block for them — prompts come out a few tokens long — and the Coder model answers in an unparseable `<function-call>` dialect). A custom `--chat-template-file` doesn't help: llama.cpp decides tool support per model and won't hand the tools to these templates. They're fine as plain chat models if you want the extra downloads.
@@ -136,6 +143,8 @@ The control script (`llama_ctl.py`) lives inside the plugin folder — but its *
   qwen3-coder-30b.sh
   gemma4-e2b.sh
   gpt-oss-20b.sh
+  spark-x2.5-4b.sh
+  spark-x2.5-1.7b.sh
   llama3.2-3b.sh            chat-only, not in the panel
   lfm2.5-8b.sh              chat-only, not in the panel
   nemotron-nano.sh          chat-only, not in the panel
@@ -169,6 +178,7 @@ The servers expose standard llama.cpp OpenAI-compatible endpoints (`http://127.0
       "models": { "qwen3-4b": { "name": "Qwen3-4B-Instruct-2507" } }
     }
     // local-17b → 8084, local-14b → 8086, local-oss → 8090,
+    // local-spark4b → 8091, local-spark17b → 8092,
     // local-8b → 8081, local-coder → 8082, local-gemma4 → 8083
   }
 }
@@ -224,7 +234,7 @@ python3 ~/.config/omarchy/plugins/mihai.llama/llama_ctl.py unload qwen3-8b
 python3 ~/.config/omarchy/plugins/mihai.llama/llama_ctl.py stop     # all servers
 ```
 
-Model ids (panel presets only): `qwen3-1.7b`, `qwen3-4b`, `qwen3-8b`, `qwen3-14b`, `qwen3-coder-30b`, `gemma4-e2b`, `gpt-oss-20b`. The chat-only models (`llama3.2-3b`, `lfm2.5-8b`, `nemotron-nano`, `gemma3-12b`) are intentionally absent — run their launchers by hand.
+Model ids (panel presets only): `qwen3-1.7b`, `qwen3-4b`, `qwen3-8b`, `qwen3-14b`, `qwen3-coder-30b`, `gemma4-e2b`, `gpt-oss-20b`, `spark-2.5-4b`, `spark-2.5-1.7b`. The chat-only models (`llama3.2-3b`, `lfm2.5-8b`, `nemotron-nano`, `gemma3-12b`) are intentionally absent — run their launchers by hand.
 
 ## Editing for your own hardware
 
