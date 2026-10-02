@@ -8,7 +8,7 @@ BarWidget {
   moduleName: "white.nights"
 
   readonly property var noSleepService: bar?.shell?.serviceFor("white.nights")
-  readonly property bool enabled: noSleepService ? noSleepService.noSleep : false
+  readonly property bool noSleepActive: noSleepService ? noSleepService.noSleep : false
 
   visible: noSleepService !== null
   implicitWidth: button.implicitWidth
@@ -19,9 +19,9 @@ BarWidget {
     anchors.fill: parent
     bar: root.bar
     text: "󰍹"
-    active: root.enabled
-    dimmed: !root.enabled
-    tooltipText: root.enabled
+    active: root.noSleepActive
+    dimmed: !root.noSleepActive
+    tooltipText: root.noSleepActive
       ? "Sleep blocked: system stays on, screen still goes off"
       : "Suspend allowed: click to block sleep"
     onPressed: { if (root.noSleepService) root.noSleepService.toggle() }
