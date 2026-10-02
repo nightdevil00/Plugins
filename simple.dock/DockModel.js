@@ -94,12 +94,52 @@ function entryFor(appRows, appId) {
   return null
 }
 
+// Recover the host from a Chromium web-app window id. Chromium reports these
+// as "chrome-<host>__<path>-<class>", e.g. "chrome-x.com__-Default" or
+// "chrome-discord.com__channels_@me-Default". Returns "" for anything that is
+// not a web-app id.
+function webAppHost(appId) {
+  var match = /^(?:chrome|chromium|google-chrome)[a-z]*-(.+)$/.exec(stripDesktop(appId))
+  if (!match) return ""
+  // Drop the trailing class suffix Chromium appends ("-Default", "-Beta", ...).
+  var rest = match[1].replace(/-[A-Za-z][A-Za-z0-9]*$/, "")
+  var host = rest.split("__")[0].toLowerCase()
+  return host.indexOf(".") > 0 ? host : ""
+}
+
+// Locate the launcher for a web-app window: the desktop entry whose Exec line
+// points at the same host. Tries the full host first, then — for a single
+// subdomain, which is the shape Chromium produces — the parent site, so
+// music.youtube.com lands on the youtube.com launcher. Requiring "//" before
+// the host keeps "notexample.com" from matching an entry for "example.com".
+function webAppEntryFor(appRows, appId) {
+  var host = webAppHost(appId)
+  if (!host || !appRows) return null
+
+  var labels = host.split(".")
+  var candidates = [host]
+  if (labels.length === 3) candidates.push(labels[1] + "." + labels[2])
+
+  for (var c = 0; c < candidates.length; c++) {
+    var needle = "//" + candidates[c]
+    for (var i = 0; i < appRows.length; i++) {
+      var row = appRows[i]
+      var entry = row && row.entry
+      if (!entry) continue
+      if (String(entry.execString || "").indexOf(needle) !== -1) return entry
+    }
+  }
+  return null
+}
+
 // Build the dock sections. Pinned apps first (in pinned order), then running
 // apps that are not pinned (in window order). Running apps that are pinned
 // stay in the pinned section with their running state attached.
 //
 // Returns { pinned: [...], running: [...] } where each entry is
-// { appId, name, icon, pinned, running, windows }.
+// { appId, name, icon, launchId, pinned, running, windows }. `launchId` is the
+// desktop id to hand back to appApi.launch(), which differs from appId for a
+// web-app window.
 // `appApi` is shell.appLibrary (or a DesktopEntries-backed stand-in) exposing
 // entryName(), iconSource(), and launch(). `iconForId` is an optional fallback
 // used for app ids with no matching desktop entry.
@@ -123,13 +163,17 @@ function buildEntries(pinnedIds, toplevels, appRows, appApi, iconForId) {
 
   function enrich(list) {
     for (var j = 0; j < list.length; j++) {
-      var entry = entryFor(appRows, list[j].appId)
+      // An exact id match wins; a web-app window only matches by host, so it
+      // falls through to the launcher whose Exec line points at that host.
+      var entry = entryFor(appRows, list[j].appId) || webAppEntryFor(appRows, list[j].appId)
       if (entry && appApi) {
         list[j].name = appApi.entryName(entry) || list[j].appId
         list[j].icon = appApi.iconSource(entry.icon)
+        list[j].launchId = entry.id
       } else {
         list[j].name = list[j].appId
         list[j].icon = ""
+        list[j].launchId = list[j].appId
       }
       if (!list[j].icon && typeof iconForId === "function") {
         list[j].icon = String(iconForId(list[j].appId) || "")

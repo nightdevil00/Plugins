@@ -28,12 +28,16 @@ omarchy plugin enable simple.dock
 - Centered dock card opposite the bar (default: bottom edge).
 - Apps menu button that opens the Omarchy apps menu.
 - Pinned apps (in your chosen order) followed by running apps.
+- Web apps (Chromium windows such as Discord, X, or YouTube Music) resolve to the
+  matching `omarchy-launch-webapp` launcher, so they get a real name and icon
+  instead of a generic glyph. A subdomain window such as `music.youtube.com`
+  falls back to its parent site's launcher.
 - Left-click a running app to focus it (or launch a pinned app that isn't running).
 - Right-click for a context menu: **Launch**, **Pin to Dock** / **Unpin from Dock**, and **Close Window(s)**.
 - Pin state persists in `~/.config/omarchy/dock.json` across shell restarts.
-- Autohide: the dock hides and reveals itself when the cursor touches the
-  bottom edge of the screen. Disable it via `~/.config/omarchy/simple.dock.json`
-  (`"autohide": false`) to keep the dock pinned.
+- Autohide (on by default): the dock hides and reveals itself when the cursor
+  touches the bottom edge of the screen. Set `"autohide": false` in
+  `~/.config/omarchy/simple.dock.json` to keep the dock pinned.
 - Configurable monitor via `"screen": "eDP-1"` in the same file.
 
 ## Requirements
@@ -87,12 +91,13 @@ picked up while the shell is running.
 ### Autohide and screen
 
 The dock hides and reveals itself when the cursor touches the bottom edge of
-the screen. To keep it pinned and always visible, create
-`~/.config/omarchy/simple.dock.json` with:
+the screen. Autohide is on by default, so no file is needed; to make the
+setting explicit — or to keep the dock pinned and always visible — create
+`~/.config/omarchy/simple.dock.json`:
 
 ```json
 {
-  "autohide": false,
+  "autohide": true,
   "screen": "eDP-1"
 }
 ```

@@ -430,7 +430,9 @@ Item {
     if (entry && entry.running) {
       DockModel.activateApp(ToplevelManager.toplevels.values, ToplevelManager.activeToplevel, appId)
     } else {
-      root.appApi.launch(appId, entry ? entry.name : appId)
+      // A web-app window's id is not a desktop id; launchId points at the
+      // launcher entry it was resolved from.
+      root.appApi.launch(entry ? entry.launchId : appId, entry ? entry.name : appId)
     }
   }
 
@@ -653,7 +655,10 @@ Item {
       ContextRow {
         text: "Launch"
         onTriggered: {
-          if (root.appApi) root.appApi.launch(root.contextAppId, root.contextName)
+          if (root.appApi) {
+            var entry = root.entryForId(root.contextAppId)
+            root.appApi.launch(entry ? entry.launchId : root.contextAppId, root.contextName)
+          }
           root.closeContext()
         }
       }
