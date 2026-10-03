@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "mihai.renderer",
+  "name": "Renderer",
+  "version": "1.0.0",
+  "author": "mihai",
+  "description": "Shows which GPU renders the desktop and lets you pick a different one",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "Panel.qml"
+  },
+  "barWidget": {
+    "displayName": "Renderer",
+    "description": "Shows which GPU renders the desktop and lets you pick a different one",
+    "category": "System",
+    "allowMultiple": false,
+    "defaultSection": "right"
+  }
+}
