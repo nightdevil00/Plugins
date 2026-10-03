@@ -33,6 +33,7 @@ omarchy plugin enable mihai.spotlight
   - Wrapper commands like `sudo …`, `watch …`, `env …` work too
 - **Open folders in terminal** — `cd ~/Projects` launches a terminal at that directory
 - **Open URLs** — anything that looks like a link (`example.com`, `www.foo.org`) opens in your default browser
+- **Bang search** — `!g <term>` searches the web straight from the launcher, using DuckDuckGo's full bang list (13,489 bangs: `!g` Google, `!gh` GitHub, `!yt` YouTube, `!aw` Arch Wiki, `!aur` AUR, `!so` Stack Overflow, `!gm` Maps, `!r` Reddit, `!ai`, `!ddg`…). Alternates and typo corrections are offered as you type, and unknown bangs fall back to DuckDuckGo's own resolver
 - **Inline calculator** — type an expression like `(1920 * 2) / 3`; press Enter to copy the result to the clipboard
 - **Quick actions** — screenshot (region/fullscreen), screen recording, lock screen, night light toggle
 - **Omarchy menu built in** — the full `omarchy.menu` tree lives inside Spotlight. It opens at the menu's root (Apps, Learn, Trigger, Style…); submenu rows drill into their section right in Spotlight (`←` goes back), action rows run their command directly, and the Apps and Fonts sections list their entries natively. Entries hidden by `when:` conditions stay hidden, and `checked:` rows carry a ✓
@@ -66,6 +67,9 @@ Summon the overlay and just start typing — or use it like the Omarchy menu: th
 | `sudo pacman -Syu` | Runs the full command in a terminal |
 | `cd ~/.config` | Opens a terminal there |
 | `github.com` | Opens in default browser |
+| `!g omarchy shell` | Searches Google, Enter opens it in the browser |
+| `!aw pacman` | Searches the Arch Wiki |
+| `!gh quickshell` | Searches GitHub |
 | `128*42+7` | Shows `128*42+7 = 5383`, Enter copies it |
 | `lock`, `record`, `night` | Quick system actions |
 | `theme` | Runs the omarchy Theme picker (Style › Theme action) |
@@ -98,6 +102,29 @@ Spotlight loads the same menu tree as the `omarchy.menu` plugin — the default 
 - **Link entries** (most of Learn) open their target in your browser and close the overlay.
 - **`checked:` rows** carry a `✓` wherever the real menu would show one.
 - **Search is scoped like the real menu**: while inside a section, typing searches that section and its descendants; at the root, typing searches the whole tree alongside apps, files, and commands as usual. Matching menu entries appear in the results either as a section (drill in) or an action (run).
+
+## Bangs
+
+Any query that starts with `!bang` is a [DuckDuckGo bang](https://duckduckgo.com/bang_lite.html) and goes straight to that site's search — no DuckDuckGo round trip, the target URL is built locally:
+
+```
+!g omarchy          → https://www.google.com/search?q=omarchy
+!gh quickshell      → https://github.com/search?q=quickshell
+!aw !ryu            → search the Arch Wiki
+!yt lofi girl       → YouTube
+```
+
+- The first result is the bang you typed, with the final URL shown as the subtitle — `Enter` opens it, the arrows pick any of the alternates below it.
+- **Alternates** are the other bangs that extend what you typed, ranked by DuckDuckGo's own popularity, so `!a` also offers `!aw` (Arch Wiki) and `!aur` (AUR).
+- **Misspellings** recover by one character: `!githbu` offers `!git`/`!github`.
+- **Unknown bangs** still work — the row falls back to `duckduckgo.com/?q=!bang term` so DuckDuckGo can resolve it, with a plain web search as the last resort.
+- No term? `!gh` just opens the site's search page with an empty box.
+
+The list lives in `bangs.txt` (1.3 MB, 13,489 bangs), loaded from disk the first time you type a bang and kept in memory afterwards. Refresh it with:
+
+```sh
+./update-bangs.py
+```
 
 ## Requirements
 

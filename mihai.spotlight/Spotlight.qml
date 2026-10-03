@@ -420,7 +420,7 @@ Item {
   function headerHint() {
     if (root.filterText) return root.filterText
     if (root.activeMenu === "root")
-      return "Search apps, files, extensions, commands, math, URLs…"
+      return "Search apps, files, extensions, commands, math, URLs… try !g for a bang search"
     return "‹ " + root.menuBreadcrumb()
   }
 
@@ -733,6 +733,163 @@ Item {
     return root.fallbackWrappers.indexOf(first) >= 0 ? s : ""
   }
 
+  // ---- bangs ----------------------------------------------------------
+  //
+  // DuckDuckGo's bang list bundled as bangs.txt (see update-bangs.py), one
+  // bang per line: `trigger \t url-template \t domain \t name \t rank`,
+  // sorted by trigger. Kept as raw strings and bisected on demand so typing
+  // `!g` costs nothing until the first bang query actually happens, and
+  // unknown bangs still work through DuckDuckGo's own redirect.
+  property bool bangsLoaded: false
+  property var bangLines: []
+  readonly property string bangFilePath: {
+    var url = String(Qt.resolvedUrl("bangs.txt"))
+    return url.indexOf("file://") === 0 ? url.substring(7) : url
+  }
+
+  function ensureBangs() {
+    if (root.bangsLoaded || bangFile.running) return
+    bangFile.reload()
+  }
+
+  function loadBangs(buffer) {
+    var lines = String(buffer || "").split("\n")
+    var out = []
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i]
+      if (line.length > 0 && line.indexOf("\t") > 0) out.push(line)
+    }
+    root.bangLines = out
+    root.bangsLoaded = true
+    if (root.opened) root.rebuildDisplay()
+  }
+
+  function bangKey(line) {
+    var tab = line.indexOf("\t")
+    return tab < 0 ? line : line.substring(0, tab)
+  }
+
+  // Index of the first line whose trigger sorts at or after `trigger`.
+  function bangLowerBound(trigger) {
+    var lines = root.bangLines
+    var low = 0
+    var high = lines.length
+    while (low < high) {
+      var mid = (low + high) >> 1
+      if (root.bangKey(lines[mid]) < trigger) low = mid + 1
+      else high = mid
+    }
+    return low
+  }
+
+  function findBang(trigger) {
+    var lines = root.bangLines
+    var at = root.bangLowerBound(trigger)
+    if (at >= lines.length) return null
+    if (root.bangKey(lines[at]) !== trigger) return null
+    var parts = lines[at].split("\t")
+    return { trigger: trigger, url: parts[1] || "", domain: parts[2] || "", name: parts[3] || "", rank: parseInt(parts[4] || "0", 10) || 0 }
+  }
+
+  // `!gh` also offers `!github`, `!ghc` … Everything that extends the
+  // trigger sorts immediately after it, so this is a forward scan. Long
+  // extensions are dropped (`!git` should not suggest `!git-manpages`).
+  function bangAlternates(trigger, limit) {
+    if (trigger.length === 0) return []
+    var lines = root.bangLines
+    var maxLength = trigger.length + 3
+    var out = []
+    for (var i = root.bangLowerBound(trigger); i < lines.length; i++) {
+      var line = lines[i]
+      var tab = line.indexOf("\t")
+      if (tab <= 0) break
+      var key = line.substring(0, tab)
+      if (key.indexOf(trigger) !== 0) break
+      if (key === trigger || key.length > maxLength) continue
+      var parts = line.split("\t")
+      out.push({ trigger: key, url: parts[1] || "", domain: parts[2] || "", name: parts[3] || "", rank: parseInt(parts[4] || "0", 10) || 0 })
+    }
+    out.sort(function(a, b) { return b.rank - a.rank })
+    return out.slice(0, limit)
+  }
+
+  function bangUrl(template, term) {
+    var url = String(template || "")
+    if (url.indexOf("{{{s}}}") < 0) return url
+    var encoded = encodeURIComponent(String(term || ""))
+    if (encoded.length === 0)
+      return url.split("{{{s}}}").join("").replace(/\?&/g, "?").replace(/[?&=/]+$/, "")
+    return url.split("{{{s}}}").join(encoded)
+  }
+
+  function bangQuery(q) {
+    var s = String(q || "").trim()
+    if (s.charAt(0) !== "!") return null
+    var match = /^!([A-Za-z0-9._+-]*)\s*(.*)$/.exec(s)
+    if (!match) return null
+    return { trigger: String(match[1]).toLowerCase(), term: String(match[2]).trim() }
+  }
+
+  function bangResultRow(bang, term) {
+    var url = root.bangUrl(bang.url, term)
+    return {
+      kind: "bang",
+      name: "!" + bang.trigger + (bang.name ? "  " + bang.name : ""),
+      subtitle: url,
+      icon: "",
+      arg: url
+    }
+  }
+
+  function bangRows(bang) {
+    var rows = []
+    if (bang.trigger.length === 0) {
+      rows.push({ kind: "bang", name: "Bang search", subtitle: "Try !g cats, !gh omarchy, !yt lofi, !so qml timers", icon: "", arg: "" })
+      return rows
+    }
+    if (!root.bangsLoaded) {
+      root.ensureBangs()
+      rows.push({ kind: "bang", name: "Loading bangs…", subtitle: "", icon: "", arg: "" })
+      return rows
+    }
+
+    var term = bang.term
+    var exact = root.findBang(bang.trigger)
+
+    // No exact bang: a dropped character is the likeliest typo, so try the
+    // shorter trigger before falling back to extending the typed one.
+    var near = null
+    if (!exact && bang.trigger.length >= 3) {
+      near = root.findBang(bang.trigger.slice(0, -1))
+      if (near) rows.push(root.bangResultRow(near, term))
+    }
+
+    if (exact) rows.push(root.bangResultRow(exact, term))
+
+    var alternates = root.bangAlternates(near ? near.trigger : bang.trigger, 4)
+    for (var i = 0; i < alternates.length; i++) rows.push(root.bangResultRow(alternates[i], term))
+
+    if (!exact) {
+      rows.push({
+        kind: "bang",
+        name: "!" + bang.trigger + "  DuckDuckGo",
+        subtitle: "Let DuckDuckGo resolve this bang",
+        icon: "",
+        arg: "https://duckduckgo.com/?q=" + encodeURIComponent("!" + bang.trigger + (term ? " " + term : ""))
+      })
+    }
+
+    rows.push({
+      kind: "bang",
+      name: term ? "Search DuckDuckGo for “" + term + "”" : "Open DuckDuckGo",
+      subtitle: term ? "https://duckduckgo.com/?q=" + encodeURIComponent(term) : "https://duckduckgo.com/",
+      icon: "",
+      arg: term ? "https://duckduckgo.com/?q=" + encodeURIComponent(term) : "https://duckduckgo.com/"
+    })
+
+    return rows
+  }
+
   readonly property var tuiCommands: [
     "vim", "nvim", "vi", "nano", "micro", "hx", "helix", "emacs",
     "less", "more", "top", "htop", "btop", "iotop", "iftop", "bottom",
@@ -887,9 +1044,11 @@ Item {
     if (!root.opened) return
     var q = root.filterText.trim()
     root.scanSerial++
-    if (q.length < 2) {
-      root.fileResults = []
-      root.rebuildDisplay()
+    if (q.length < 2 || root.bangQuery(q)) {
+      if (root.fileResults.length > 0) {
+        root.fileResults = []
+        root.rebuildDisplay()
+      }
       return
     }
     if (fileScan.running) fileScan.running = false
@@ -944,6 +1103,18 @@ Item {
     var q = root.filterText.trim()
     var activeEntry = root.menuItemById(root.activeMenu)
     var activeProvider = activeEntry && activeEntry.provider ? activeEntry.provider : ""
+
+    // A bang query is a web search, not a Spotlight search: `!g omarchy`
+    // belongs to DuckDuckGo's catalog, so nothing else competes for the list.
+    var bang = root.bangQuery(q)
+    if (bang) {
+      var bangs = root.bangRows(bang)
+      for (var bq = 0; bq < bangs.length && displayModel.count < root.maxResults; bq++)
+        displayModel.append(bangs[bq])
+      if (displayModel.count === 0) root.selectedIndex = 0
+      else if (root.selectedIndex >= displayModel.count) root.selectedIndex = displayModel.count - 1
+      return
+    }
 
     if (q) {
       var calc = calcValue(q)
@@ -1135,6 +1306,15 @@ Item {
         if (root.opened) root.rebuildDisplay()
       }
     }
+  }
+
+  FileView {
+    id: bangFile
+    path: root.bangFilePath
+    watchChanges: false
+    printErrors: false
+    onLoaded: root.loadBangs(text())
+    onLoadFailed: root.loadBangs("")
   }
 
   FileView {
@@ -1447,7 +1627,7 @@ Item {
           Text {
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
-            text: "↵ open   ·   ← back   ·   ↑↓ navigate   ·   *.ext files   ·   cd dir   ·   esc close"
+            text: "↵ open   ·   ← back   ·   ↑↓ navigate   ·   !bang web   ·   *.ext files   ·   cd dir   ·   esc close"
             color: root.foreground
             opacity: 0.45
             font.family: root.fontFamily
