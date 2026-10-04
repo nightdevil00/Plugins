@@ -6,7 +6,7 @@ A bar widget + panel that boots and stops **local [llama.cpp](https://github.com
 
 Nothing occupies RAM or VRAM by itself — the widget reports **off** and every model is idle until you click **Load**. Pick a model in the panel, click Load, and once it reports **loaded** you can select it in opencode (`/models`). Unload frees the memory again.
 
-It ships with **thirteen launchers tuned for a GTX 1650 Ti (4 GB class)** — nine usable as opencode models, four chat-only because they don't survive tool calling. The same flow and control script work for any llama.cpp build: edit the launchers in `~/llama-serve` to point at your own GGUFs and ports.
+It ships with **fourteen launchers tuned for a GTX 1650 Ti (4 GB class)** — ten usable as opencode models, four chat-only because they don't survive tool calling. The same flow and control script work for any llama.cpp build: edit the launchers in `~/llama-serve` to point at your own GGUFs and ports.
 
 ## Installing
 
@@ -62,6 +62,7 @@ Split into two groups, because **whether a model can call tools decides whether 
 | Qwen3-4B-Instruct-2507 · Q4_K_M | `Qwen3-4B-Instruct-2507-Q4_K_M.gguf` | 2.3 GB | 8080 | fits, `-ngl 99` | ~43 tok/s, good default |
 | Gemma 4 E2B it · q4_0 | `gemma-4-E2B_q4_0-it.gguf` | 3.1 GB | 8083 | fits, `-ngl 99` | ~62 tok/s |
 | Qwen3-8B · Q4_K_M | `Qwen3-8B-Q4_K_M.gguf` | 4.7 GB | 8081 | partial, `-ngl 16` | ~6 tok/s |
+| OxCoder-9B · Q4_K_M | `OxCoder-9B-Q4_K_M.gguf` | 5.3 GB | 8093 | partial, `-ngl 18`, `-ctv q8_0` | ~4.4 tok/s at 12k ctx, best agentic tool caller |
 | Qwen3-14B · Q4_K_M | `Qwen3-14B-Q4_K_M.gguf` | 8.4 GB | 8086 | partial, `-ngl 10`, `-c 8192` | ~2.7 tok/s |
 | Spark-X2.5-1.7B · Q4_K_M | `Spark-X2.5-1.7B-Q4_K_M.gguf` | 1.0 GB | 8092 | fits, `-ngl 99` | ~75 tok/s, best tool caller at this size |
 | Spark-X2.5-4B · Q4_K_M | `Spark-X2.5-4B-Q4_K_M.gguf` | 2.4 GB | 8091 | fits, `-ngl 99` | ~38 tok/s |
@@ -94,6 +95,8 @@ wget -O Qwen3-4B-Instruct-2507-Q4_K_M.gguf \
   https://huggingface.co/Qwen/Qwen3-4B-GGUF/resolve/main/Qwen3-4B-Instruct-2507-Q4_K_M.gguf
 wget -O Qwen3-8B-Q4_K_M.gguf \
   https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/Qwen3-8B-Q4_K_M.gguf
+wget -O OxCoder-9B-Q4_K_M.gguf \
+  https://huggingface.co/mradermacher/OxCoder-9B-GGUF/resolve/main/OxCoder-9B.Q4_K_M.gguf
 wget -O Qwen3-14B-Q4_K_M.gguf \
   https://huggingface.co/unsloth/Qwen3-14B-GGUF/resolve/main/Qwen3-14B-Q4_K_M.gguf
 wget -O gemma-4-E2B_q4_0-it.gguf \
@@ -123,6 +126,7 @@ wget -O gemma-3-12b-it-Q4_K_M.gguf \
 
 - **Qwen3 family** (`qwen3-8b`, `qwen3-14b`, `qwen3-1.7b`): `--chat-template-kwargs '{"enable_thinking": false}'`. The 8B additionally ships *no* chat template at all, so its launcher also points at `~/models/qwen3-tool.jinja` (a copy is in this plugin folder).
 - **Gemma** (`gemma4-e2b`): `--chat-template-kwargs '{"enable_thinking": false}'`.
+- **OxCoder-9B** (`oxcoder-9b`): this build takes the non-deprecated `--reasoning off` for the same job — `--chat-template-kwargs '{"enable_thinking": false}'` still works but logs a deprecation warning. Unlike the others, its thinking mode is genuinely good (it returns clean `reasoning_content` *and* still calls tools), so `--reasoning on` is a real option if you want the reasoning trace.
 - **Spark-X2.5** (`spark-x2.5-4b`, `spark-x2.5-1.7b`): same `enable_thinking:false`. Note this model emits a correct tool call *either way* — thinking-on is not a bug here, it's just slower in a tool loop. Their published agentic numbers are measured in thinking mode, so flip the flag if you want that trade.
 - **Anything else**: `--reasoning off` / `--reasoning-budget 0` do *not* reliably work — the template ignores them. Don't assume a model is fixable this way; test it (see below).
 
@@ -139,6 +143,7 @@ The control script (`llama_ctl.py`) lives inside the plugin folder — but its *
   qwen3-1.7b.sh             launchers: copy the matching .sh from this plugin folder
   qwen3-4b.sh
   qwen3-8b.sh
+  oxcoder-9b.sh
   qwen3-14b.sh
   qwen3-coder-30b.sh
   gemma4-e2b.sh
@@ -234,7 +239,7 @@ python3 ~/.config/omarchy/plugins/mihai.llama/llama_ctl.py unload qwen3-8b
 python3 ~/.config/omarchy/plugins/mihai.llama/llama_ctl.py stop     # all servers
 ```
 
-Model ids (panel presets only): `qwen3-1.7b`, `qwen3-4b`, `qwen3-8b`, `qwen3-14b`, `qwen3-coder-30b`, `gemma4-e2b`, `gpt-oss-20b`, `spark-2.5-4b`, `spark-2.5-1.7b`. The chat-only models (`llama3.2-3b`, `lfm2.5-8b`, `nemotron-nano`, `gemma3-12b`) are intentionally absent — run their launchers by hand.
+Model ids (panel presets only): `qwen3-1.7b`, `qwen3-4b`, `qwen3-8b`, `oxcoder-9b`, `qwen3-14b`, `qwen3-coder-30b`, `gemma4-e2b`, `gpt-oss-20b`, `spark-2.5-4b`, `spark-2.5-1.7b`. The chat-only models (`llama3.2-3b`, `lfm2.5-8b`, `nemotron-nano`, `gemma3-12b`) are intentionally absent — run their launchers by hand.
 
 ## Editing for your own hardware
 
