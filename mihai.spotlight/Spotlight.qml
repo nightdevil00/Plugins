@@ -1148,6 +1148,14 @@ Item {
         for (var fs2 = 0; fs2 < fontSearch.length && displayModel.count < root.maxResults; fs2++)
           displayModel.append(fontSearch[fs2])
       } else {
+        // Installed apps lead the list: searching "Chrome" should offer Chrome,
+        // not a PATH binary, a menu entry or a file. Files stay last.
+        if (root.activeMenu === "root") {
+          var appRowsSearch = root.appRows(q, taken)
+          for (var ap2 = 0; ap2 < appRowsSearch.length && displayModel.count < root.maxResults; ap2++)
+            displayModel.append(appRowsSearch[ap2])
+        }
+
         var bins = binaryMatches(extensionQuery(q).length > 0 ? "" : q, taken)
         for (var b = 0; b < bins.length && displayModel.count < root.maxResults; b++)
           displayModel.append(bins[b])
@@ -1169,10 +1177,6 @@ Item {
           var folders = matchingFolders(q)
           for (var f = 0; f < folders.length && displayModel.count < root.maxResults; f++)
             displayModel.append(folders[f])
-
-          var appRowsSearch = root.appRows(q, taken)
-          for (var ap2 = 0; ap2 < appRowsSearch.length && displayModel.count < root.maxResults; ap2++)
-            displayModel.append(appRowsSearch[ap2])
         }
 
         for (var fj = 0; fj < root.fileResults.length && displayModel.count < root.maxResults; fj++)
