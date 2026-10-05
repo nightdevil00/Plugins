@@ -55,7 +55,7 @@ Pick whatever combo you like — `ALT + SPACE` is just a suggestion.
 
 ## Usage
 
-Summon the overlay and just start typing — or use it like the Omarchy menu: the root sections are listed, `Enter`/`→` drills into a section, `←`/`Esc` goes back. Results when typing are grouped: calculator → URLs → terminal folders → commands → binaries → actions → menu matches → folders → apps.
+Summon the overlay and just start typing — or use it like the Omarchy menu: the root sections are listed, `Enter`/`→` drills into a section, `←`/`Esc` goes back. Results when typing are grouped: calculator → URLs → terminal folders → commands → **apps** → binaries → actions → menu matches → folders → files. Installed apps come before `PATH` binaries so the app you searched for leads the list (`chrome` opens Chromium, not `Run chromium`).
 
 | Input | Result |
 |---|---|
