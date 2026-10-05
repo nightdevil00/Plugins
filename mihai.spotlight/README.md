@@ -36,6 +36,7 @@ omarchy plugin enable mihai.spotlight
 - **Bang search** — `!g <term>` searches the web straight from the launcher, using DuckDuckGo's full bang list (13,489 bangs: `!g` Google, `!gh` GitHub, `!yt` YouTube, `!aw` Arch Wiki, `!aur` AUR, `!so` Stack Overflow, `!gm` Maps, `!r` Reddit, `!ai`, `!ddg`…). Alternates and typo corrections are offered as you type, and unknown bangs fall back to DuckDuckGo's own resolver
 - **Inline calculator** — type an expression like `(1920 * 2) / 3`; press Enter to copy the result to the clipboard
 - **Quick actions** — screenshot (region/fullscreen), screen recording, lock screen, night light toggle
+- **Uninstall** — press `Delete` on an app or web app and a small dialog asks to confirm; Omarchy then removes whichever kind of entry it is (web app, TUI launcher, a `.desktop` you dropped in `~/.local/share/applications`, a pacman package, or a Flatpak)
 - **Omarchy menu built in** — the full `omarchy.menu` tree lives inside Spotlight. It opens at the menu's root (Apps, Learn, Trigger, Style…); submenu rows drill into their section right in Spotlight (`←` goes back), action rows run their command directly, and the Apps and Fonts sections list their entries natively. Entries hidden by `when:` conditions stay hidden, and `checked:` rows carry a ✓
 - **Folder jump list** — Downloads, Documents, Omarchy/Hyprland config, etc.
 
@@ -84,6 +85,7 @@ Summon the overlay and just start typing — or use it like the Omarchy menu: th
 | `→` | Drill into selected menu section |
 | `←` / `Backspace` | Go back to the previous menu section |
 | `↑` / `↓` | Navigate results |
+| `Delete` | Uninstall the selected app (asks first) |
 | `PgUp` / `PgDn` | Jump to first / last |
 | `Esc` | Clear query, go back, then dismiss |
 | Click outside | Dismiss |

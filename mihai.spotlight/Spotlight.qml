@@ -15,6 +15,9 @@ Item {
   property bool opened: false
   property string filterText: ""
   property int selectedIndex: 0
+  // Delete-key uninstall: the row under the cursor and the dialog state.
+  property bool deleteConfirmOpen: false
+  property var deleteTarget: null
   property int scanSerial: 0
   property var fileResults: []
   property var pathBins: ({})
@@ -47,6 +50,7 @@ Item {
   property var borderSpec: Border.surfaceSpec("menu", "border", border, Math.max(1, Style.space(2)))
   property color scrim: Color.menu.scrim
   property color selectedBackground: Color.menu.selectedBackground
+  readonly property color selectedText: Color.menu.selectedText
   readonly property int cornerRadius: Style.cornerRadius
   property string fontFamily: Style.font.menuFamily
   property int contentMargin: Style.spacing.panelPadding
@@ -64,6 +68,8 @@ Item {
     root.opened = true
     root.filterText = ""
     root.selectedIndex = 0
+    root.deleteConfirmOpen = false
+    root.deleteTarget = null
     root.activeMenu = "root"
     root.menuNav = []
     root.fileResults = []
@@ -81,6 +87,13 @@ Item {
 
   function close() {
     root.opened = false
+  }
+
+  onOpenedChanged: {
+    if (!root.opened) {
+      root.deleteConfirmOpen = false
+      root.deleteTarget = null
+    }
   }
 
   function dismiss() {
@@ -1247,6 +1260,47 @@ Item {
       Util.execDetached("xdg-open " + Util.shellQuote(row.arg))
   }
 
+  // ------------------------------------------------------------------
+  // Uninstall, same flow as the Omarchy menu: Delete on an app row opens a
+  // small confirm dialog, and Omarchy removes whichever kind of entry the
+  // desktop file turns out to be (web app, TUI entry, user-local launcher,
+  // pacman package, or Flatpak).
+  // ------------------------------------------------------------------
+
+  function requestDeleteSelected() {
+    if (root.deleteConfirmOpen) return
+    if (root.selectedIndex < 0 || root.selectedIndex >= displayModel.count) return
+    var row = displayModel.get(root.selectedIndex)
+    if (!row || row.kind !== "app" || !row.arg) return
+    root.deleteTarget = { appId: String(row.arg), label: String(row.name || row.arg) }
+    root.deleteConfirmOpen = true
+  }
+
+  function cancelDelete() {
+    root.deleteConfirmOpen = false
+    root.deleteTarget = null
+    Qt.callLater(function() { keyCatcher.forceActiveFocus() })
+  }
+
+  function confirmDelete() {
+    var target = root.deleteTarget
+    root.deleteConfirmOpen = false
+    root.deleteTarget = null
+    if (!target) return
+    // Quoted on both sides: the id and label come from a desktop entry, and the
+    // pacman/Flatpak paths open a terminal that needs the words intact.
+    Util.execDetached(Util.shellQuote(root.omarchyPath + "/bin/omarchy-remove-launcher-entry")
+      + " " + Util.shellQuote(target.appId)
+      + " " + Util.shellQuote(target.label))
+    root.dismiss()
+  }
+
+  function selectedRowIsApp() {
+    if (root.selectedIndex < 0 || root.selectedIndex >= displayModel.count) return false
+    var row = displayModel.get(root.selectedIndex)
+    return !!row && row.kind === "app" && !!row.arg
+  }
+
   function debugState() {
     return JSON.stringify({
       opened: root.opened,
@@ -1419,10 +1473,19 @@ Item {
 
         Keys.priority: Keys.BeforeItem
         Keys.onPressed: function(event) {
+          // The uninstall dialog gets first refusal on every key, so Esc there
+          // closes it instead of clearing the query behind it.
+          if (root.deleteConfirmOpen && deleteConfirm.handleKey(event)) {
+            event.accepted = true
+            return
+          }
           if (event.key === Qt.Key_Escape) {
             if (root.filterText) root.setFilter("")
             else if (root.activeMenu !== "root") root.menuGoBack()
             else root.dismiss()
+            event.accepted = true
+          } else if (event.key === Qt.Key_Delete) {
+            root.requestDeleteSelected()
             event.accepted = true
           } else if ((event.key === Qt.Key_Backspace || event.key === Qt.Key_Left) && !root.filterText) {
             root.menuGoBack()
@@ -1630,15 +1693,39 @@ Item {
 
           Text {
             anchors.right: parent.right
+            anchors.left: parent.left
+            width: parent.width
+            horizontalAlignment: Text.AlignRight
             anchors.verticalCenter: parent.verticalCenter
-            text: "↵ open   ·   ← back   ·   ↑↓ navigate   ·   !bang web   ·   *.ext files   ·   cd dir   ·   esc close"
+            text: "↵ open   ·   ← back   ·   ↑↓ navigate   ·   del uninstall   ·   !bang web   ·   *.ext files   ·   cd dir   ·   esc close"
             color: root.foreground
-            opacity: 0.45
+            opacity: root.selectedRowIsApp() ? 0.6 : 0.45
             font.family: root.fontFamily
             font.pixelSize: Style.font.caption
+            elide: Text.ElideRight
           }
         }
       }
+    }
+
+    // Uninstall confirm, above the card and the dismiss scrim: Delete on an app
+    // row lands here, and Enter picks the destructive button by default.
+    ConfirmDialog {
+      id: deleteConfirm
+      anchors.fill: parent
+      z: 20
+      opened: root.deleteConfirmOpen
+      message: "Do you want to uninstall " + ((root.deleteTarget && root.deleteTarget.label) || "") + "?"
+      confirmText: "Uninstall"
+      background: root.background
+      foreground: root.foreground
+      scrim: root.scrim
+      selectedBackground: root.selectedBackground
+      selectedText: root.selectedText
+      fontFamily: root.fontFamily
+      cornerRadius: root.cornerRadius
+      onCanceled: root.cancelDelete()
+      onConfirmed: root.confirmDelete()
     }
   }
 }

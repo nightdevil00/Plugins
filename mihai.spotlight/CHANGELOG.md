@@ -56,6 +56,23 @@ omarchy plugin remove mihai.spotlight                  # uninstall
 
 ---
 
+## [1.3.0] - Unreleased
+
+### 🚀 Added
+- **Uninstall from the results list**: press `Delete` on an app or web app and
+  the same confirm dialog the Omarchy menu uses appears — `Enter` confirms,
+  `Esc` backs out. Spotlight hands the entry to
+  `omarchy-remove-launcher-entry`, so removal matches the menu exactly: a web
+  app goes through `omarchy-webapp-remove`, a TUI launcher through
+  `omarchy-tui-remove`, a `.desktop` you dropped into
+  `~/.local/share/applications` is deleted, and a packaged entry resolves its
+  owner (`pacman -Qo`, then Flatpak) and opens a floating terminal running
+  `sudo pacman -Rns <pkg>`. Nothing is removed without the dialog.
+- The footer hint gains `del uninstall`, and brightens whenever the selected
+  row is an app, so the shortcut only advertises itself where it applies.
+
+---
+
 ## [1.2.1] - 2026-10-05
 
 ### 🐛 Fixed
