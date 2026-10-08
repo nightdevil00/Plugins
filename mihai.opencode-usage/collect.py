@@ -90,10 +90,17 @@ def collect(db_path: str) -> dict:
     return {"ready": False, "error": "could not open opencode database"}
   try:
     conn.execute("PRAGMA query_only = ON")
+    tables = {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type = 'table'")}
+    if "session_v2" in tables:
+      session_table, message_table = "session_v2", "session_message"
+      user_filter = "type = 'user'"
+    else:
+      session_table, message_table = "session", "message"
+      user_filter = "data LIKE '%\"role\":\"user\"%'"
 
     for agent, raw_model, in_t, out_t, rea_t, cache_r, cache_w, cost, created in conn.execute(
         "SELECT agent, model, tokens_input, tokens_output, tokens_reasoning,"
-        " tokens_cache_read, tokens_cache_write, cost, time_created FROM session"):
+        " tokens_cache_read, tokens_cache_write, cost, time_created FROM " + session_table):
       total = number(in_t) + number(out_t) + number(rea_t) + number(cache_r) + number(cache_w)
       if total <= 0:
         continue
@@ -137,12 +144,12 @@ def collect(db_path: str) -> dict:
     # Prompts: one user message, whole database for the total, only since
     # local midnight for today's figure.
     total_prompts = conn.execute(
-        "SELECT COUNT(*) FROM message WHERE data LIKE '%\"role\":\"user\"%'").fetchone()[0]
+        f"SELECT COUNT(*) FROM {message_table} WHERE {user_filter}").fetchone()[0]
     today_prompts = conn.execute(
-        "SELECT COUNT(*) FROM message WHERE time_created >= ?"
-        " AND data LIKE '%\"role\":\"user\"%'", (today_start_ms,)).fetchone()[0]
+        f"SELECT COUNT(*) FROM {message_table} WHERE time_created >= ?"
+        f" AND {user_filter}", (today_start_ms,)).fetchone()[0]
     today_sessions = conn.execute(
-        "SELECT COUNT(DISTINCT session_id) FROM message WHERE time_created >= ?",
+        f"SELECT COUNT(DISTINCT session_id) FROM {message_table} WHERE time_created >= ?",
         (today_start_ms,)).fetchone()[0]
   except sqlite3.Error as exc:
     conn.close()
