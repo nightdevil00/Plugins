@@ -1,5 +1,9 @@
 > Part of the **[Plugins](https://github.com/nightdevil00/Plugins)** collection — source: [`Plugins/mihai.opencode-usage`](https://github.com/nightdevil00/Plugins/mihai.opencode-usage/)
 
+## Compatibility
+
+This plugin works **only with opencode 2** (`session_v2` / `session_message` database tables). It does not support opencode 1.
+
 ## Installing
 
 This plugin lives in the [Plugins](https://github.com/nightdevil00/Plugins) collection. Install it with the bundled script:
