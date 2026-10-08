@@ -39,7 +39,7 @@ Item {
   FloatingWindow {
     id: window
     title: "Omarchy Settings"
-    color: Color.background
+    color: ShellColor.background
     implicitWidth: 1080
     implicitHeight: 720
     minimumSize: Qt.size(900, 580)

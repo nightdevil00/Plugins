@@ -45,7 +45,7 @@ Item {
           font.family: Style.font.family
           font.pixelSize: Style.font.caption
           font.letterSpacing: 1.2
-          color: Color.muted
+          color: ShellColor.muted
         }
 
         Repeater {
@@ -93,7 +93,7 @@ Item {
             font.family: Style.font.family
             font.pixelSize: Style.font.caption
             font.letterSpacing: 1.2
-            color: Color.muted
+            color: ShellColor.muted
           }
 
           Repeater {

@@ -44,13 +44,13 @@ Item {
   property var fontRows: []
   readonly property string fontProviderScript: "current=$(omarchy-font-current 2>/dev/null); omarchy-font-list 2>/dev/null | while read -r f; do [[ -z $f ]] && continue; printf '%s\\t%s\\t%s\\n' \"$f\" \"$f\" \"$current\"; done"
 
-  property color background: Color.menu.background
-  property color foreground: Color.menu.text
-  property color border: Color.menu.border
+  property color background: ShellColor.menu.background
+  property color foreground: ShellColor.menu.text
+  property color border: ShellColor.menu.border
   property var borderSpec: Border.surfaceSpec("menu", "border", border, Math.max(1, Style.space(2)))
-  property color scrim: Color.menu.scrim
-  property color selectedBackground: Color.menu.selectedBackground
-  readonly property color selectedText: Color.menu.selectedText
+  property color scrim: ShellColor.menu.scrim
+  property color selectedBackground: ShellColor.menu.selectedBackground
+  readonly property color selectedText: ShellColor.menu.selectedText
   readonly property int cornerRadius: Style.cornerRadius
   property string fontFamily: Style.font.menuFamily
   property int contentMargin: Style.spacing.panelPadding

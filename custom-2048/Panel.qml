@@ -13,7 +13,7 @@ Panel {
   property var hostWidget: null
   readonly property var barIdentity: hostWidget || root
 
-  readonly property color contentForeground: bar ? bar.foreground : Color.foreground
+  readonly property color contentForeground: bar ? bar.foreground : ShellColor.foreground
   readonly property string contentFontFamily: bar ? bar.fontFamily : Style.font.family
   readonly property string pluginDir: String(Qt.resolvedUrl(".")).replace(/^file:\/\//, "").replace(/\/$/, "")
   readonly property string gamePath: pluginDir + "/omarchy-2048"
@@ -162,7 +162,7 @@ Panel {
             Button {
               width: (sizeRow.width - sizeRow.spacing * (sizeRepeater.count - 1)) / sizeRepeater.count
               text: modelData.label
-              foreground: root.size === modelData.value ? Color.accent : root.contentForeground
+              foreground: root.size === modelData.value ? ShellColor.accent : root.contentForeground
               fontFamily: root.contentFontFamily
               onClicked: {
                 root.size = modelData.value

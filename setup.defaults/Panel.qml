@@ -29,9 +29,9 @@ Panel {
 
   ListModel { id: appModel }
 
-  readonly property color fg: bar ? bar.foreground : Color.popups.text
-  readonly property color bg: Color.popups.background
-  readonly property color accent: Color.accent
+  readonly property color fg: bar ? bar.foreground : ShellColor.popups.text
+  readonly property color bg: ShellColor.popups.background
+  readonly property color accent: ShellColor.accent
   readonly property string fontFam: bar ? bar.fontFamily : Style.font.family
 
   function reloadApps() {
@@ -156,7 +156,7 @@ Panel {
               height: 42
               radius: Style.space(10)
               color: modelData.id === root.selectedCategory
-                ? Color.accent
+                ? ShellColor.accent
                 : Qt.rgba(root.fg.r, root.fg.g, root.fg.b, 0.08)
               border.width: 1
               border.color: Qt.rgba(root.fg.r, root.fg.g, root.fg.b, 0.18)
@@ -205,17 +205,17 @@ Panel {
               height: 32
               radius: Style.space(6)
               color: modelData.id === root.currentDefault
-                ? Qt.rgba(Color.accent.r, Color.accent.g, Color.accent.b, 0.22)
+                ? Qt.rgba(ShellColor.accent.r, ShellColor.accent.g, ShellColor.accent.b, 0.22)
                 : "transparent"
               border.width: modelData.id === root.currentDefault ? 1 : 0
-              border.color: Color.accent
+              border.color: ShellColor.accent
               Text {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.left: parent.left
                 anchors.leftMargin: Style.space(10)
                 textFormat: Text.PlainText
                 text: modelData.name
-                color: modelData.id === root.currentDefault ? Color.accent : root.fg
+                color: modelData.id === root.currentDefault ? ShellColor.accent : root.fg
                 font.family: root.fontFam
                 font.pixelSize: Style.font.body
                 elide: Text.ElideRight
@@ -228,7 +228,7 @@ Panel {
                 anchors.rightMargin: Style.space(10)
                 textFormat: Text.PlainText
                 text: "✓"
-                color: Color.accent
+                color: ShellColor.accent
                 font.family: root.fontFam
                 font.pixelSize: Style.font.body
                 visible: modelData.id === root.currentDefault

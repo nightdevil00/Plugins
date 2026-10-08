@@ -53,14 +53,14 @@ Panel {
   readonly property bool whisperAvailable: stateData && stateData.whisper_available === true
   readonly property string whisperEngine: stateData && stateData.whisper_engine ? stateData.whisper_engine : "none"
 
-  // Shared accent color variants — avoids 27 repeated Color.accent.r/g/b decompositions
-  readonly property color accentAlpha08: Qt.rgba(Color.accent.r, Color.accent.g, Color.accent.b, 0.08)
-  readonly property color accentAlpha15: Qt.rgba(Color.accent.r, Color.accent.g, Color.accent.b, 0.15)
-  readonly property color accentAlpha18: Qt.rgba(Color.accent.r, Color.accent.g, Color.accent.b, 0.18)
-  readonly property color accentAlpha20: Qt.rgba(Color.accent.r, Color.accent.g, Color.accent.b, 0.20)
-  readonly property color accentAlpha25: Qt.rgba(Color.accent.r, Color.accent.g, Color.accent.b, 0.25)
-  readonly property color accentAlpha30: Qt.rgba(Color.accent.r, Color.accent.g, Color.accent.b, 0.30)
-  readonly property color accentAlpha40: Qt.rgba(Color.accent.r, Color.accent.g, Color.accent.b, 0.40)
+  // Shared accent color variants — avoids 27 repeated ShellColor.accent.r/g/b decompositions
+  readonly property color accentAlpha08: Qt.rgba(ShellColor.accent.r, ShellColor.accent.g, ShellColor.accent.b, 0.08)
+  readonly property color accentAlpha15: Qt.rgba(ShellColor.accent.r, ShellColor.accent.g, ShellColor.accent.b, 0.15)
+  readonly property color accentAlpha18: Qt.rgba(ShellColor.accent.r, ShellColor.accent.g, ShellColor.accent.b, 0.18)
+  readonly property color accentAlpha20: Qt.rgba(ShellColor.accent.r, ShellColor.accent.g, ShellColor.accent.b, 0.20)
+  readonly property color accentAlpha25: Qt.rgba(ShellColor.accent.r, ShellColor.accent.g, ShellColor.accent.b, 0.25)
+  readonly property color accentAlpha30: Qt.rgba(ShellColor.accent.r, ShellColor.accent.g, ShellColor.accent.b, 0.30)
+  readonly property color accentAlpha40: Qt.rgba(ShellColor.accent.r, ShellColor.accent.g, ShellColor.accent.b, 0.40)
 
   property var displayedHistory: []
 
@@ -287,9 +287,9 @@ Panel {
     }
     if (lower.indexOf("http://") === 0 || lower.indexOf("https://") === 0) {
       if (lower.indexOf("list=") !== -1 || lower.indexOf("/playlist") !== -1) {
-        return { id: "playlist", name: "Media Playlist", icon: "󰑋", color: Color.accent }
+        return { id: "playlist", name: "Media Playlist", icon: "󰑋", color: ShellColor.accent }
       }
-      return { id: "web", name: "Web Video", icon: "󰈫", color: Color.accent }
+      return { id: "web", name: "Web Video", icon: "󰈫", color: ShellColor.accent }
     }
     return null
   }
@@ -428,7 +428,7 @@ Panel {
     iconComponent: horseHeadIconComponent
     active: root.hasActiveDownloads
     useActiveColor: true
-    activeColor: Color.accent
+    activeColor: ShellColor.accent
     tooltipText: root.hasActiveDownloads
       ? ("Downloading " + root.activeDownloadsCount + " item" + (root.activeDownloadsCount > 1 ? "s" : "") + "...")
       : "OmaPony (Right-click: Grab selection)"
@@ -485,7 +485,7 @@ Panel {
               width: Style.space(38)
               height: Style.space(32)
               radius: Style.cornerRadius
-              color: Style.selectedFillFor(Color.foreground, Color.accent)
+              color: Style.selectedFillFor(ShellColor.foreground, ShellColor.accent)
 
               Text {
                 visible: !root.hasActiveDownloads
@@ -494,7 +494,7 @@ Panel {
                 font.family: "Font Awesome 7 Free Solid"
                 font.styleName: "Solid"
                 font.pixelSize: Style.font.title
-                color: Color.accent
+                color: ShellColor.accent
                 renderType: Text.NativeRendering
               }
 
@@ -525,7 +525,7 @@ Panel {
                 font.family: Style.font.family
                 font.pixelSize: Style.font.subtitle
                 font.bold: true
-                color: Color.foreground
+                color: ShellColor.foreground
               }
 
               Text {
@@ -534,7 +534,7 @@ Panel {
                   : "YouTube • X • Instagram • Facebook"
                 font.family: Style.font.family
                 font.pixelSize: Style.font.caption
-                color: Qt.darker(Color.foreground, 1.4)
+                color: Qt.darker(ShellColor.foreground, 1.4)
               }
             }
 
@@ -580,7 +580,7 @@ Panel {
                 font.family: Style.font.family
                 font.pixelSize: Style.font.body
                 font.bold: true
-                color: Color.accent
+                color: ShellColor.accent
               }
 
               Text {
@@ -589,7 +589,7 @@ Panel {
                 text: "Highlight any link on screen and press SUPER+ALT+V to download instantly! Press SUPER+SHIFT+V to toggle this panel."
                 font.family: Style.font.family
                 font.pixelSize: Style.font.caption
-                color: Color.foreground
+                color: ShellColor.foreground
               }
 
               Text {
@@ -597,7 +597,7 @@ Panel {
                 font.family: Style.font.family
                 font.pixelSize: Style.font.body
                 font.bold: true
-                color: Color.accent
+                color: ShellColor.accent
               }
 
               Text {
@@ -608,7 +608,7 @@ Panel {
                   : "Whisper is not installed. Click 'Install Whisper' or run 'omarchy pkg add whisper-cpp' to enable offline speech-to-text and subtitle generation."
                 font.family: Style.font.family
                 font.pixelSize: Style.font.caption
-                color: root.whisperAvailable ? Color.foreground : Color.urgent
+                color: root.whisperAvailable ? ShellColor.foreground : ShellColor.urgent
               }
             }
           }
@@ -676,7 +676,7 @@ Panel {
                 implicitHeight: Style.space(22)
                 radius: Style.cornerRadius
                 color: root.accentAlpha15
-                border.color: root.detectedPlatform ? root.detectedPlatform.color : Color.accent
+                border.color: root.detectedPlatform ? root.detectedPlatform.color : ShellColor.accent
                 border.width: 1
 
                 Row {
@@ -688,7 +688,7 @@ Panel {
                     text: root.detectedPlatform ? root.detectedPlatform.icon : ""
                     font.family: Style.font.family
                     font.pixelSize: Style.font.caption
-                    color: root.detectedPlatform ? root.detectedPlatform.color : Color.accent
+                    color: root.detectedPlatform ? root.detectedPlatform.color : ShellColor.accent
                   }
 
                   Text {
@@ -696,7 +696,7 @@ Panel {
                     font.family: Style.font.family
                     font.pixelSize: Style.font.caption
                     font.bold: true
-                    color: Color.foreground
+                    color: ShellColor.foreground
                   }
                 }
               }
@@ -710,8 +710,8 @@ Panel {
               height: visible ? (plNoticeCol.implicitHeight + Style.space(16)) : 0
               clip: true
               radius: Style.cornerRadius
-              color: Qt.rgba(Color.urgent.r, Color.urgent.g, Color.urgent.b, 0.09)
-              border.color: Qt.rgba(Color.urgent.r, Color.urgent.g, Color.urgent.b, 0.4)
+              color: Qt.rgba(ShellColor.urgent.r, ShellColor.urgent.g, ShellColor.urgent.b, 0.09)
+              border.color: Qt.rgba(ShellColor.urgent.r, ShellColor.urgent.g, ShellColor.urgent.b, 0.4)
               border.width: 1
 
               Column {
@@ -728,7 +728,7 @@ Panel {
                     text: "󰑋"
                     font.family: Style.font.family
                     font.pixelSize: Style.font.body
-                    color: Color.urgent
+                    color: ShellColor.urgent
                   }
                   Text {
                     text: (root.mediaUrlInfo && root.mediaUrlInfo.hasSingleVideo)
@@ -737,7 +737,7 @@ Panel {
                     font.family: Style.font.family
                     font.pixelSize: Style.font.caption
                     font.bold: true
-                    color: Color.urgent
+                    color: ShellColor.urgent
                   }
                 }
 
@@ -749,7 +749,7 @@ Panel {
                     : "This link contains an entire playlist. Downloading will queue all individual tracks from the playlist."
                   font.family: Style.font.family
                   font.pixelSize: Style.font.caption
-                  color: Qt.darker(Color.foreground, 1.25)
+                  color: Qt.darker(ShellColor.foreground, 1.25)
                 }
               }
             }
@@ -784,7 +784,7 @@ Panel {
             visible: urlInput.text.length > 0
             height: visible ? (whisperCol.implicitHeight + Style.space(16)) : 0
             radius: Style.cornerRadius
-            color: Style.selectedFillFor(Color.foreground, Color.accent)
+            color: Style.selectedFillFor(ShellColor.foreground, ShellColor.accent)
             border.color: root.accentAlpha20
             border.width: 1
 
@@ -814,14 +814,14 @@ Panel {
                         text: "󰍬"
                         font.family: Style.font.family
                         font.pixelSize: Style.font.body
-                        color: Color.accent
+                        color: ShellColor.accent
                       }
                       Text {
                         text: "Offline Whisper Transcription"
                         font.family: Style.font.family
                         font.pixelSize: Style.font.body
                         font.bold: true
-                        color: Color.foreground
+                        color: ShellColor.foreground
                       }
                     }
 
@@ -829,7 +829,7 @@ Panel {
                       text: "100% offline speech-to-text without cloud or internet"
                       font.family: Style.font.family
                       font.pixelSize: Style.font.caption
-                      color: Qt.darker(Color.foreground, 1.4)
+                      color: Qt.darker(ShellColor.foreground, 1.4)
                     }
                   }
 
@@ -858,13 +858,13 @@ Panel {
                           text: "󰨖"
                           font.family: Style.font.family
                           font.pixelSize: Style.font.body
-                          color: Color.accent
+                          color: ShellColor.accent
                         }
                         Text {
                           text: "Generate Subtitles (.srt & .vtt)"
                           font.family: Style.font.family
                           font.pixelSize: Style.font.body
-                          color: Color.foreground
+                          color: ShellColor.foreground
                         }
                       }
 
@@ -872,7 +872,7 @@ Panel {
                         text: "Auto-loaded by media players (MPV, VLC)"
                         font.family: Style.font.family
                         font.pixelSize: Style.font.caption
-                        color: Qt.darker(Color.foreground, 1.4)
+                        color: Qt.darker(ShellColor.foreground, 1.4)
                       }
                     }
 
@@ -891,7 +891,7 @@ Panel {
                       text: "Model:"
                       font.family: Style.font.family
                       font.pixelSize: Style.font.caption
-                      color: Qt.darker(Color.foreground, 1.3)
+                      color: Qt.darker(ShellColor.foreground, 1.3)
                     }
 
                     Button {
@@ -940,14 +940,14 @@ Panel {
                         text: "󰍬"
                         font.family: Style.font.family
                         font.pixelSize: Style.font.body
-                        color: Color.urgent
+                        color: ShellColor.urgent
                       }
                       Text {
                         text: "Offline Whisper AI"
                         font.family: Style.font.family
                         font.pixelSize: Style.font.body
                         font.bold: true
-                        color: Color.foreground
+                        color: ShellColor.foreground
                       }
                     }
 
@@ -955,7 +955,7 @@ Panel {
                       text: "Speech-to-text & subtitles require whisper-cpp"
                       font.family: Style.font.family
                       font.pixelSize: Style.font.caption
-                      color: Qt.darker(Color.foreground, 1.4)
+                      color: Qt.darker(ShellColor.foreground, 1.4)
                     }
                   }
 
@@ -963,8 +963,8 @@ Panel {
                     implicitWidth: notInstTxt.implicitWidth + Style.space(8)
                     implicitHeight: Style.space(18)
                     radius: Style.cornerRadius
-                    color: Qt.rgba(Color.urgent.r, Color.urgent.g, Color.urgent.b, 0.15)
-                    border.color: Color.urgent
+                    color: Qt.rgba(ShellColor.urgent.r, ShellColor.urgent.g, ShellColor.urgent.b, 0.15)
+                    border.color: ShellColor.urgent
                     border.width: 1
 
                     Text {
@@ -973,7 +973,7 @@ Panel {
                       text: "Not Installed"
                       font.family: Style.font.family
                       font.pixelSize: Style.font.caption
-                      color: Color.urgent
+                      color: ShellColor.urgent
                     }
                   }
                 }
@@ -983,7 +983,7 @@ Panel {
                   text: "Install Whisper (whisper-cpp)"
                   iconText: "󰇚"
                   selected: true
-                  accent: Color.accent
+                  accent: ShellColor.accent
                   tooltipText: "Launch terminal to run: omarchy pkg add whisper-cpp"
                   onClicked: root.installWhisper()
                 }
@@ -994,7 +994,7 @@ Panel {
                   text: "Or run in terminal: omarchy pkg add whisper-cpp"
                   font.family: Style.font.family
                   font.pixelSize: Style.font.caption
-                  color: Qt.darker(Color.foreground, 1.4)
+                  color: Qt.darker(ShellColor.foreground, 1.4)
                 }
               }
             }
@@ -1013,7 +1013,7 @@ Panel {
               iconText: "󰕧"
               fontSize: Style.font.caption
               selected: true
-              accent: Color.accent
+              accent: ShellColor.accent
               tooltipText: "Download only this single video (strips playlist parameters)"
               onClicked: root.startDownload("single")
             }
@@ -1037,7 +1037,7 @@ Panel {
             iconText: "󰑋"
             fontSize: Style.font.subtitle
             selected: true
-            accent: Color.accent
+            accent: ShellColor.accent
             tooltipText: "Confirm and queue all items from this playlist"
             onClicked: root.confirmPlaylistDownload()
           }
@@ -1050,7 +1050,7 @@ Panel {
             iconText: "󰇚"
             fontSize: Style.font.subtitle
             selected: true
-            accent: Color.accent
+            accent: ShellColor.accent
             onClicked: root.startDownload()
           }
 
@@ -1066,7 +1066,7 @@ Panel {
               font.family: Style.font.family
               font.pixelSize: Style.font.body
               font.bold: true
-              color: Color.accent
+              color: ShellColor.accent
             }
 
             Repeater {
@@ -1087,8 +1087,8 @@ Panel {
                 width: mainColumn.width
                 implicitHeight: activeCol.implicitHeight + Style.space(16)
                 radius: Style.cornerRadius
-                color: Style.selectedFillFor(Color.foreground, Color.accent)
-                border.color: jobStatus === "completed" ? Qt.rgba(0.3, 0.8, 0.4, 0.5) : (jobStatus === "error" ? Qt.rgba(Color.urgent.r, Color.urgent.g, Color.urgent.b, 0.5) : root.accentAlpha30)
+                color: Style.selectedFillFor(ShellColor.foreground, ShellColor.accent)
+                border.color: jobStatus === "completed" ? Qt.rgba(0.3, 0.8, 0.4, 0.5) : (jobStatus === "error" ? Qt.rgba(ShellColor.urgent.r, ShellColor.urgent.g, ShellColor.urgent.b, 0.5) : root.accentAlpha30)
                 border.width: 1
 
                 Column {
@@ -1106,7 +1106,7 @@ Panel {
                       font.family: jobPlatformIcon ? Style.font.family : "Font Awesome 7 Free Solid"
                       font.styleName: jobPlatformIcon ? "" : "Solid"
                       font.pixelSize: Style.font.subtitle
-                      color: jobPlatformColor || Color.accent
+                      color: jobPlatformColor || ShellColor.accent
                     }
 
                     Text {
@@ -1116,7 +1116,7 @@ Panel {
                       font.family: Style.font.family
                       font.pixelSize: Style.font.body
                       font.bold: true
-                      color: Color.foreground
+                      color: ShellColor.foreground
                     }
 
                     // Error badge
@@ -1125,8 +1125,8 @@ Panel {
                       implicitWidth: errTxt.implicitWidth + Style.space(8)
                       implicitHeight: Style.space(18)
                       radius: Style.cornerRadius
-                      color: Qt.rgba(Color.urgent.r, Color.urgent.g, Color.urgent.b, 0.15)
-                      border.color: Color.urgent
+                      color: Qt.rgba(ShellColor.urgent.r, ShellColor.urgent.g, ShellColor.urgent.b, 0.15)
+                      border.color: ShellColor.urgent
                       border.width: 1
                       Text {
                         id: errTxt
@@ -1135,7 +1135,7 @@ Panel {
                         font.family: Style.font.family
                         font.pixelSize: Style.font.caption
                         font.bold: true
-                        color: Color.urgent
+                        color: ShellColor.urgent
                       }
                     }
 
@@ -1166,7 +1166,7 @@ Panel {
                       implicitHeight: Style.space(18)
                       radius: Style.cornerRadius
                       color: root.accentAlpha15
-                      border.color: Color.accent
+                      border.color: ShellColor.accent
                       border.width: 1
                       Text {
                         id: queueTxt
@@ -1175,7 +1175,7 @@ Panel {
                         font.family: Style.font.family
                         font.pixelSize: Style.font.caption
                         font.bold: true
-                        color: Color.accent
+                        color: ShellColor.accent
                       }
                     }
 
@@ -1184,14 +1184,14 @@ Panel {
                       implicitWidth: fmtTxt.implicitWidth + Style.space(8)
                       implicitHeight: Style.space(18)
                       radius: Style.cornerRadius
-                      color: Style.hoverFillFor(Color.foreground, Color.accent)
+                      color: Style.hoverFillFor(ShellColor.foreground, ShellColor.accent)
                       Text {
                         id: fmtTxt
                         anchors.centerIn: parent
                         text: (jobFormat || "video").toUpperCase()
                         font.family: Style.font.family
                         font.pixelSize: Style.font.caption
-                        color: Color.foreground
+                        color: ShellColor.foreground
                       }
                     }
 
@@ -1239,13 +1239,13 @@ Panel {
                     width: parent.width
                     height: Style.space(6)
                     radius: Style.space(3)
-                    color: Qt.darker(Color.popups.background, 1.2)
+                    color: Qt.darker(ShellColor.popups.background, 1.2)
 
                     Rectangle {
                       height: parent.height
                       width: jobStatus === "queued" ? 0 : Math.max(0, Math.min(parent.width, parent.width * (Math.max(0, Math.min(100, jobProgress)) / 100.0)))
                       radius: Style.space(3)
-                      color: jobStatus === "completed" ? "#4EBF71" : (jobStatus === "error" ? Color.urgent : Color.accent)
+                      color: jobStatus === "completed" ? "#4EBF71" : (jobStatus === "error" ? ShellColor.urgent : ShellColor.accent)
 
                       Behavior on width {
                         NumberAnimation { duration: 100; easing.type: Easing.Linear }
@@ -1274,7 +1274,7 @@ Panel {
                                    (jobEta && jobEta !== "--" ? (" • ETA " + jobEta) : ""))))))
                       font.family: Style.font.family
                       font.pixelSize: Style.font.caption
-                      color: jobStatus === "completed" ? "#4EBF71" : (jobStatus === "error" ? Color.urgent : (jobStatus === "queued" ? Color.accent : Qt.darker(Color.foreground, 1.3)))
+                      color: jobStatus === "completed" ? "#4EBF71" : (jobStatus === "error" ? ShellColor.urgent : (jobStatus === "queued" ? ShellColor.accent : Qt.darker(ShellColor.foreground, 1.3)))
                     }
                   }
                 }
@@ -1298,7 +1298,7 @@ Panel {
                 font.family: Style.font.family
                 font.pixelSize: Style.font.body
                 font.bold: true
-                color: Color.accent
+                color: ShellColor.accent
               }
 
               Button {
@@ -1316,7 +1316,7 @@ Panel {
                 width: mainColumn.width
                 implicitHeight: historyCol.implicitHeight + Style.space(12)
                 radius: Style.cornerRadius
-                color: Style.selectedFillFor(Color.foreground, Color.accent)
+                color: Style.selectedFillFor(ShellColor.foreground, ShellColor.accent)
 
                 RowLayout {
                   id: historyCol
@@ -1329,7 +1329,7 @@ Panel {
                     font.family: modelData.platform_icon ? Style.font.family : "Font Awesome 7 Free Solid"
                     font.styleName: modelData.platform_icon ? "" : "Solid"
                     font.pixelSize: Style.font.subtitle
-                    color: modelData.platform_color || Color.accent
+                    color: modelData.platform_color || ShellColor.accent
                   }
 
                   ColumnLayout {
@@ -1342,7 +1342,7 @@ Panel {
                       elide: Text.ElideRight
                       font.family: Style.font.family
                       font.pixelSize: Style.font.body
-                      color: Color.foreground
+                      color: ShellColor.foreground
                     }
 
                     Row {
@@ -1353,7 +1353,7 @@ Panel {
                               (modelData.file_size ? (" • " + modelData.file_size) : "")
                         font.family: Style.font.family
                         font.pixelSize: Style.font.caption
-                        color: Qt.darker(Color.foreground, 1.4)
+                        color: Qt.darker(ShellColor.foreground, 1.4)
                       }
 
                       Rectangle {
@@ -1374,7 +1374,7 @@ Panel {
                             text: "󰍬"
                             font.family: Style.font.family
                             font.pixelSize: Style.font.caption
-                            color: Color.accent
+                            color: ShellColor.accent
                           }
 
                           Text {
@@ -1382,7 +1382,7 @@ Panel {
                             font.family: Style.font.family
                             font.pixelSize: Style.font.caption
                             font.bold: true
-                            color: Color.accent
+                            color: ShellColor.accent
                           }
                         }
                       }
@@ -1400,7 +1400,7 @@ Panel {
                           text: "CC / Subs"
                           font.family: Style.font.family
                           font.pixelSize: Style.font.caption
-                          color: Color.accent
+                          color: ShellColor.accent
                         }
                       }
                     }
@@ -1431,7 +1431,7 @@ Panel {
         anchors.fill: parent
         visible: root.showPlaylistConfirm
         z: 100
-        color: Util.alpha(Color.background, 0.75)
+        color: Util.alpha(ShellColor.background, 0.75)
 
         MouseArea {
           anchors.fill: parent
@@ -1443,8 +1443,8 @@ Panel {
           width: Math.min(parent.width - Style.space(32), Style.space(380))
           height: cardContentCol.implicitHeight + Style.space(32)
           anchors.centerIn: parent
-          color: Color.background
-          borderSpec: Border.flat(Color.accent, Style.normalBorderWidth)
+          color: ShellColor.background
+          borderSpec: Border.flat(ShellColor.accent, Style.normalBorderWidth)
           radius: Style.cornerRadius
 
           MouseArea {
@@ -1467,7 +1467,7 @@ Panel {
                 text: "󰑋"
                 font.family: Style.font.family
                 font.pixelSize: Style.font.title
-                color: Color.accent
+                color: ShellColor.accent
               }
 
               Text {
@@ -1477,7 +1477,7 @@ Panel {
                 font.family: Style.font.family
                 font.pixelSize: Style.font.title
                 font.bold: true
-                color: Color.foreground
+                color: ShellColor.foreground
               }
             }
 
@@ -1486,7 +1486,7 @@ Panel {
               wrapMode: Text.Wrap
               font.family: Style.font.family
               font.pixelSize: Style.font.body
-              color: Color.foreground
+              color: ShellColor.foreground
               text: (root.mediaUrlInfo && root.mediaUrlInfo.hasSingleVideo)
                 ? "This link contains both an individual video and an attached playlist/mix. Choose whether to download only this single video or queue the entire playlist."
                 : "This link points to an entire playlist and will queue all individual tracks. Are you sure you want to download the entire playlist?"
@@ -1504,7 +1504,7 @@ Panel {
                 text: "Download Single Video Only"
                 iconText: "󰕧"
                 selected: true
-                accent: Color.accent
+                accent: ShellColor.accent
                 fontSize: Style.font.caption
                 onClicked: {
                   root.showPlaylistConfirm = false
@@ -1558,7 +1558,7 @@ Panel {
                 text: "Download All"
                 iconText: "󰑋"
                 selected: true
-                accent: Color.accent
+                accent: ShellColor.accent
                 fontSize: Style.font.caption
                 onClicked: {
                   root.showPlaylistConfirm = false

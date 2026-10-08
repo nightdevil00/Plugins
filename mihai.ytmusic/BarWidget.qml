@@ -110,7 +110,7 @@ BarWidget {
       anchors.centerIn: parent
       visible: !root.playerMode
       iconSize: Style.space(14)
-      color: root.bar ? root.bar.barForeground : Color.foreground
+      color: root.bar ? root.bar.barForeground : ShellColor.foreground
       opacity: root.hasMedia && !root.playing ? 0.72 : 1.0
     }
 
@@ -125,8 +125,8 @@ BarWidget {
         anchors.verticalCenter: parent.verticalCenter
         text: root.hasMedia ? root.playIcon : "󰝚"
         color: root.playing
-          ? (root.bar ? root.bar.barForeground : Color.foreground)
-          : Qt.darker(root.bar ? root.bar.barForeground : Color.foreground, 1.5)
+          ? (root.bar ? root.bar.barForeground : ShellColor.foreground)
+          : Qt.darker(root.bar ? root.bar.barForeground : ShellColor.foreground, 1.5)
         font.family: root.bar ? root.bar.fontFamily : Style.font.family
         font.pixelSize: Style.font.body
         renderType: Text.NativeRendering
@@ -148,7 +148,7 @@ BarWidget {
           id: labelText
           text: root.statusText
           textFormat: Text.PlainText
-          color: root.bar ? root.bar.barForeground : Color.foreground
+          color: root.bar ? root.bar.barForeground : ShellColor.foreground
           opacity: root.hasMedia ? 1.0 : 0.58
           font.family: root.bar ? root.bar.fontFamily : Style.font.family
           font.pixelSize: Style.font.body

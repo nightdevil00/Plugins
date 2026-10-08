@@ -419,7 +419,7 @@ Panel {
 
     hasCursor: rowSelected
     foreground: root.foreground
-    accent: Color.accent
+    accent: ShellColor.accent
     // BorderSurface reports no implicitWidth and a Column does not stretch its
     // children, so without this the row is zero-width and nothing in it — glyph,
     // title, or the MouseArea — is on screen to click.
@@ -489,7 +489,7 @@ Panel {
 
     hasCursor: rowSelected
     foreground: root.foreground
-    accent: Color.accent
+    accent: ShellColor.accent
     width: parent ? parent.width : 0
     implicitHeight: Math.max(label.implicitHeight, hintLabel.implicitHeight) + Style.spacing.rowPaddingX
 
@@ -559,7 +559,7 @@ Panel {
       visible: noteRow.actionText !== ""
       text: noteRow.actionText
       foreground: root.foreground
-      accent: Color.accent
+      accent: ShellColor.accent
       fontFamily: root.fontFamily
       onClicked: noteRow.actionClicked()
     }

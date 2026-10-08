@@ -37,12 +37,12 @@ Item {
     anchors.right: parent.right
     height: 4
     radius: 2
-    color: Util.alpha(Color.foreground, 0.12)
+    color: Util.alpha(ShellColor.foreground, 0.12)
 
     Rectangle {
       height: parent.height
       radius: parent.radius
-      color: Color.accent
+      color: ShellColor.accent
       width: parent.width * root.progress
     }
   }
@@ -52,9 +52,9 @@ Item {
     width: root.hot || root.activeFocus ? 16 : 13
     height: width
     radius: width / 2
-    color: Color.foreground
+    color: ShellColor.foreground
     border.width: root.activeFocus ? 2 : 0
-    border.color: Color.accent
+    border.color: ShellColor.accent
     anchors.verticalCenter: parent.verticalCenter
     x: Math.max(0, Math.min(parent.width - width, parent.width * root.progress - width / 2))
     Behavior on width { NumberAnimation { duration: 100 } }

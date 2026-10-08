@@ -56,7 +56,7 @@ BarWidget {
     tooltipText: "Default Apps"
     active: root.opened
     useActiveColor: true
-    activeColor: Color.accent
+    activeColor: ShellColor.accent
     onPressed: function(b) { root.togglePanel() }
   }
 }

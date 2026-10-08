@@ -9,8 +9,8 @@ TextField {
   selectByMouse: true
   font.family: Style.font.family
   font.pixelSize: Style.font.body
-  color: Color.foreground
-  placeholderTextColor: Util.alpha(Color.foreground, 0.35)
+  color: ShellColor.foreground
+  placeholderTextColor: Util.alpha(ShellColor.foreground, 0.35)
   leftPadding: 36
   rightPadding: 34
   topPadding: 9
@@ -18,9 +18,9 @@ TextField {
 
   background: Rectangle {
     radius: Style.cornerRadius > 0 ? Math.min(14, Math.round(Style.cornerRadius * 0.6)) : 5
-    color: Util.alpha(Color.foreground, 0.05)
+    color: Util.alpha(ShellColor.foreground, 0.05)
     border.width: root.activeFocus ? 1 : 0
-    border.color: Color.accent
+    border.color: ShellColor.accent
     Behavior on color { ColorAnimation { duration: 110 } }
 
     Text {
@@ -30,7 +30,7 @@ TextField {
       text: "󰍉"
       font.family: Style.font.family
       font.pixelSize: Style.font.icon
-      color: Color.muted
+      color: ShellColor.muted
     }
 
     Rectangle {
@@ -41,13 +41,13 @@ TextField {
       width: 20
       height: 20
       radius: 10
-      color: clearMouse.containsMouse ? Util.alpha(Color.foreground, 0.14) : "transparent"
+      color: clearMouse.containsMouse ? Util.alpha(ShellColor.foreground, 0.14) : "transparent"
       Text {
         anchors.centerIn: parent
         text: "󰅖"
         font.family: Style.font.family
         font.pixelSize: Style.font.bodySmall
-        color: Color.muted
+        color: ShellColor.muted
       }
       MouseArea {
         id: clearMouse

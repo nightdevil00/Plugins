@@ -16,11 +16,11 @@ Item {
     id: track
     anchors.fill: parent
     radius: Style.cornerRadius > 0 ? height / 2 : 4
-    color: root.checked ? Util.alpha(Color.accent, 0.9) : Util.alpha(Color.foreground, 0.12)
+    color: root.checked ? Util.alpha(ShellColor.accent, 0.9) : Util.alpha(ShellColor.foreground, 0.12)
     border.width: 1
     border.color: root.activeFocus
-      ? Util.alpha(Color.accent, 1.0)
-      : (root.hot ? Util.alpha(Color.foreground, 0.30) : Util.alpha(Color.foreground, 0.14))
+      ? Util.alpha(ShellColor.accent, 1.0)
+      : (root.hot ? Util.alpha(ShellColor.foreground, 0.30) : Util.alpha(ShellColor.foreground, 0.14))
     Behavior on color { ColorAnimation { duration: 120 } }
 
     Rectangle {
@@ -29,7 +29,7 @@ Item {
       anchors.verticalCenter: parent.verticalCenter
       x: root.checked ? parent.width - width - 4 : 4
       radius: Style.cornerRadius > 0 ? height / 2 : 3
-      color: root.checked ? Color.background : Color.foreground
+      color: root.checked ? ShellColor.background : ShellColor.foreground
       Behavior on x { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
       Behavior on color { ColorAnimation { duration: 120 } }
     }

@@ -29,10 +29,10 @@ Panel {
   }
 
   readonly property color hoverFill: bar
-    ? Style.hoverFillFor(bar.foreground, Color.accent)
+    ? Style.hoverFillFor(bar.foreground, ShellColor.accent)
     : "transparent"
   readonly property color selectedFill: bar
-    ? Style.selectedFillFor(bar.foreground, Color.accent)
+    ? Style.selectedFillFor(bar.foreground, ShellColor.accent)
     : "transparent"
 
   // Single flat list: a header row per connected Bluetooth audio card,

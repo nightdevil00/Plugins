@@ -23,7 +23,7 @@ Item {
       font.family: Style.font.family
       font.pixelSize: Style.font.display
       font.weight: Font.Bold
-      color: Color.foreground
+      color: ShellColor.foreground
     }
     Text {
       text: root.description
@@ -31,7 +31,7 @@ Item {
       elide: Text.ElideRight
       font.family: Style.font.family
       font.pixelSize: Style.font.body
-      color: Color.muted
+      color: ShellColor.muted
     }
   }
 
@@ -47,7 +47,7 @@ Item {
       anchors.verticalCenter: parent.verticalCenter
       font.family: Style.font.family
       font.pixelSize: Style.font.bodySmall
-      color: Color.muted
+      color: ShellColor.muted
     }
 
     Rectangle {
@@ -55,7 +55,7 @@ Item {
       width: resetText.implicitWidth + 24
       height: 30
       radius: Style.cornerRadius > 0 ? Math.min(12, Math.round(Style.cornerRadius * 0.5)) : 4
-      color: resetMouse.containsMouse ? Util.alpha(Color.foreground, 0.12) : Util.alpha(Color.foreground, 0.06)
+      color: resetMouse.containsMouse ? Util.alpha(ShellColor.foreground, 0.12) : Util.alpha(ShellColor.foreground, 0.06)
       anchors.verticalCenter: parent.verticalCenter
       Text {
         id: resetText
@@ -63,7 +63,7 @@ Item {
         text: "Reset all"
         font.family: Style.font.family
         font.pixelSize: Style.font.body
-        color: Color.foreground
+        color: ShellColor.foreground
       }
       MouseArea {
         id: resetMouse

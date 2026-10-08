@@ -8,7 +8,7 @@ Item {
   id: root
 
   property bool advancedMode: false
-  readonly property color warnColor: Color.urgent
+  readonly property color warnColor: ShellColor.urgent
 
   Flickable {
     anchors.fill: parent
@@ -29,9 +29,9 @@ Item {
         implicitHeight: warningCol.implicitHeight + 28
         height: implicitHeight
         radius: Style.cornerRadius > 0 ? Math.min(20, Style.cornerRadius) : 6
-        color: advancedMode ? Util.alpha(root.warnColor, 0.1) : Util.alpha(Color.foreground, 0.04)
+        color: advancedMode ? Util.alpha(root.warnColor, 0.1) : Util.alpha(ShellColor.foreground, 0.04)
         border.width: 1
-        border.color: advancedMode ? Util.alpha(root.warnColor, 0.3) : Util.alpha(Color.foreground, 0.07)
+        border.color: advancedMode ? Util.alpha(root.warnColor, 0.3) : Util.alpha(ShellColor.foreground, 0.07)
 
         Column {
           id: warningCol
@@ -49,7 +49,7 @@ Item {
               text: advancedMode ? "󰀪" : "󰋽"
               font.family: Style.font.family
               font.pixelSize: Style.font.iconLarge
-              color: advancedMode ? root.warnColor : Color.muted
+              color: advancedMode ? root.warnColor : ShellColor.muted
               anchors.verticalCenter: parent.verticalCenter
             }
 
@@ -61,7 +61,7 @@ Item {
                 : "Environment variables control low-level behavior for Hyprland, Aquamarine, NVIDIA drivers, and toolkits (GTK, Qt, SDL, etc.). Enable Advanced mode to edit them."
               font.family: Style.font.family
               font.pixelSize: Style.font.body
-              color: advancedMode ? root.warnColor : Color.muted
+              color: advancedMode ? root.warnColor : ShellColor.muted
             }
           }
 
@@ -70,9 +70,9 @@ Item {
             width: parent.width
             height: 48
             radius: Style.cornerRadius > 0 ? Math.min(12, Math.round(Style.cornerRadius * 0.5)) : 4
-            color: advancedMode ? Util.alpha(root.warnColor, 0.15) : (toggleMouse.containsMouse ? Util.alpha(Color.foreground, 0.06) : "transparent")
+            color: advancedMode ? Util.alpha(root.warnColor, 0.15) : (toggleMouse.containsMouse ? Util.alpha(ShellColor.foreground, 0.06) : "transparent")
             border.width: 1
-            border.color: advancedMode ? Util.alpha(root.warnColor, 0.4) : Util.alpha(Color.foreground, 0.1)
+            border.color: advancedMode ? Util.alpha(root.warnColor, 0.4) : Util.alpha(ShellColor.foreground, 0.1)
 
             Item {
               anchors.fill: parent
@@ -89,7 +89,7 @@ Item {
                 font.family: Style.font.family
                 font.pixelSize: Style.font.body
                 font.weight: Font.DemiBold
-                color: advancedMode ? root.warnColor : Color.foreground
+                color: advancedMode ? root.warnColor : ShellColor.foreground
               }
 
               Rectangle {
@@ -99,7 +99,7 @@ Item {
                 radius: 13
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                color: advancedMode ? root.warnColor : Util.alpha(Color.foreground, 0.15)
+                color: advancedMode ? root.warnColor : Util.alpha(ShellColor.foreground, 0.15)
 
                 Rectangle {
                   id: toggleThumb

@@ -27,8 +27,8 @@ Panel {
   readonly property var totals: record && record.totals ? record.totals : {}
 
   readonly property bool ready: record.ready === true
-  readonly property color foreground: bar ? bar.foreground : Color.foreground
-  readonly property color urgent: bar ? bar.urgent : Color.urgent
+  readonly property color foreground: bar ? bar.foreground : ShellColor.foreground
+  readonly property color urgent: bar ? bar.urgent : ShellColor.urgent
   readonly property color dim: Qt.darker(foreground, 1.55)
   readonly property color track: Util.alpha(foreground, 0.12)
   readonly property string fontFamily: bar ? bar.fontFamily : Style.font.family

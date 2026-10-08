@@ -18,16 +18,16 @@ Item {
       font.family: Style.font.family
       font.pixelSize: Style.font.caption
       font.letterSpacing: 1.2
-      color: Color.muted
+      color: ShellColor.muted
     }
 
     Rectangle {
       width: parent.width
       height: timingCol.implicitHeight + 32
       radius: Style.cornerRadius > 0 ? Math.min(20, Style.cornerRadius) : 6
-      color: Util.alpha(Color.foreground, 0.04)
+      color: Util.alpha(ShellColor.foreground, 0.04)
       border.width: 1
-      border.color: Util.alpha(Color.foreground, 0.07)
+      border.color: Util.alpha(ShellColor.foreground, 0.07)
 
       Column {
         id: timingCol
@@ -48,13 +48,13 @@ Item {
               text: "Screensaver"
               font.family: Style.font.family
               font.pixelSize: Style.font.subtitle
-              color: Color.foreground
+              color: ShellColor.foreground
             }
             Text {
               text: "Minutes of inactivity before the screen dims."
               font.family: Style.font.family
               font.pixelSize: Style.font.bodySmall
-              color: Color.muted
+              color: ShellColor.muted
             }
           }
           Text {
@@ -64,7 +64,7 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             font.family: Style.font.family
             font.pixelSize: Style.font.body
-            color: Color.muted
+            color: ShellColor.muted
           }
           ValueSlider {
             id: screensaverSlider
@@ -89,13 +89,13 @@ Item {
               text: "Lock"
               font.family: Style.font.family
               font.pixelSize: Style.font.subtitle
-              color: Color.foreground
+              color: ShellColor.foreground
             }
             Text {
               text: "Minutes of inactivity before the session locks."
               font.family: Style.font.family
               font.pixelSize: Style.font.bodySmall
-              color: Color.muted
+              color: ShellColor.muted
             }
           }
           Text {
@@ -105,7 +105,7 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             font.family: Style.font.family
             font.pixelSize: Style.font.body
-            color: Color.muted
+            color: ShellColor.muted
           }
           ValueSlider {
             id: lockSlider
@@ -129,7 +129,7 @@ Item {
       font.family: Style.font.family
       font.pixelSize: Style.font.caption
       font.letterSpacing: 1.2
-      color: Color.muted
+      color: ShellColor.muted
     }
 
     Row {
@@ -150,7 +150,7 @@ Item {
       wrapMode: Text.WordWrap
       font.family: Style.font.family
       font.pixelSize: Style.font.bodySmall
-      color: Util.alpha(Color.muted, 0.8)
+      color: Util.alpha(ShellColor.muted, 0.8)
     }
   }
 }

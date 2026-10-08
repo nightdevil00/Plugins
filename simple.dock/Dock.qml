@@ -64,7 +64,7 @@ Item {
       width: item.active ? Style.space(8) : Style.space(5)
       height: item.active ? Style.space(3) : Style.space(2)
       radius: height / 2
-      color: item.active ? Color.bar.active : Util.alpha(Color.bar.text, 0.6)
+      color: item.active ? ShellColor.bar.active : Util.alpha(ShellColor.bar.text, 0.6)
       visible: item.running
     }
 
@@ -100,7 +100,7 @@ Item {
 
     property string glyph: ""
     property string tooltip: ""
-    property color glyphColor: Color.bar.text
+    property color glyphColor: ShellColor.bar.text
     property real glyphSize: root.iconSize * 0.42
     signal pressed()
 
@@ -146,7 +146,7 @@ Item {
     id: crow
 
     property string text: ""
-    property color textColor: Color.menu.text
+    property color textColor: ShellColor.menu.text
     property bool danger: false
     signal triggered()
 
@@ -157,7 +157,7 @@ Item {
       anchors.fill: parent
       radius: Style.cornerRadius
       color: area.containsMouse
-        ? (crow.danger ? Util.alpha(Color.urgent, 0.14) : Color.menu.selectedBackground)
+        ? (crow.danger ? Util.alpha(ShellColor.urgent, 0.14) : ShellColor.menu.selectedBackground)
         : "transparent"
     }
 
@@ -168,7 +168,7 @@ Item {
       anchors.rightMargin: Style.space(8)
       anchors.verticalCenter: parent.verticalCenter
       text: crow.text
-      color: area.containsMouse && crow.danger ? Color.urgent : crow.textColor
+      color: area.containsMouse && crow.danger ? ShellColor.urgent : crow.textColor
       font.family: Style.font.family
       font.pixelSize: Style.font.body
       elide: Text.ElideRight
@@ -529,8 +529,8 @@ Item {
 
   BorderSurface {
     id: dockCard
-    color: Color.bar.background
-    borderSpec: Border.flat(Color.bar.text, 1)
+    color: ShellColor.bar.background
+    borderSpec: Border.flat(ShellColor.bar.text, 1)
     radius: Math.min(Style.cornerRadius, height / 2)
     padding: Style.space(4)
     z: 1
@@ -602,7 +602,7 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         width: Style.space(1)
         height: root.iconSize
-        color: Util.alpha(Color.bar.text, 0.35)
+        color: Util.alpha(ShellColor.bar.text, 0.35)
       }
 
       Repeater {
@@ -627,8 +627,8 @@ Item {
     id: contextMenu
     visible: root.contextAppId !== ""
     z: 100
-    color: Color.menu.background
-    borderSpec: Border.surfaceSpec("menu", "border", Color.menu.border, 1)
+    color: ShellColor.menu.background
+    borderSpec: Border.surfaceSpec("menu", "border", ShellColor.menu.border, 1)
     radius: Style.cornerRadius
     padding: Style.space(3)
 
@@ -691,8 +691,8 @@ Item {
     id: tooltipCard
     visible: root.tooltipText !== ""
     z: 200
-    color: Color.tooltip.background
-    borderSpec: Border.surfaceSpec("tooltip", "border", Color.tooltip.border, 1)
+    color: ShellColor.tooltip.background
+    borderSpec: Border.surfaceSpec("tooltip", "border", ShellColor.tooltip.border, 1)
     radius: Style.cornerRadius
     padding: Style.space(4)
 
@@ -704,7 +704,7 @@ Item {
     Text {
       id: tooltipLabel
       text: root.tooltipText
-      color: Color.tooltip.text
+      color: ShellColor.tooltip.text
       font.family: Style.font.family
       font.pixelSize: Style.font.caption
     }

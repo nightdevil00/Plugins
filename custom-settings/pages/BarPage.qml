@@ -64,16 +64,16 @@ Item {
           font.family: Style.font.family
           font.pixelSize: Style.font.caption
           font.letterSpacing: 1.2
-          color: Color.muted
+          color: ShellColor.muted
         }
 
         Rectangle {
           width: col.width
           height: barCol.implicitHeight + 28
           radius: Style.cornerRadius > 0 ? Math.min(20, Style.cornerRadius) : 6
-          color: Util.alpha(Color.foreground, 0.04)
+          color: Util.alpha(ShellColor.foreground, 0.04)
           border.width: 1
-          border.color: Util.alpha(Color.foreground, 0.07)
+          border.color: Util.alpha(ShellColor.foreground, 0.07)
 
           Column {
             id: barCol
@@ -93,7 +93,7 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 font.family: Style.font.family
                 font.pixelSize: Style.font.body
-                color: Color.foreground
+                color: ShellColor.foreground
               }
               SegmentedControl {
                 options: [
@@ -116,7 +116,7 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 font.family: Style.font.family
                 font.pixelSize: Style.font.body
-                color: Color.foreground
+                color: ShellColor.foreground
               }
               SwitchControl {
                 checked: Omarchy.barTransparent
@@ -144,7 +144,7 @@ Item {
             font.family: Style.font.family
             font.pixelSize: Style.font.caption
             font.letterSpacing: 1.2
-            color: Color.muted
+            color: ShellColor.muted
           }
 
           Repeater {
@@ -155,7 +155,7 @@ Item {
               width: groupCol.width
               height: 52
               radius: 0
-              color: pluginMouse.containsMouse ? Util.alpha(Color.foreground, 0.04) : "transparent"
+              color: pluginMouse.containsMouse ? Util.alpha(ShellColor.foreground, 0.04) : "transparent"
 
               Row {
                 anchors.fill: parent
@@ -171,13 +171,13 @@ Item {
                     text: pluginRow.modelData.name
                     font.family: Style.font.family
                     font.pixelSize: Style.font.subtitle
-                    color: Color.foreground
+                    color: ShellColor.foreground
                   }
                   Text {
                     text: pluginRow.modelData.id
                     font.family: Style.font.family
                     font.pixelSize: Style.font.caption
-                    color: Color.muted
+                    color: ShellColor.muted
                   }
                 }
 

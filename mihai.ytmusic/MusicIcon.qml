@@ -9,7 +9,7 @@ Item {
   id: root
 
   property real iconSize: Style.font.icon
-  property color color: Color.foreground
+  property color color: ShellColor.foreground
 
   width: iconSize
   height: iconSize

@@ -16,7 +16,7 @@ BarWidget {
   property bool loading: false
 
   readonly property string glyph: "\uf1b0"
-  readonly property color buttonForeground: bar ? bar.foreground : Color.foreground
+  readonly property color buttonForeground: bar ? bar.foreground : ShellColor.foreground
   readonly property string buttonFontFamily: bar ? bar.fontFamily : Style.font.family
 
   readonly property int refreshIntervalSec: Math.max(15, Number(setting("refreshIntervalSec", 60)))

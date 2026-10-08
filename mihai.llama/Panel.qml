@@ -21,8 +21,8 @@ Panel {
   readonly property var record: hostWidget ? hostWidget.record : ({})
   readonly property var models: record && record.models ? record.models : []
   readonly property bool ready: record.ready === true
-  readonly property color foreground: bar ? bar.foreground : Color.foreground
-  readonly property color urgent: bar ? bar.urgent : Color.urgent
+  readonly property color foreground: bar ? bar.foreground : ShellColor.foreground
+  readonly property color urgent: bar ? bar.urgent : ShellColor.urgent
   readonly property color dim: Qt.darker(foreground, 1.55)
   readonly property string fontFamily: bar ? bar.fontFamily : Style.font.family
   readonly property int loadedCount: root.models.filter(function(m) { return m.state === "loaded" }).length
@@ -221,8 +221,8 @@ Panel {
   component ModelRow: Item {
     id: modelRow
     property var m: null
-    property color foreground: Color.foreground
-    property color urgent: Color.urgent
+    property color foreground: ShellColor.foreground
+    property color urgent: ShellColor.urgent
     property color dim: Qt.darker(foreground, 1.55)
     property string fontFamily: Style.font.family
     signal loadRequested()
@@ -312,8 +312,8 @@ Panel {
     id: btn
     property string labelText: ""
     property bool enabledFlag: true
-    property color fill: Color.foreground
-    property color foreground: Color.foreground
+    property color fill: ShellColor.foreground
+    property color foreground: ShellColor.foreground
     property color dim: Qt.darker(foreground, 1.55)
     property string fontFamily: Style.font.family
     signal clicked

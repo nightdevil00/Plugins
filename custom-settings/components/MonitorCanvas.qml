@@ -133,9 +133,9 @@ Item {
     id: surface
     anchors.fill: parent
     radius: Style.cornerRadius > 0 ? Math.min(20, Style.cornerRadius) : 6
-    color: Util.alpha(Color.foreground, 0.03)
+    color: Util.alpha(ShellColor.foreground, 0.03)
     border.width: 1
-    border.color: Util.alpha(Color.foreground, 0.07)
+    border.color: Util.alpha(ShellColor.foreground, 0.07)
     clip: true
 
     Text {
@@ -145,7 +145,7 @@ Item {
       text: "Drag to arrange"
       font.family: Style.font.family
       font.pixelSize: Style.font.caption
-      color: Util.alpha(Color.foreground, 0.3)
+      color: Util.alpha(ShellColor.foreground, 0.3)
     }
 
     Text {
@@ -155,7 +155,7 @@ Item {
         : (canvas.entries.filter(function (e) { return e.enabled }).length === 0 ? "All monitors are disabled." : "")
       font.family: Style.font.family
       font.pixelSize: Style.font.body
-      color: Color.muted
+      color: ShellColor.muted
     }
 
     Repeater {
@@ -178,9 +178,9 @@ Item {
         width: Math.max(24, (entry ? entry.w : 0) * canvas.frame.fit)
         height: Math.max(18, (entry ? entry.h : 0) * canvas.frame.fit)
         radius: 8
-        color: held ? Util.alpha(Color.accent, 0.20) : Util.alpha(Color.foreground, 0.06)
+        color: held ? Util.alpha(ShellColor.accent, 0.20) : Util.alpha(ShellColor.foreground, 0.06)
         border.width: 1
-        border.color: held ? Color.accent : Util.alpha(Color.foreground, 0.28)
+        border.color: held ? ShellColor.accent : Util.alpha(ShellColor.foreground, 0.28)
         Behavior on color { ColorAnimation { duration: 110 } }
 
         Column {
@@ -192,7 +192,7 @@ Item {
             font.family: Style.font.family
             font.pixelSize: Style.font.bodySmall
             font.weight: Font.DemiBold
-            color: Color.foreground
+            color: ShellColor.foreground
           }
           Text {
             anchors.horizontalCenter: parent.horizontalCenter
@@ -201,7 +201,7 @@ Item {
               : (box.entry ? (box.entry.x + ", " + box.entry.y) : "")
             font.family: Style.font.family
             font.pixelSize: Style.font.caption
-            color: Color.muted
+            color: ShellColor.muted
           }
         }
 

@@ -20,7 +20,7 @@ BarWidget {
   property variant notifyCommand: []
 
   readonly property string glyph: "\uf233"
-  readonly property color buttonForeground: bar ? bar.foreground : Color.foreground
+  readonly property color buttonForeground: bar ? bar.foreground : ShellColor.foreground
   readonly property string buttonFontFamily: bar ? bar.fontFamily : Style.font.family
 
   readonly property int refreshIntervalSec: Math.max(3, Number(setting("refreshIntervalSec", 3) || 3))

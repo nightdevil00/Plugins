@@ -34,7 +34,7 @@ Item {
     text: "No settings match \"" + root.query + "\""
     font.family: Style.font.family
     font.pixelSize: Style.font.body
-    color: Color.muted
+    color: ShellColor.muted
   }
 
   Flickable {
@@ -69,7 +69,7 @@ Item {
             font.family: Style.font.family
             font.pixelSize: Style.font.caption
             font.letterSpacing: 1.2
-            color: Color.muted
+            color: ShellColor.muted
           }
 
           SettingRow {

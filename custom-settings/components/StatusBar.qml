@@ -11,7 +11,7 @@ Item {
     anchors.left: parent.left
     anchors.right: parent.right
     height: 1
-    color: Util.alpha(Color.foreground, 0.08)
+    color: Util.alpha(ShellColor.foreground, 0.08)
   }
 
   Row {
@@ -24,8 +24,8 @@ Item {
       height: 7
       radius: 4
       anchors.verticalCenter: parent.verticalCenter
-      color: SettingsStore.errors.length > 0 ? Color.urgent
-        : (SettingsStore.applying ? Color.accent : Util.alpha(Color.foreground, 0.35))
+      color: SettingsStore.errors.length > 0 ? ShellColor.urgent
+        : (SettingsStore.applying ? ShellColor.accent : Util.alpha(ShellColor.foreground, 0.35))
     }
 
     Text {
@@ -35,7 +35,7 @@ Item {
       anchors.verticalCenter: parent.verticalCenter
       font.family: Style.font.family
       font.pixelSize: Style.font.bodySmall
-      color: SettingsStore.errors.length > 0 ? Color.urgent : Color.muted
+      color: SettingsStore.errors.length > 0 ? ShellColor.urgent : ShellColor.muted
       elide: Text.ElideRight
       width: Math.min(implicitWidth, root.width - hints.width - 60)
     }
@@ -48,6 +48,6 @@ Item {
     text: "↑↓/Tab navigate   ←→ adjust   Enter toggle   Esc close"
     font.family: Style.font.family
     font.pixelSize: Style.font.bodySmall
-    color: Util.alpha(Color.muted, 0.7)
+    color: Util.alpha(ShellColor.muted, 0.7)
   }
 }

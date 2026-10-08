@@ -16,9 +16,9 @@ Item {
       width: parent.width
       height: nightCol.implicitHeight + 32
       radius: Style.cornerRadius > 0 ? Math.min(20, Style.cornerRadius) : 6
-      color: Util.alpha(Color.foreground, 0.04)
+      color: Util.alpha(ShellColor.foreground, 0.04)
       border.width: 1
-      border.color: Util.alpha(Color.foreground, 0.07)
+      border.color: Util.alpha(ShellColor.foreground, 0.07)
 
       Column {
         id: nightCol
@@ -39,13 +39,13 @@ Item {
               text: "Warm screen after dark"
               font.family: Style.font.family
               font.pixelSize: Style.font.subtitle
-              color: Color.foreground
+              color: ShellColor.foreground
             }
             Text {
               text: "Shifts the display toward warmer tones using hyprsunset."
               font.family: Style.font.family
               font.pixelSize: Style.font.bodySmall
-              color: Color.muted
+              color: ShellColor.muted
             }
           }
           SwitchControl {
@@ -68,13 +68,13 @@ Item {
               text: "Temperature"
               font.family: Style.font.family
               font.pixelSize: Style.font.subtitle
-              color: Color.foreground
+              color: ShellColor.foreground
             }
             Text {
               text: "Lower is warmer. 4000 K is a comfortable evening setting."
               font.family: Style.font.family
               font.pixelSize: Style.font.bodySmall
-              color: Color.muted
+              color: ShellColor.muted
             }
           }
           Text {
@@ -84,7 +84,7 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             font.family: Style.font.family
             font.pixelSize: Style.font.body
-            color: Color.muted
+            color: ShellColor.muted
           }
           ValueSlider {
             id: tempSlider

@@ -62,7 +62,7 @@ BarWidget {
           implicitHeight: row.implicitHeight + Style.space(12)
           radius: Style.cornerRadius
           color: mouseArea.containsMouse
-            ? Style.hoverFillFor(root.bar.foreground, Color.accent)
+            ? Style.hoverFillFor(root.bar.foreground, ShellColor.accent)
             : "transparent"
 
           Row {

@@ -13,10 +13,10 @@ Rectangle {
 
   readonly property bool hot: mouse.containsMouse
   color: primary
-    ? (hot ? Qt.lighter(Color.accent, 1.1) : Color.accent)
-    : (hot ? Util.alpha(Color.foreground, 0.14) : Util.alpha(Color.foreground, 0.07))
+    ? (hot ? Qt.lighter(ShellColor.accent, 1.1) : ShellColor.accent)
+    : (hot ? Util.alpha(ShellColor.foreground, 0.14) : Util.alpha(ShellColor.foreground, 0.07))
   border.width: activeFocus ? 1 : 0
-  border.color: primary ? Qt.lighter(Color.accent, 1.3) : Color.accent
+  border.color: primary ? Qt.lighter(ShellColor.accent, 1.3) : ShellColor.accent
   Behavior on color { ColorAnimation { duration: 110 } }
 
   activeFocusOnTab: true
@@ -28,7 +28,7 @@ Rectangle {
     font.family: Style.font.family
     font.pixelSize: Style.font.body
     font.weight: root.primary ? Font.DemiBold : Font.Normal
-    color: root.primary ? Color.background : Color.foreground
+    color: root.primary ? ShellColor.background : ShellColor.foreground
   }
 
   MouseArea {

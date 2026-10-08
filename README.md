@@ -125,6 +125,16 @@ Each subdirectory is self-contained: `manifest.json`, its QML/JS sources, its ow
 its control script keeps all runtime state in `~/llama-serve`, outside the plugin
 folder, so the shell's plugin reload is never tripped.
 
+## Compatibility — Qt 6.12
+
+Qt 6.12's QtQuick registers a built-in `Color` QML type. Once the shell imports it,
+`Color.*` resolves to that type instead of the shell's palette singleton, so every
+color binding quietly becomes `undefined` (omacom/omarchy#14560). The Omarchy
+Qt 6.12 fix renames the shell's palette singleton to `ShellColor`, and these plugins
+now use `ShellColor.*` to match. Run your shell with that fix in place — the
+`omarchy-shell-fix-qt612` workaround or a newer omarchy that renames the singleton —
+so the plugins load.
+
 ---
 *`yt-pony` is a fork of [tonythesuperpony/omapony](https://github.com/tonythesuperpony) —
 see its README for upstream credits.*

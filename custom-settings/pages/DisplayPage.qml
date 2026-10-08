@@ -86,9 +86,9 @@ Item {
           width: col.width
           height: content.height + 16
           radius: Style.cornerRadius > 0 ? Math.min(20, Style.cornerRadius) : 6
-          color: Util.alpha(Color.foreground, 0.04)
+          color: Util.alpha(ShellColor.foreground, 0.04)
           border.width: 1
-          border.color: Util.alpha(Color.foreground, 0.07)
+          border.color: Util.alpha(ShellColor.foreground, 0.07)
 
           readonly property bool enabledHere: SettingsStore.monitorValue(modelData, "disabled", false) === false
 
@@ -115,13 +115,13 @@ Item {
                   font.family: Style.font.family
                   font.pixelSize: Style.font.title
                   font.weight: Font.DemiBold
-                  color: Color.foreground
+                  color: ShellColor.foreground
                 }
                 Text {
                   text: card.modelData.description + "  ·  " + card.modelData.width + "×" + card.modelData.height
                   font.family: Style.font.family
                   font.pixelSize: Style.font.bodySmall
-                  color: Color.muted
+                  color: ShellColor.muted
                 }
               }
 
@@ -137,7 +137,7 @@ Item {
                   text: card.expanded ? "▲" : "▼"
                   font.family: Style.font.family
                   font.pixelSize: Style.font.bodySmall
-                  color: Color.muted
+                  color: ShellColor.muted
                 }
                 MouseArea {
                   anchors.fill: parent
@@ -154,14 +154,14 @@ Item {
                 radius: Style.cornerRadius > 0 ? Math.min(12, Math.round(Style.cornerRadius * 0.5)) : 4
                 visible: SettingsStore.isMonitorManaged(card.modelData.name)
                 anchors.verticalCenter: parent.verticalCenter
-                color: resetMouse.containsMouse ? Util.alpha(Color.foreground, 0.12) : Util.alpha(Color.foreground, 0.06)
+                color: resetMouse.containsMouse ? Util.alpha(ShellColor.foreground, 0.12) : Util.alpha(ShellColor.foreground, 0.06)
                 Text {
                   id: resetText
                   anchors.centerIn: parent
                   text: "Reset"
                   font.family: Style.font.family
                   font.pixelSize: Style.font.bodySmall
-                  color: Color.foreground
+                  color: ShellColor.foreground
                 }
                 MouseArea {
                   id: resetMouse
@@ -187,7 +187,7 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 font.family: Style.font.family
                 font.pixelSize: Style.font.body
-                color: Color.foreground
+                color: ShellColor.foreground
               }
             }
 
@@ -216,7 +216,7 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     font.family: Style.font.family
                     font.pixelSize: Style.font.body
-                    color: Color.muted
+                    color: ShellColor.muted
                   }
                   SegmentedControl {
                     options: root.modeOptions(card.modelData)
@@ -236,7 +236,7 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     font.family: Style.font.family
                     font.pixelSize: Style.font.body
-                    color: Color.muted
+                    color: ShellColor.muted
                   }
                   SegmentedControl {
                     options: [
@@ -262,7 +262,7 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     font.family: Style.font.family
                     font.pixelSize: Style.font.body
-                    color: Color.muted
+                    color: ShellColor.muted
                   }
                   SegmentedControl {
                     options: root.transformOptions(card.modelData)
@@ -282,14 +282,14 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     font.family: Style.font.family
                     font.pixelSize: Style.font.body
-                    color: Color.muted
+                    color: ShellColor.muted
                   }
                   Text {
                     text: "X"
                     anchors.verticalCenter: parent.verticalCenter
                     font.family: Style.font.family
                     font.pixelSize: Style.font.bodySmall
-                    color: Color.muted
+                    color: ShellColor.muted
                   }
                   ValueSlider {
                     width: 150
@@ -305,7 +305,7 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     font.family: Style.font.family
                     font.pixelSize: Style.font.bodySmall
-                    color: Color.muted
+                    color: ShellColor.muted
                   }
                   ValueSlider {
                     width: 150

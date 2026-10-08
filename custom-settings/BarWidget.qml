@@ -17,7 +17,7 @@ BarWidget {
         anchors.centerIn: parent
 
         text: "󰒓"
-        color: (root.bar && root.barForeground) ? root.barForeground : Color.foreground
+        color: (root.bar && root.barForeground) ? root.barForeground : ShellColor.foreground
         font.family: root.bar ? root.bar.fontFamily : Style.font.family
         font.pixelSize: Style.font.icon
 
