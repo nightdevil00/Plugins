@@ -59,6 +59,14 @@ MODELS = [
      "tag": "9B",
      "size": "5.8 GB", "port": 8094, "script": "qwen3.5-9b-kimi-k3.sh",
      "opencode": "local-kimi/qwen3.5-9b-kimi-k3"},
+    # Underdog Saluki 27B, a Qwen3.8-27B quantised to IQ2-mix. Tool calling is
+    # real (verified by curl AND by a real opencode run), but it is a 27B with
+    # 44 of 64 layers on CPU: 1.29 tok/s generation and 4m23s of wall clock to
+    # answer opencode's 5,632-token system prompt. Listed because it does emit
+    # correct tool calls; read the launcher before driving it.
+    {"id": "saluki-27b", "name": "Underdog Saluki 27B 1.0", "tag": "S27B",
+     "size": "7.9 GB", "port": 8095, "script": "saluki-27b.sh",
+     "opencode": "local-saluki/saluki-27b"},
     {"id": "spark-2.5-1.7b", "name": "Spark-X2.5-1.7B", "tag": "Spark1.7",
      "size": "1.0 GB", "port": 8092, "script": "spark-x2.5-1.7b.sh",
      "opencode": "local-spark17b/spark-x2.5-1.7b"},

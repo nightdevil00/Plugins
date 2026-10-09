@@ -6,7 +6,7 @@ A bar widget + panel that boots and stops **local [llama.cpp](https://github.com
 
 Nothing occupies RAM or VRAM by itself — the widget reports **off** and every model is idle until you click **Load**. Pick a model in the panel, click Load, and once it reports **loaded** you can select it in opencode (`/models`). Unload frees the memory again.
 
-It ships with **fifteen launchers tuned for a GTX 1650 Ti (4 GB class)** — eleven usable as opencode models, four chat-only because they don't survive tool calling. The same flow and control script work for any llama.cpp build: edit the launchers in `~/llama-serve` to point at your own GGUFs and ports.
+It ships with **sixteen launchers tuned for a GTX 1650 Ti (4 GB class)** — twelve usable as opencode models, four chat-only because they don't survive tool calling. The same flow and control script work for any llama.cpp build: edit the launchers in `~/llama-serve` to point at your own GGUFs and ports.
 
 ## Installing
 
@@ -83,6 +83,11 @@ Split into two groups, because **whether a model can call tools decides whether 
 | Qwen3-Coder-30B-A3B · Q2_K | `qwen3-coder-30b-a3b-Q2_K.gguf` | 10.5 GB | 8082 | low, `-ngl 8` | ~11 tok/s, best tool caller |
 | gpt-oss-20b · MXFP4 | `gpt-oss-20b-MXFP4.gguf` | 11.3 GB | 8090 | **CPU only**, `-ngl 0`, `-c 8192` | ~4.8 tok/s |
 | Qwen3.5-9B Kimi-k3 Distilled · Q4_K_M | `Qwen3.5-9B-Kimi-k3-Distilled-Q4_K_M.gguf` | 5.8 GB | 8094 | partial, `-ngl 18`, `--parallel 1` | ~5.6 tok/s, no template coaxing needed |
+| Underdog Saluki 27B 1.0 · IQ2-mix | `Underdog-Saluki-27B-1.0-IQ2-mix.gguf` | 7.9 GB | 8095 | partial, `-ngl 20`, `-fa on`, `--device Vulkan1` | ~1.3 tok/s, 4m23s per opencode request — see the box below |
+
+> **Saluki 27B is wired in and does work, but it is slow enough to change how you use it.** Tool calling is verified twice — a raw curl tool call with clean JSON arguments, and a real `opencode run` that answered correctly. The cost is that it is a 27B with only 20 of 64 layers in VRAM; the other 44 run on CPU. Measured: ~21 tok/s prompt processing and 1.29 tok/s generation, which is **4m23s of wall clock to answer a one-word prompt**, because opencode's system prompt alone is 5,632 tokens. An agent loop with several tool calls is multi-minutes per step. Fine for a long single question through `llama-cli`; not a preset to drive opencode with at speed.
+>
+> Everything in its launcher that matters is about squeeze: `-fa on` (the model's own quickstart passes it; without it prompt processing was 4.6 tok/s on a small prompt), `--parallel 1` for the usual 4× KV reason, and `-ngl 20` because `-ngl 24` dies allocating the KV cache. `--device Vulkan1` is pinned deliberately: the unused Intel iGPU looks like free compute and is a trap — splitting across both GPUs measured **3× slower** (1.4 tok/s prompt, 0.45 tok/s generation), because every layer boundary pays a cross-device transfer and a UHD iGPU loses to the 12 CPU threads it displaces.
 
 **No tool calling — chat-only, deliberately absent from the panel:**
 
@@ -126,6 +131,8 @@ wget -O Spark-X2.5-4B-Q4_K_M.gguf \
   https://huggingface.co/XHToken/Spark-X2.5-4B-GGUF/resolve/main/Spark-X2.5-4B-Q4_K_M.gguf
 wget -O Qwen3.5-9B-Kimi-k3-Distilled-Q4_K_M.gguf \
   https://huggingface.co/mradermacher/Qwen3.5-9B-Kimi-k3-Distilled-GGUF/resolve/main/Qwen3.5-9B-Kimi-k3-Distilled.Q4_K_M.gguf
+wget -O Underdog-Saluki-27B-1.0-IQ2-mix.gguf \
+  https://huggingface.co/ConwayResearch/Underdog-Saluki-27B-1.0/resolve/main/Underdog-Saluki-27B-1.0-IQ2-mix.gguf
 # chat-only, optional
 wget -O Llama-3.2-3B-Instruct-Q4_K_M.gguf \
   https://huggingface.co/unsloth/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-Q4_K_M.gguf
@@ -169,6 +176,7 @@ The control script (`llama_ctl.py`) lives inside the plugin folder — but its *
   spark-x2.5-4b.sh
   spark-x2.5-1.7b.sh
   qwen3.5-9b-kimi-k3.sh
+  saluki-27b.sh
   llama3.2-3b.sh            chat-only, not in the panel
   lfm2.5-8b.sh              chat-only, not in the panel
   nemotron-nano.sh          chat-only, not in the panel
@@ -212,7 +220,7 @@ The servers expose standard llama.cpp OpenAI-compatible endpoints (`http://127.0
     // local-17b → 8084, local-14b → 8086, local-oss → 8090,
     // local-spark4b → 8091, local-spark17b → 8092,
     // local-8b → 8081, local-coder → 8082, local-gemma4 → 8083,
-    // local-kimi → 8094
+    // local-kimi → 8094, local-saluki → 8095
   }
 }
 ```
@@ -274,7 +282,7 @@ python3 ~/.config/omarchy/plugins/mihai.llama/llama_ctl.py unload qwen3-8b
 python3 ~/.config/omarchy/plugins/mihai.llama/llama_ctl.py stop     # all servers
 ```
 
-Model ids (panel presets only): `qwen3-1.7b`, `qwen3-4b`, `qwen3-8b`, `oxcoder-9b`, `qwen3-14b`, `qwen3-coder-30b`, `gemma4-e2b`, `gpt-oss-20b`, `spark-2.5-4b`, `spark-2.5-1.7b`, `qwen3.5-9b-kimi-k3`. The chat-only models (`llama3.2-3b`, `lfm2.5-8b`, `nemotron-nano`, `gemma3-12b`) are intentionally absent — run their launchers by hand.
+Model ids (panel presets only): `qwen3-1.7b`, `qwen3-4b`, `qwen3-8b`, `oxcoder-9b`, `qwen3-14b`, `qwen3-coder-30b`, `gemma4-e2b`, `gpt-oss-20b`, `spark-2.5-4b`, `spark-2.5-1.7b`, `qwen3.5-9b-kimi-k3`, `saluki-27b`. The chat-only models (`llama3.2-3b`, `lfm2.5-8b`, `nemotron-nano`, `gemma3-12b`) are intentionally absent — run their launchers by hand.
 
 ## Editing for your own hardware
 
