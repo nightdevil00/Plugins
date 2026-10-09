@@ -6,7 +6,7 @@ A bar widget + panel that boots and stops **local [llama.cpp](https://github.com
 
 Nothing occupies RAM or VRAM by itself — the widget reports **off** and every model is idle until you click **Load**. Pick a model in the panel, click Load, and once it reports **loaded** you can select it in opencode (`/models`). Unload frees the memory again.
 
-It ships with **fourteen launchers tuned for a GTX 1650 Ti (4 GB class)** — ten usable as opencode models, four chat-only because they don't survive tool calling. The same flow and control script work for any llama.cpp build: edit the launchers in `~/llama-serve` to point at your own GGUFs and ports.
+It ships with **fifteen launchers tuned for a GTX 1650 Ti (4 GB class)** — eleven usable as opencode models, four chat-only because they don't survive tool calling. The same flow and control script work for any llama.cpp build: edit the launchers in `~/llama-serve` to point at your own GGUFs and ports.
 
 ## Installing
 
@@ -46,7 +46,21 @@ cmake -B build -DCMAKE_BUILD_TYPE=Release -DGGML_CUDA=ON     # NVIDIA CUDA
 cmake --build build -j --target llama-server
 ```
 
-CPU-only works too — the models are a bit slower, and the tool-calling tests below were done on the CUDA build. (On Arch Linux, `paru llama.cpp-cuda` installs a packaged build if you prefer.)
+CPU-only works too — the models are a bit slower, and the tool-calling tests above were done on the CUDA build. (On Arch Linux, `paru llama.cpp-cuda` installs a packaged build if you prefer.)
+
+You do not have to build anything from source. If a working `llama-server`
+already exists elsewhere on the machine, point `~/llama.cpp/build/bin` at it:
+
+```sh
+mkdir -p ~/llama.cpp/build/bin
+ln -s /path/to/existing/llama-server ~/llama.cpp/build/bin/llama-server
+```
+
+`RUNPATH` is `$ORIGIN` in stock builds, so the symlink still finds its sibling
+`.so` files — no `LD_LIBRARY_PATH` needed. (This box runs the Vulkan build that
+`atomic-agent` installs under `~/.atomic-agent/models/backend`, which is enough
+for every preset here; `atomic-agent models start` would fight you for VRAM if
+it is holding a model resident, so stop it first with `atomic-agent models stop`.)
 
 ### 2. Download the models
 
@@ -68,6 +82,7 @@ Split into two groups, because **whether a model can call tools decides whether 
 | Spark-X2.5-4B · Q4_K_M | `Spark-X2.5-4B-Q4_K_M.gguf` | 2.4 GB | 8091 | fits, `-ngl 99` | ~38 tok/s |
 | Qwen3-Coder-30B-A3B · Q2_K | `qwen3-coder-30b-a3b-Q2_K.gguf` | 10.5 GB | 8082 | low, `-ngl 8` | ~11 tok/s, best tool caller |
 | gpt-oss-20b · MXFP4 | `gpt-oss-20b-MXFP4.gguf` | 11.3 GB | 8090 | **CPU only**, `-ngl 0`, `-c 8192` | ~4.8 tok/s |
+| Qwen3.5-9B Kimi-k3 Distilled · Q4_K_M | `Qwen3.5-9B-Kimi-k3-Distilled-Q4_K_M.gguf` | 5.8 GB | 8094 | partial, `-ngl 18`, `--parallel 1` | ~5.6 tok/s, no template coaxing needed |
 
 **No tool calling — chat-only, deliberately absent from the panel:**
 
@@ -109,6 +124,8 @@ wget -O Spark-X2.5-1.7B-Q4_K_M.gguf \
   https://huggingface.co/XHToken/Spark-X2.5-1.7B-GGUF/resolve/main/Spark-X2.5-1.7B-Q4_K_M.gguf
 wget -O Spark-X2.5-4B-Q4_K_M.gguf \
   https://huggingface.co/XHToken/Spark-X2.5-4B-GGUF/resolve/main/Spark-X2.5-4B-Q4_K_M.gguf
+wget -O Qwen3.5-9B-Kimi-k3-Distilled-Q4_K_M.gguf \
+  https://huggingface.co/mradermacher/Qwen3.5-9B-Kimi-k3-Distilled-GGUF/resolve/main/Qwen3.5-9B-Kimi-k3-Distilled.Q4_K_M.gguf
 # chat-only, optional
 wget -O Llama-3.2-3B-Instruct-Q4_K_M.gguf \
   https://huggingface.co/unsloth/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-Q4_K_M.gguf
@@ -122,11 +139,12 @@ wget -O gemma-3-12b-it-Q4_K_M.gguf \
 
 > The 30B URL is `Qwen3-Coder-30B-A3B-**Instruct**-GGUF`, not `Qwen3-Coder-30B-A3B-GGUF`. The ungated-looking name is a 401.
 
-**Thinking must be off, per model, or tool calling silently fails.** This is the single most common failure and it does not look like a tool-calling failure: with a `tools` block present the model spends its *entire* `max_tokens` budget on `reasoning_content`, returns an empty `content`, and opencode surfaces it as a generic `Unexpected server error`. Three different mechanisms are needed:
+**Thinking must be off, per model, or tool calling silently fails.** This is the single most common failure and it does not look like a tool-calling failure: with a `tools` block present the model spends its *entire* `max_tokens` budget on `reasoning_content`, returns an empty `content`, and opencode surfaces it as a generic `Unexpected server error`. Four different mechanisms are needed:
 
 - **Qwen3 family** (`qwen3-8b`, `qwen3-14b`, `qwen3-1.7b`): `--chat-template-kwargs '{"enable_thinking": false}'`. The 8B additionally ships *no* chat template at all, so its launcher also points at `~/models/qwen3-tool.jinja` (a copy is in this plugin folder).
 - **Gemma** (`gemma4-e2b`): `--chat-template-kwargs '{"enable_thinking": false}'`.
 - **OxCoder-9B** (`oxcoder-9b`): this build takes the non-deprecated `--reasoning off` for the same job — `--chat-template-kwargs '{"enable_thinking": false}'` still works but logs a deprecation warning. Unlike the others, its thinking mode is genuinely good (it returns clean `reasoning_content` *and* still calls tools), so `--reasoning on` is a real option if you want the reasoning trace.
+- **Qwen3.5-9B Kimi-k3** (`qwen3.5-9b-kimi-k3`): also `--reasoning off`. Its embedded template honours `enable_thinking:false` too, but routing it through `--chat-template-kwargs` logs a deprecation warning on every start, so the modern flag is the better default. Unlike every other preset here this model needs *no* template coaxing at all for tools — the autoparser reads the `<tool_call>` format straight out of the GGUF's own chat template.
 - **Spark-X2.5** (`spark-x2.5-4b`, `spark-x2.5-1.7b`): same `enable_thinking:false`. Note this model emits a correct tool call *either way* — thinking-on is not a bug here, it's just slower in a tool loop. Their published agentic numbers are measured in thinking mode, so flip the flag if you want that trade.
 - **Anything else**: `--reasoning off` / `--reasoning-budget 0` do *not* reliably work — the template ignores them. Don't assume a model is fixable this way; test it (see below).
 
@@ -150,6 +168,7 @@ The control script (`llama_ctl.py`) lives inside the plugin folder — but its *
   gpt-oss-20b.sh
   spark-x2.5-4b.sh
   spark-x2.5-1.7b.sh
+  qwen3.5-9b-kimi-k3.sh
   llama3.2-3b.sh            chat-only, not in the panel
   lfm2.5-8b.sh              chat-only, not in the panel
   nemotron-nano.sh          chat-only, not in the panel
@@ -171,23 +190,39 @@ This separation is deliberate: the control script and its files must **never** b
 
 ## Wiring opencode
 
-The servers expose standard llama.cpp OpenAI-compatible endpoints (`http://127.0.0.1:8080` etc.). Add one provider per model in `~/.config/opencode/opencode.json`:
+The servers expose standard llama.cpp OpenAI-compatible endpoints (`http://127.0.0.1:8080` etc.). Add one provider per model in `~/.config/opencode/opencode.json`. OpenCode **v2** uses `providers` / `package` / `settings` — the older `provider` / `npm` / `options` spelling is v1 and is ignored:
 
 ```jsonc
 {
-  "provider": {
+  "$schema": "https://opencode.ai/config.json",
+  "providers": {
     "local-4b": {
-      "npm": "@ai-sdk/openai-compatible",
       "name": "Local llama 4B (8080)",
-      "options": { "baseURL": "http://127.0.0.1:8080/v1" },
-      "models": { "qwen3-4b": { "name": "Qwen3-4B-Instruct-2507" } }
+      "package": "@opencode/ai/providers/openai-compatible",
+      "settings": { "baseURL": "http://127.0.0.1:8080/v1" },
+      "models": {
+        "qwen3-4b": {
+          "name": "Qwen3-4B-Instruct-2507",
+          "modelID": "qwen3-4b",
+          "capabilities": { "tools": true, "input": ["text"], "output": ["text"] },
+          "limit": { "context": 16384, "output": 8192 }
+        }
+      }
     }
     // local-17b → 8084, local-14b → 8086, local-oss → 8090,
     // local-spark4b → 8091, local-spark17b → 8092,
-    // local-8b → 8081, local-coder → 8082, local-gemma4 → 8083
+    // local-8b → 8081, local-coder → 8082, local-gemma4 → 8083,
+    // local-kimi → 8094
   }
 }
 ```
+
+`modelID` must match the launcher's `--alias` (that is the name the server answers
+to), while the `models` key is what you type in `/models`. Set `capabilities` and
+`limit` explicitly: OpenCode cannot probe a custom endpoint and otherwise assumes
+a 200,000-token context and 32,000-token output, which quietly overruns every
+preset here — `limit.context` is what makes it compact in time. Skip `apiKey`
+entirely; llama.cpp servers run without authentication.
 
 Model ids match the panel's `opencode` field, so `llama_ctl.py status` always tells you the exact `provider/model` string to select.
 
@@ -239,7 +274,7 @@ python3 ~/.config/omarchy/plugins/mihai.llama/llama_ctl.py unload qwen3-8b
 python3 ~/.config/omarchy/plugins/mihai.llama/llama_ctl.py stop     # all servers
 ```
 
-Model ids (panel presets only): `qwen3-1.7b`, `qwen3-4b`, `qwen3-8b`, `oxcoder-9b`, `qwen3-14b`, `qwen3-coder-30b`, `gemma4-e2b`, `gpt-oss-20b`, `spark-2.5-4b`, `spark-2.5-1.7b`. The chat-only models (`llama3.2-3b`, `lfm2.5-8b`, `nemotron-nano`, `gemma3-12b`) are intentionally absent — run their launchers by hand.
+Model ids (panel presets only): `qwen3-1.7b`, `qwen3-4b`, `qwen3-8b`, `oxcoder-9b`, `qwen3-14b`, `qwen3-coder-30b`, `gemma4-e2b`, `gpt-oss-20b`, `spark-2.5-4b`, `spark-2.5-1.7b`, `qwen3.5-9b-kimi-k3`. The chat-only models (`llama3.2-3b`, `lfm2.5-8b`, `nemotron-nano`, `gemma3-12b`) are intentionally absent — run their launchers by hand.
 
 ## Editing for your own hardware
 

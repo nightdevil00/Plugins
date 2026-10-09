@@ -51,6 +51,14 @@ MODELS = [
     {"id": "spark-2.5-4b", "name": "Spark-X2.5-4B", "tag": "Spark4B",
      "size": "2.4 GB", "port": 8091, "script": "spark-x2.5-4b.sh",
      "opencode": "local-spark4b/spark-x2.5-4b"},
+    # Qwen3.5-9B distilled from Kimi K3 coding traces. Needs no template coaxing
+    # at all - the GGUF embeds one that the autoparser reads the tool format out
+    # of - but --reasoning off, or it burns max_tokens on thinking before the
+    # first tool call. Port 8094, one past the highest existing preset.
+    {"id": "qwen3.5-9b-kimi-k3", "name": "Qwen3.5-9B Kimi-k3 Distilled",
+     "tag": "9B",
+     "size": "5.8 GB", "port": 8094, "script": "qwen3.5-9b-kimi-k3.sh",
+     "opencode": "local-kimi/qwen3.5-9b-kimi-k3"},
     {"id": "spark-2.5-1.7b", "name": "Spark-X2.5-1.7B", "tag": "Spark1.7",
      "size": "1.0 GB", "port": 8092, "script": "spark-x2.5-1.7b.sh",
      "opencode": "local-spark17b/spark-x2.5-1.7b"},
