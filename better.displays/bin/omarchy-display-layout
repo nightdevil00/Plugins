@@ -1,0 +1,480 @@
+#!/bin/bash
+# omarchy:summary=Rewrite the monitor layout (order, position, rotation) in ~/.config/hypr/monitors.lua
+# omarchy:group=display
+# omarchy:name=layout
+# omarchy:args=[read|apply --json '<array>']
+# omarchy:examples=omarchy display layout read | omarchy display layout apply --json '[{"output":"eDP-1","position":"0x1080","scale":1,"transform":0}]'
+
+# Batched layout control. `omarchy display monitor set` handles one output at a
+# time and rewrites only that output's line inside ~/.config/hypr/monitors.lua,
+# which can never reorder the lines. This command regenerates the whole managed
+# block so the order, positions and transforms in the file match what the
+# better.displays panel draws.
+#
+# Rewrite rules:
+#   * Every line that is NOT an hl.monitor(...) call is preserved byte-for-byte
+#     -- header comments, `local omarchy_monitor_scale` declarations, hl.env()
+#     calls, hand-written notes. Commented-out hl.monitor examples are left
+#     alone too.
+#   * The hl.monitor(...) calls are regenerated in the order given on the
+#     command line. Omarchy's catch-all (`output = ""`) line, if the file had
+#     one, is re-emitted first.
+#   * `mode`, `position`, `scale` and `transform` may be omitted per entry. An
+#     omitted field keeps whatever the file already had for that output, so
+#     dragging a display never rewrites `mode = "preferred"` into a hardcoded
+#     refresh rate. A bare-identifier scale (Omarchy's `omarchy_monitor_scale`)
+#     is re-emitted as the identifier when its value still matches.
+#   * One backup of the pre-first-write file is kept as monitors.lua.bak.
+
+set -euo pipefail
+
+CONFIG_DIR="$HOME/.config/omarchy"
+DISPLAYS_JSON="$CONFIG_DIR/displays.json"
+# Overridable so the rewrite can be rehearsed against a scratch file.
+MONITORS_LUA="${BETTER_DISPLAYS_MONITORS_LUA:-$HOME/.config/hypr/monitors.lua}"
+
+die() { echo "$*" >&2; exit 1; }
+
+# ---- input validation ----
+
+validate_output() {
+  # Hyprland output names: alphanumeric, hyphens, underscores, colons (e.g. DP-1, HDMI-A:0)
+  [[ $1 =~ ^[a-zA-Z0-9_-]+(:[a-zA-Z0-9_-]+)?$ ]] || { echo "Invalid monitor output name: $1" >&2; exit 1; }
+}
+
+validate_mode() {
+  # Mode format: WxH@R, WxH@RHz, or one of Hyprland's special tokens.
+  case "$1" in
+    preferred|highres|highrr) return 0 ;;
+  esac
+  [[ $1 =~ ^[0-9]+x[0-9]+@[0-9]+(\.[0-9]+)?(Hz)?$ ]] || { echo "Invalid mode format: $1" >&2; exit 1; }
+}
+
+validate_pos() {
+  # Position format: XxY or one of Hyprland's auto placements.
+  case "$1" in
+    auto|auto-up|auto-down|auto-left|auto-right) return 0 ;;
+  esac
+  [[ $1 =~ ^-?[0-9]+x-?[0-9]+$ ]] || { echo "Invalid position format: $1" >&2; exit 1; }
+}
+
+validate_scale() {
+  [[ $1 =~ ^[0-9]+(\.[0-9]+)?$ ]] || { echo "Invalid scale value: $1" >&2; exit 1; }
+}
+
+validate_transform() {
+  [[ $1 =~ ^[0-3]$ ]] || { echo "Invalid transform value: $1 (must be 0-3)" >&2; exit 1; }
+}
+
+# Escape for safe embedding in Lua double-quoted strings.
+lua_escape() {
+  printf '%s' "$1" | sed 's/[\\"]/\\&/g'
+}
+
+# ---- monitors.lua inspection ----
+
+# Flatten every hl.monitor(...) block -- single-line or multi-line -- down to
+# one line each, so field extraction only has to cope with one shape.
+# Commented-out blocks are skipped: `-- hl.monitor({ ... })` is documentation
+# and must survive the rewrite untouched.
+flatten_monitor_blocks() {
+  [[ -f $MONITORS_LUA ]] || return 0
+  awk '
+    function depth_of(s,   t, o, c) {
+      t = s; o = gsub(/\(/, "", t)
+      t = s; c = gsub(/\)/, "", t)
+      return o - c
+    }
+    function flush() {
+      if (buf == "") return
+      # A block that was written across several lines gets re-emitted on one;
+      # squeeze the newlines away so the preserved line stays readable.
+      if (multiline) gsub(/[ \t]+/, " ", buf)
+      print buf
+      buf = ""
+      multiline = 0
+    }
+    {
+      if (inblk) {
+        buf = buf " " $0
+        multiline = 1
+        depth += depth_of($0)
+        if (depth <= 0) { inblk = 0; flush() }
+        next
+      }
+      if ($0 ~ /^[ \t]*--/) next
+      if ($0 ~ /^[ \t]*hl\.monitor[ \t]*\(/) {
+        depth = depth_of($0)
+        buf = $0
+        multiline = 0
+        if (depth <= 0) flush()
+        else inblk = 1
+      }
+    }
+    END {
+      # Unterminated block: hand it back anyway so it can be preserved.
+      if (inblk) flush()
+    }
+  ' "$MONITORS_LUA"
+}
+
+# True when a flattened block assigns `field = ...`.
+has_field() {
+  printf '%s' "$2" | grep -qE "[{,[:space:]]${1}[[:space:]]*="
+}
+
+# Quoted string value of a field: field_value mode "$line" -> preferred
+field_value() {
+  printf '%s' "$2" | sed -n 's/.*[{,[:space:]]'"$1"'[[:space:]]*=[[:space:]]*"\([^"]*\)".*/\1/p'
+}
+
+# Bare / numeric / quoted value of a field (position, scale, transform).
+# Ends at a comma or brace, so an identifier such as omarchy_monitor_scale
+# comes back without its trailing brace.
+field_value_raw() {
+  local v
+  v="$(printf '%s' "$2" | sed -n 's/.*[{,[:space:]]'"$1"'[[:space:]]*=[[:space:]]*\([^,}]*\).*/\1/p')"
+  v="${v#"${v%%[![:space:]]*}"}"   # ltrim
+  v="${v%"${v##*[![:space:]]}"}"   # rtrim
+  v="${v#\"}"                       # strip a wrapping pair of double quotes
+  v="${v%\"}"
+  printf '%s\n' "$v"
+}
+
+# `local NAME = NUMBER` declarations, so a scale written as an identifier can be
+# recognised and re-emitted as the identifier.
+declare -A LUA_LOCALS=()
+load_lua_locals() {
+  [[ -f $MONITORS_LUA ]] || return 0
+  local name val
+  while IFS=$'\t' read -r name val; do
+    [[ -n $name && -n $val ]] || continue
+    LUA_LOCALS["$name"]="$val"
+  done < <(awk '
+    match($0, /^[ \t]*local[ \t]+[A-Za-z_][A-Za-z0-9_]*[ \t]*=[ \t]*-?[0-9]+(\.[0-9]+)?/) {
+      s = substr($0, RSTART, RLENGTH)
+      sub(/^[ \t]*local[ \t]+/, "", s)
+      sub(/[ \t]*=[ \t]*/, "\t", s)
+      print s
+    }
+  ' "$MONITORS_LUA" 2>/dev/null || true)
+}
+
+# Per-output state currently in the file.
+declare -A FILE_MODE=() FILE_POSITION=() FILE_SCALE=() FILE_TRANSFORM=()
+CATCHALL_LINE=""
+# Outputs (and unrecognised monitor lines) that are in the file but not in the
+# incoming list, in file order. They keep their own line verbatim so nothing is
+# ever silently dropped from monitors.lua.
+declare -a PRESERVE_NAME=()
+declare -a PRESERVE_LINE=()
+load_file_state() {
+  local line out
+  while IFS= read -r line; do
+    [[ -n $line ]] || continue
+    if has_field output "$line"; then
+      out="$(field_value output "$line")"
+    else
+      # No `output` key: not a shape we can name, so hand it back untouched.
+      PRESERVE_NAME+=("")
+      PRESERVE_LINE+=("$line")
+      continue
+    fi
+    # A blank output name is Hyprland's catch-all: keep its raw text and
+    # re-emit it ahead of the per-output lines.
+    if [[ -z $out ]]; then
+      [[ -n $CATCHALL_LINE ]] || CATCHALL_LINE="$line"
+      continue
+    fi
+    FILE_MODE["$out"]="$(field_value mode "$line")"
+    FILE_POSITION["$out"]="$(field_value_raw position "$line")"
+    FILE_SCALE["$out"]="$(field_value_raw scale "$line")"
+    FILE_TRANSFORM["$out"]="$(field_value_raw transform "$line")"
+    PRESERVE_NAME+=("$out")
+    PRESERVE_LINE+=("$line")
+  done < <(flatten_monitor_blocks)
+}
+
+# Numeric value of the scale a file line asks for, resolving a bare identifier
+# through the `local` declarations at the top of the file.
+file_scale_number() {
+  local out="$1" expr="${FILE_SCALE[$out]:-}"
+  [[ -n $expr ]] || return 0
+  if [[ $expr =~ ^-?[0-9]+(\.[0-9]+)?$ ]]; then
+    printf '%s\n' "$expr"
+    return
+  fi
+  printf '%s\n' "${LUA_LOCALS[$expr]:-}"
+}
+
+is_listed() {
+  local i
+  for i in "${!OUTS[@]}"; do
+    [[ ${OUTS[$i]} == "$1" ]] && return 0
+  done
+  return 1
+}
+
+# Re-emit `omarchy_monitor_scale` (or any other local) when it still resolves
+# to the scale being written.
+scale_expression() {
+  local out="$1" want="$2" expr="${FILE_SCALE[$out]:-}" val
+  if [[ $expr =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
+    val="${LUA_LOCALS[$expr]:-}"
+    if [[ -n $val ]] && awk -v a="$val" -v b="$want" 'BEGIN { exit !(a + 0 == b + 0) }'; then
+      printf '%s\n' "$expr"
+      return
+    fi
+  fi
+  printf '%s\n' "$want"
+}
+
+# ---- live monitor read ----
+
+declare -A LIVE_MODE=() LIVE_SCALE=() LIVE_TRANSFORM=() LIVE_W=() LIVE_H=()
+load_live_state() {
+  local json
+  json="$(hyprctl monitors -j 2>/dev/null || true)"
+  [[ -n $json && $json != "null" ]] || return 0
+  local line name w h x y scale tr rate
+  while IFS=$'\t' read -r name w h x y scale tr rate; do
+    [[ -n $name ]] || continue
+    LIVE_MODE["$name"]="${w}x${h}@${rate}"
+    LIVE_SCALE["$name"]="$scale"
+    LIVE_TRANSFORM["$name"]="$tr"
+    LIVE_W["$name"]="$w"
+    LIVE_H["$name"]="$h"
+  done < <(jq -r '.[] | "\(.name)\t\(.width)\t\(.height)\t\(.x)\t\(.y)\t\(.scale)\t\(.transform)\t\(.refreshRate)"' <<<"$json" 2>/dev/null || true)
+}
+
+# ---- helpers ----
+
+clean_scale() {
+  # Mirror omarchy-hyprland-monitor-scaling: Hyprland only accepts scales where
+  # the mode divides into whole logical pixels (1/120 steps).
+  awk -v scale="$1" -v width="$2" -v height="$3" '
+    function gcd(a, b, t) { while (b) { t = a % b; a = b; b = t } return a }
+    BEGIN {
+      g = gcd(width * 120, height * 120)
+      k = int(scale * 120 + 0.5)
+      if (k > g) k = g
+      while (g % k != 0) k++
+      printf "%g\n", k / 120
+    }'
+}
+
+# ---- monitors.lua rewrite ----
+
+# Build the replacement block: catch-all first (verbatim), then the requested
+# outputs in order.
+build_block() {
+  local dest="$1" i k
+  : >"$dest"
+  if [[ -n $CATCHALL_LINE ]]; then
+    printf '%s\n' "$CATCHALL_LINE" >>"$dest"
+  fi
+  for i in "${!OUTS[@]}"; do
+    printf 'hl.monitor({ output = "%s", mode = "%s", position = "%s", scale = %s, transform = %s })\n' \
+      "$(lua_escape "${OUTS[$i]}")" \
+      "$(lua_escape "${MODES[$i]}")" \
+      "$(lua_escape "${POSITIONS[$i]}")" \
+      "${SCALE_EXPR[$i]}" \
+      "${TRANSFORMS[$i]}" >>"$dest"
+  done
+  # Anything the caller did not mention keeps its own line, in file order.
+  for (( k = 0; k < ${#PRESERVE_NAME[@]}; k++ )); do
+    if [[ -z ${PRESERVE_NAME[k]} ]] || ! is_listed "${PRESERVE_NAME[k]}"; then
+      printf '%s\n' "${PRESERVE_LINE[k]}" >>"$dest"
+    fi
+  done
+}
+
+# Preserve everything that is not an hl.monitor(...) block, and splice the new
+# block in at the position of the first one (append if there was none).
+rewrite_lua() {
+  local blockfile="$1" tmp
+  tmp="$(mktemp)"
+  awk -v block="$blockfile" '
+    function depth_of(s,   t, o, c) {
+      t = s; o = gsub(/\(/, "", t)
+      t = s; c = gsub(/\)/, "", t)
+      return o - c
+    }
+    function emit_block(   n, i, l, lines) {
+      if (emitted) return
+      emitted = 1
+      n = 0
+      while ((getline l < block) > 0) lines[++n] = l
+      close(block)
+      for (i = 1; i <= n; i++) print lines[i]
+    }
+    BEGIN { inblk = 0; depth = 0; emitted = 0 }
+    {
+      if (inblk) {
+        depth += depth_of($0)
+        if (depth <= 0) { inblk = 0; emit_block() }
+        next
+      }
+      if ($0 ~ /^[ \t]*--/) { print; next }
+      if ($0 ~ /^[ \t]*hl\.monitor[ \t]*\(/) {
+        depth = depth_of($0)
+        if (depth <= 0) emit_block()
+        else inblk = 1
+        next
+      }
+      print
+    }
+    END {
+      if (!emitted) {
+        if (NR > 0) print ""
+        emit_block()
+      }
+    }
+  ' "$MONITORS_LUA" >"$tmp" || { rm -f "$tmp"; return 1; }
+  mv "$tmp" "$MONITORS_LUA"
+}
+
+# ---- commands ----
+
+cmd_read() {
+  local json
+  json="$(hyprctl monitors -j 2>/dev/null || true)"
+  [[ -n $json && $json != "null" ]] || { echo "hyprctl unavailable" >&2; exit 1; }
+  jq -c '[ .[] | { output: .name, mode: "\(.width)x\(.height)@\(.refreshRate)", position: "\(.x)x\(.y)", scale: .scale, transform: .transform } ]' <<<"$json"
+}
+
+cmd_apply() {
+  local json=""
+  while (( $# > 0 )); do
+    case "$1" in
+      --json) json="${2:-}"; shift 2 ;;
+      *) echo "Unknown arg: $1" >&2; exit 1 ;;
+    esac
+  done
+  [[ -n $json ]] || { echo "Usage: omarchy display layout apply --json <array>" >&2; exit 1; }
+  jq -e 'type == "array"' <<<"$json" >/dev/null 2>&1 \
+    || { echo "Expected a JSON array of {output,mode,position,scale,transform}" >&2; exit 1; }
+
+  local count
+  count="$(jq 'length' <<<"$json")"
+  (( count > 0 )) || { echo "Refusing to write an empty monitor list" >&2; exit 1; }
+
+  # Duplicate outputs would silently drop a line -- reject instead.
+  local dupes
+  dupes="$(jq -r '[.[].output] | group_by(.) | map(select(length > 1) | .[0]) | join(", ")' <<<"$json")"
+  [[ -z $dupes ]] || { echo "Duplicate output in layout: $dupes" >&2; exit 1; }
+
+  load_lua_locals
+  load_file_state
+  load_live_state
+
+  OUTS=(); MODES=(); POSITIONS=(); SCALE_NUM=(); SCALE_EXPR=(); TRANSFORMS=()
+  local i line out mode pos scale tr w h live_mode
+  for (( i = 0; i < count; i++ )); do
+    # Join with \u001f (unit separator), not a tab: reading a tab-delimited line
+    # with IFS collapses empty middle fields, and mode/position/scale/
+    # transform are all optional, so empty fields are the common case.
+    line="$(jq -r --argjson i "$i" \
+      '.[$i] | [ (.output // ""), (.mode // ""), (.position // ""), (.scale // ""), (.transform // "") ] | join("\u001f")' \
+      <<<"$json")"
+    IFS=$'\037' read -r out mode pos scale tr <<<"$line"
+    [[ -n $out ]] || { echo "Entry $i is missing \"output\"" >&2; exit 1; }
+    validate_output "$out"
+
+    # Omitted fields inherit whatever the file already said for this output.
+    [[ -n $pos ]] || pos="${FILE_POSITION[$out]:-auto}"
+    [[ -n $scale ]] || scale="${LIVE_SCALE[$out]:-}"
+    [[ -n $scale ]] || scale="$(file_scale_number "$out")"
+    [[ -n $tr ]] || tr="${FILE_TRANSFORM[$out]:-0}"
+    [[ -n $tr ]] || tr=0
+    [[ -n $mode ]] || mode="${FILE_MODE[$out]:-preferred}"
+    [[ -n $scale ]] || scale=1
+
+    validate_mode "$mode"
+    validate_pos "$pos"
+    validate_scale "$scale"
+    validate_transform "$tr"
+
+    # Hyprland only accepts scales that divide the mode into whole logical
+    # pixels; snap them when the output is live.
+    w="${LIVE_W[$out]:-}"
+    h="${LIVE_H[$out]:-}"
+    if [[ -n $w && -n $h ]]; then
+      scale="$(clean_scale "$scale" "$w" "$h")"
+      validate_scale "$scale"
+    fi
+
+    OUTS+=("$out")
+    MODES+=("$mode")
+    POSITIONS+=("$pos")
+    SCALE_NUM+=("$scale")
+    SCALE_EXPR+=("$(scale_expression "$out" "$scale")")
+    TRANSFORMS+=("$tr")
+  done
+
+  # ---- write monitors.lua ----
+  if [[ ! -f $MONITORS_LUA ]]; then
+    mkdir -p "$(dirname "$MONITORS_LUA")"
+    {
+      echo "-- See https://wiki.hypr.land/Configuring/Basics/Monitors/"
+      echo "-- List current monitors and supported resolutions with: hyprctl monitors all"
+      echo ""
+    } >"$MONITORS_LUA"
+  fi
+  [[ -f $MONITORS_LUA.bak ]] || cp -p "$MONITORS_LUA" "$MONITORS_LUA.bak"
+
+  local blockfile
+  blockfile="$(mktemp)"
+  build_block "$blockfile"
+  if ! rewrite_lua "$blockfile"; then
+    rm -f "$blockfile"
+    die "Failed to rewrite $MONITORS_LUA (left untouched)"
+  fi
+  rm -f "$blockfile"
+
+  # ---- apply live ----
+  local applied=0 skipped=0
+  for i in "${!OUTS[@]}"; do
+    local out="${OUTS[$i]}"
+    if [[ -z ${LIVE_W[$out]:-} ]]; then
+      echo "  ($out is not connected -- written to file only)" >&2
+      skipped=$(( skipped + 1 ))
+      continue
+    fi
+    # The file may say "preferred" while the monitor runs a concrete mode; keep
+    # running what it runs instead of renegotiating on every drag.
+    live_mode="${LIVE_MODE[$out]:-${MODES[$i]}}"
+    if ! hyprctl eval "hl.monitor({ output = \"$(lua_escape "$out")\", mode = \"$(lua_escape "$live_mode")\", position = \"$(lua_escape "${POSITIONS[$i]}")\", scale = ${SCALE_NUM[$i]}, transform = ${TRANSFORMS[$i]} })" >/dev/null 2>&1; then
+      echo "  (live apply failed for $out -- written to file only)" >&2
+      skipped=$(( skipped + 1 ))
+      continue
+    fi
+    applied=$(( applied + 1 ))
+  done
+
+  # ---- runtime state ----
+  mkdir -p "$CONFIG_DIR"
+  [[ -f $DISPLAYS_JSON ]] || echo '{"monitors":{},"terminals":{}}' >"$DISPLAYS_JSON"
+  local tmp
+  tmp="$(mktemp)"
+  jq --argjson m "$json" '
+    .monitors = (.monitors // {})
+    | reduce $m[] as $e (.;
+        .monitors[$e.output] = {
+          mode: ($e.mode // "preferred"),
+          position: ($e.position // "auto"),
+          scale: ($e.scale // 1),
+          transform: ($e.transform // 0)
+        })
+  ' "$DISPLAYS_JSON" >"$tmp" && mv "$tmp" "$DISPLAYS_JSON" || rm -f "$tmp"
+
+  echo "Layout written to $MONITORS_LUA ($count outputs, $applied live, $skipped skipped):"
+  grep -E '^hl\.monitor' "$MONITORS_LUA" | sed 's/^/  /' || true
+}
+
+case "${1:-}" in
+  ""|-h|--help) echo "Usage: omarchy display layout [read|apply --json '<array>']" >&2 ;;
+  read) shift; cmd_read "$@" ;;
+  apply) shift; cmd_apply "$@" ;;
+  *) echo "Unknown subcommand: $1" >&2; exit 1 ;;
+esac

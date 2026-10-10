@@ -25,9 +25,12 @@ omarchy plugin enable better.displays
 
 ## Features
 
+- **Layout canvas** — the panel draws your displays as rectangles at their
+  real relative positions. Drag one to move it onto another (left, right,
+  above, or below) and it snaps flush; click to select, right-click to cycle
+  rotation. A ghost outline previews the landing spot while you drag.
 - **Per-monitor** resolution (real modes reported by the monitor), scale,
-  position (left/right/above/below another display), and orientation
-  (0°/90°/180°/270°).
+  position, and orientation (0°/90°/180°/270°).
 - **Per-terminal font size** for alacritty, kitty, ghostty, and foot, with
   live − / + steppers.
 - All changes apply **live** via Hyprland and **persist** to
@@ -66,18 +69,31 @@ omarchy restart shell
 
 - Click the **Better Displays** icon in the bar (next to the monitor icon), or
   summon it: `omarchy-shell shell summon better.displays`.
-- Pick a monitor, then adjust Resolution / Scale / Position / Orientation, and
-  tune each terminal's font size.
+- **Drag** a display rectangle in the LAYOUT canvas to move it next to
+  another display. A dashed outline shows where it will land. **Click** a
+  rectangle to select it, **right-click** to rotate it 90°.
+- Adjust Resolution / Scale / Orientation for the selected monitor, and tune
+  each terminal's font size.
 
 CLI equivalents (interactive shell):
 
 ```bash
 omarchy display monitor list
 omarchy display monitor set DP-1 --mode 2560x1440@144 --scale 1.6 --pos 0x0 --transform 0
+omarchy display layout read
+omarchy display layout apply --json '[{"output":"HDMI-A-1","position":"0x0","scale":1},{"output":"eDP-1","position":"1920x0","scale":1}]'
 omarchy display terminal list
 omarchy display terminal set ghostty 14
 omarchy display terminal set-all 13
 ```
+
+`omarchy display layout` is the batched entry point the panel's drag/rotate
+gestures use. It rewrites the whole block of `hl.monitor(...)` lines in
+`~/.config/hypr/monitors.lua` **in the order the panel shows them**, which
+`omarchy display monitor set` cannot do (it only replaces one output's line).
+Any `mode`, `position`, `scale`, or `transform` left out of an entry keeps the
+value the file already has, so dragging a display never rewrites
+`mode = "preferred"` into a hardcoded refresh rate.
 
 ## Uninstall
 
@@ -99,6 +115,7 @@ better.displays/
 ├── manifest.json        # plugin metadata (bar-widget)
 ├── Panel.qml            # the bar widget + popup (reuses Omarchy's qs.Ui kit)
 ├── bin/                 # backend scripts (self-contained, travel with the plugin)
+│   ├── omarchy-display-layout
 │   ├── omarchy-display-monitor
 │   ├── omarchy-display-terminal
 │   └── omarchy-display-pick
@@ -111,6 +128,24 @@ better.displays/
 `Panel.qml` invokes the scripts by their absolute path inside `bin/`, so the
 widget works the moment the folder is present — the `install` step only exists
 to expose the `omarchy display` CLI / menu.
+
+## How monitors.lua is rewritten
+
+`omarchy-display-layout apply` regenerates the `hl.monitor(...)` lines while
+preserving **everything else in the file byte-for-byte**: header comments,
+`local omarchy_monitor_scale` declarations, `hl.env()` calls, and even
+commented-out `hl.monitor` examples, which are documentation and must survive.
+
+The output order follows the order the panel draws the displays (rows by
+vertical centre, then columns within a row), and an Omarchy catch-all
+`hl.monitor({ output = "", ... })` line is re-emitted first. A name-specific
+rule always beats the catch-all in Hyprland, so precedence stays correct.
+Monitors present in the file but absent from the incoming list keep their own
+line, so a batch apply can never silently delete a display's configuration.
+One backup of the pre-first-write file is kept as `monitors.lua.bak`.
+
+Set `BETTER_DISPLAYS_MONITORS_LUA=/path/to/file` to rehearse the rewrite
+against a scratch file instead of the real one.
 
 ## Security
 
@@ -127,8 +162,17 @@ any embedded single quotes, preventing shell metacharacter injection.
 | Concern | Mitigation |
 | --- | --- |
 | Monitor name in jq filter | `jq --arg` used instead of string interpolation, so names cannot break out of the filter expression |
-| Values embedded in Lua expressions (`hyprctl eval`, `monitors.lua`) | All inputs validated against strict regex patterns **before** use: output names match `[a-zA-Z0-9_-]+(:[a-zA-Z0-9_-]+)?`, modes match `WxH@R[Hz]`, positions match `XxY` or `auto`, scales are numeric, transforms are `0`–`3`. String values are also run through `lua_escape()` which escapes `\` and `"` for safe Lua double-quote embedding |
+| Values embedded in Lua expressions (`hyprctl eval`, `monitors.lua`) | All inputs validated against strict regex patterns **before** use: output names match `[a-zA-Z0-9_-]+(:[a-zA-Z0-9_-]+)?`, modes match `WxH@R[Hz]` (or the `preferred`/`highres`/`highrr` tokens), positions match `XxY` or Hyprland's `auto`/`auto-*` placements, scales are numeric, transforms are `0`–`3`. String values are also run through `lua_escape()` which escapes `\` and `"` for safe Lua double-quote embedding |
 | Values used in grep/awk patterns | `persist_to_lua` uses the same `lua_escape()` output in its grep regex and awk `-v` assignments |
+
+**omarchy-display-layout** — takes the same validated fields as a JSON array,
+so a single batch can carry the whole layout. It rejects non-arrays, empty
+arrays, and duplicate output names. The rewrite itself never trusts the input
+to be Lua: every interpolated value goes through `lua_escape()` and the
+scale/transform (which must stay unquoted for Lua to read them as numbers)
+are validated as numeric first. Two-mode parsing splits `output = "name"` from
+bare values such as `scale = omarchy_monitor_scale`, so a monitor line that
+shares a `local` at the top of the file keeps sharing it after a rewrite.
 
 **omarchy-display-terminal** — validates that the terminal name is one of the
 known set (`alacritty`, `kitty`, `ghostty`, `foot`) via a whitelist check and

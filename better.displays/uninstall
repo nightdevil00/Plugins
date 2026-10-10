@@ -5,13 +5,13 @@
 
 set -uo pipefail
 
-for name in omarchy-display-monitor omarchy-display-terminal omarchy-display-pick; do
-  for dir in "$HOME/.local/bin" /usr/local/bin; do
-    target="$dir/$name"
-    if [[ -L $target ]]; then
-      rm -f "$target"
-      echo "Removed $target"
-    fi
+for dir in "$HOME/.local/bin" /usr/local/bin; do
+  [[ -d $dir ]] || continue
+  # Glob so scripts added to bin/ later are removed too.
+  for target in "$dir"/omarchy-display-*; do
+    [[ -L $target ]] || continue
+    rm -f "$target"
+    echo "Removed $target"
   done
 done
 
