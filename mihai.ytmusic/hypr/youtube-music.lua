@@ -76,29 +76,28 @@ local function disable_rule(rule)
   if rule then pcall(function() rule:set_enabled(false) end) end
 end
 
--- Click-away dismissal: a global, non-consuming left-click bind that asks
--- control.sh whether the cursor is outside the dropdown and hides it.
--- Installed only while the dropdown is open, so normal clicks are
--- untouched the rest of the time. Clicks pass through (non_consuming),
--- the checker just observes cursor position vs window rect.
-function M.arm_clickaway(script)
-  M.disarm_clickaway()
+-- Escape dismissal: a global, non-consuming Escape bind that hides the
+-- dropdown. Installed only while the dropdown is open and removed when it
+-- closes, so Escape is untouched the rest of the time. The key still reaches
+-- the focused window (non_consuming). The dropdown otherwise stays visible
+-- until its bar icon is clicked again or Escape is pressed.
+function M.arm_escape(script)
+  M.disarm_escape()
   script = tostring(script or "")
   if script == "" then return end
-  local quoted = "'" .. script:gsub("'", "'\\''") .. "' clickaway"
+  local quoted = "'" .. script:gsub("'", "'\\''") .. "' hide"
   local ok, bind = pcall(function()
-    return hl.bind("mouse:272", hl.dsp.exec_cmd(quoted), {
-      mouse = true,
+    return hl.bind("ESCAPE", hl.dsp.exec_cmd(quoted), {
       non_consuming = true,
-      description = "mihai.ytmusic-clickaway",
+      description = "mihai.ytmusic-escape",
     })
   end)
-  if ok then M.clickawayBind = bind end
+  if ok then M.escapeBind = bind end
 end
 
-function M.disarm_clickaway()
-  local bind = M.clickawayBind
-  M.clickawayBind = nil
+function M.disarm_escape()
+  local bind = M.escapeBind
+  M.escapeBind = nil
   if bind ~= nil then pcall(function() bind:remove() end) end
 end
 

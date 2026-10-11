@@ -211,33 +211,6 @@ restore_cursor() {
   fi
 }
 
-# Hide the dropdown when a left click lands outside of it. Invoked by the
-# non-consuming mouse bind armed while the dropdown is open. Quiet and
-# fast: a no-op unless the window is currently open and the cursor is out.
-clickaway() {
-  local snapshot address open at_x at_y width height cursor cursor_x cursor_y
-  snapshot=$(state) || return 0
-  open=$(jq -r '.open // false' <<<"$snapshot")
-  [[ $open == "true" ]] || return 0
-  address=$(jq -r '.client.address // empty' <<<"$snapshot")
-  [[ $address =~ ^0x[0-9a-fA-F]+$ ]] || return 0
-  at_x=$(jq -r '.client.at[0] // empty' <<<"$snapshot")
-  at_y=$(jq -r '.client.at[1] // empty' <<<"$snapshot")
-  width=$(jq -r '.client.size[0] // empty' <<<"$snapshot")
-  height=$(jq -r '.client.size[1] // empty' <<<"$snapshot")
-  [[ $at_x =~ ^-?[0-9]+$ && $at_y =~ ^-?[0-9]+$ ]] || return 0
-  [[ $width =~ ^[0-9]+$ && $height =~ ^[0-9]+$ ]] || return 0
-  cursor=$(cursor_xy)
-  cursor_x=${cursor%% *}
-  cursor_y=${cursor##* }
-  [[ $cursor_x =~ ^-?[0-9]+$ && $cursor_y =~ ^-?[0-9]+$ ]] || return 0
-  if (( cursor_x < at_x || cursor_y < at_y
-    || cursor_x >= at_x + width || cursor_y >= at_y + height )); then
-    hide_window "$address"
-  fi
-  return 0
-}
-
 eval_lua() {
   local snippet=$1 result
   if result=$(hyprctl eval "$snippet" 2>&1); then
@@ -250,14 +223,14 @@ eval_lua() {
   HYPRLAND_INSTANCE_SIGNATURE=$signature hyprctl eval "$snippet"
 }
 
-clickaway_arm() {
+escape_arm() {
   local script_escaped
   script_escaped=$(printf '%s/control.sh' "$ROOT" | sed "s/'/\\\\'/g")
-  eval_lua "mihai_ytmusic.arm_clickaway('$script_escaped')" >/dev/null || true
+  eval_lua "mihai_ytmusic.arm_escape('$script_escaped')" >/dev/null || true
 }
 
-clickaway_disarm() {
-  eval_lua "mihai_ytmusic.disarm_clickaway()" >/dev/null || true
+escape_disarm() {
+  eval_lua "mihai_ytmusic.disarm_escape()" >/dev/null || true
 }
 
 # The special workspace is a parking lot, never a visible overlay. Focusing
@@ -327,9 +300,8 @@ show)
   show_window "$2" "$3" "$4" "$5" "$6" "$7"
   ;;
 hide) hide_window "${2:-}" ;;
-clickaway) clickaway ;;
-clickaway-arm) clickaway_arm ;;
-clickaway-disarm) clickaway_disarm ;;
+escape-arm) escape_arm ;;
+escape-disarm) escape_disarm ;;
 dismiss-special) dismiss_special ;;
 focus)
   (( $# == 2 )) || { echo "usage: $0 focus <address>" >&2; exit 2; }
@@ -340,7 +312,7 @@ rules)
   install_rules "$2" "${3:-false}"
   ;;
 *)
-  echo "usage: $0 <state|launch|show|hide|clickaway|clickaway-arm|clickaway-disarm|dismiss-special|focus|rules>" >&2
+  echo "usage: $0 <state|launch|show|hide|escape-arm|escape-disarm|dismiss-special|focus|rules>" >&2
   exit 2
   ;;
 esac

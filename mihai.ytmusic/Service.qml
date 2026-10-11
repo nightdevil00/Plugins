@@ -36,7 +36,6 @@ Item {
   property bool dismissArmed: false
   property bool themeFocusLost: false
   property bool themePickerOpen: false
-  property string pendingFocusAddress: ""
   property double themeFocusUntil: 0
   property string lastError: ""
   property string initializedFor: ""
@@ -118,17 +117,15 @@ Item {
     var wasOpened = opened
     opened = !!(state && state.open && windowAddress)
     if (opened && !dismissArmed) dismissDelay.restart()
-    if (opened && !wasOpened) setClickaway(true)
+    if (opened && !wasOpened) setEscape(true)
     if (!opened) {
       dismissArmed = false
       dismissDelay.stop()
-      dismissFocusDelay.stop()
       themeRefocusDelay.stop()
       themeFocusLost = false
       themePickerOpen = false
-      pendingFocusAddress = ""
       themeFocusUntil = 0
-      if (wasOpened) setClickaway(false)
+      if (wasOpened) setEscape(false)
     }
     ownerScreen = opened && state && state.openScreen ? String(state.openScreen) : ""
   }
@@ -225,19 +222,17 @@ Item {
       return
     }
     dismissArmed = false
-    dismissFocusDelay.stop()
-    pendingFocusAddress = ""
     actionKind = "hide"
     actionProc.command = [controlPath, "hide", windowAddress]
     actionProc.running = true
   }
 
-  // Click-away bind (global non-consuming LMB): armed only while the
-  // dropdown is open so normal clicks are untouched otherwise.
-  function setClickaway(armed) {
-    if (!controlPath || clickawayProc.running) return
-    clickawayProc.command = [controlPath, armed ? "clickaway-arm" : "clickaway-disarm"]
-    clickawayProc.running = true
+  // Escape bind (global non-consuming): armed only while the dropdown is
+  // open so Escape is untouched otherwise.
+  function setEscape(armed) {
+    if (!controlPath || escapeProc.running) return
+    escapeProc.command = [controlPath, armed ? "escape-arm" : "escape-disarm"]
+    escapeProc.running = true
   }
 
   function dismissParkingOverlay() {
@@ -287,8 +282,6 @@ Item {
       if (openedLayer === "omarchy-image-selector") {
         themePickerOpen = true
         themeFocusLost = opened
-        dismissFocusDelay.stop()
-        pendingFocusAddress = ""
       }
       return
     }
@@ -327,21 +320,21 @@ Item {
         opened = false
         ownerScreen = ""
         dismissArmed = false
-        dismissFocusDelay.stop()
         themeRefocusDelay.stop()
         themeFocusLost = false
         themePickerOpen = false
-        pendingFocusAddress = ""
         themeFocusUntil = 0
         actionQueued = ""
         actionQueuedAnchor = null
-        setClickaway(false)
+        setEscape(false)
       }
       return
     }
 
     if (name === "activewindowv2" && dismissArmed) {
       var focused = Model.normalizeAddress(Model.eventParts(event, 1)[0])
+      // Losing focus no longer hides the dropdown; it stays until Escape or
+      // the bar icon. Focus is only restored when the theme picker stole it.
       var disposition = Model.focusDisposition(
         opened,
         focused,
@@ -349,17 +342,10 @@ Item {
         themeFocusProtected()
       )
       if (disposition === "restore") {
-        dismissFocusDelay.stop()
-        pendingFocusAddress = ""
         themeFocusLost = true
         protectThemeFocus(12000)
         if (!themePickerOpen) themeRefocusDelay.restart()
-      } else if (disposition === "dismiss") {
-        pendingFocusAddress = focused
-        dismissFocusDelay.restart()
       } else {
-        dismissFocusDelay.stop()
-        pendingFocusAddress = ""
         themeFocusLost = false
       }
     }
@@ -370,7 +356,7 @@ Item {
     var first = initializedFor !== controlPath
     initializedFor = controlPath
     installRules(true)
-    setClickaway(false)
+    setEscape(false)
     if (!rulesInstalled) rulesRetry.restart()
     if (first) requestState("sync", null)
   }
@@ -462,25 +448,6 @@ Item {
   }
 
   Timer {
-    id: dismissFocusDelay
-    interval: 140
-    onTriggered: {
-      if (root.themeFocusProtected()) {
-        root.themeFocusLost = root.opened
-        root.protectThemeFocus(12000)
-        if (!root.themePickerOpen) themeRefocusDelay.restart()
-      } else if (Model.shouldDismissWindow(
-        root.opened,
-        root.pendingFocusAddress,
-        root.windowAddress
-      )) {
-        root.hide()
-      }
-      root.pendingFocusAddress = ""
-    }
-  }
-
-  Timer {
     id: themeRefocusDelay
     interval: 350
     onTriggered: {
@@ -499,7 +466,7 @@ Item {
   }
 
   Process {
-    id: clickawayProc
+    id: escapeProc
   }
 
   Process {
