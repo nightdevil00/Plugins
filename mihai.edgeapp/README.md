@@ -10,6 +10,28 @@ The app stays open until you press Escape or click the bullet again.
 
 ![Another pinned app](screenshots/tiktok.png)
 
+## Installing
+
+This plugin lives in the [Plugins](https://github.com/nightdevil00/Plugins) collection. Install it with the bundled script:
+
+```sh
+git clone https://github.com/nightdevil00/Plugins.git
+cd Plugins
+./install.sh mihai.edgeapp
+```
+
+Or copy it straight from a clone — note the install directory is named by the
+plugin **id** (`mihai.edgeapp`), not the folder name:
+
+```sh
+git clone https://github.com/nightdevil00/Plugins.git
+cp -r Plugins/mihai.edgeapp ~/.config/omarchy/plugins/mihai.edgeapp
+omarchy-shell shell rescanPlugins
+omarchy plugin enable mihai.edgeapp
+```
+
+Then right-click the bullet on your screen edge to pick the side and the app.
+
 ## Setup
 
 The plugin is enabled by its entry in `~/.config/omarchy/shell.json`:
