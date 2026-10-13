@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "mihai.cards",
+  "name": "Card Switcher",
+  "version": "1.0.0",
+  "author": "mihai",
+  "license": "MIT",
+  "description": "Fan the open windows of the current workspace out like a poker hand",
+  "kinds": [
+    "overlay"
+  ],
+  "keepLoaded": true,
+  "entryPoints": {
+    "overlay": "Cards.qml"
+  }
+}

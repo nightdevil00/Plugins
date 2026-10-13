@@ -1,9 +1,9 @@
 # Plugins
 
-Seventeen [Omarchy](https://omarchy.org/) shell plugins — bar widgets, panels,
+Eighteen [Omarchy](https://omarchy.org/) shell plugins — bar widgets, panels,
 overlays and services, written in QML for Quickshell.
 
-All seventeen live here, one subdirectory each.
+All eighteen live here, one subdirectory each.
 
 ## The map
 
@@ -11,10 +11,11 @@ Each plugin appears under its primary kind; the table lists every kind it regist
 
 ```mermaid
 graph TB
-  subgraph panels["Panels & overlays · 4"]
+  subgraph panels["Panels & overlays · 5"]
     custom_settings["Omarchy Settings"]
     simple_dock["Simple Dock"]
     mihai_spotlight["Spotlight"]
+    mihai_cards["Card Switcher"]
     mihai_picker["Wallpaper Picker"]
   end
   subgraph services["Background services · 3"]
@@ -42,6 +43,7 @@ graph TB
 | [`custom-settings`](custom-settings/) · [Omarchy Settings](custom-settings/) | `nightdevil00.custom-settings` | `bar-widget, panel` | A graphical settings hub for Omarchy: Hyprland behaviour and monitors, the shell bar and plugins, idle and night light, updates, and a system summary. |
 | [`simple.dock`](simple.dock/) · [Simple Dock](simple.dock/) | `simple.dock` | `overlay` | Centered autohiding app dock with pinned and running apps. |
 | [`mihai.spotlight`](mihai.spotlight/) · [Spotlight](mihai.spotlight/) | `mihai.spotlight` | `overlay` | Spotlight-style launcher: fuzzy-search apps, find any file, and open URLs in your default browser. |
+| [`mihai.cards`](mihai.cards/) · [Card Switcher](mihai.cards/) | `mihai.cards` | `overlay` | Poker-style window switcher: a three-finger swipe up fans every open window out as a card with a live thumbnail. |
 | [`mihai.picker`](mihai.picker/) · [Wallpaper Picker](mihai.picker/) | `wallpicker.grid` | `overlay, bar-widget` | Fullscreen grid overlay to pick a wallpaper from your Pictures folder. |
 | **Background services** | | | |
 | [`white.nights`](white.nights/) · [No Sleep](white.nights/) | `white.nights` | `service, bar-widget` | Block suspend and hibernate so the system stays on with the screen off. The idle cycle (screensaver, lock, display off) keeps running normally. |
