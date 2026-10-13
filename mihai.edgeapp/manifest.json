@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "mihai.edgeapp",
+  "name": "Edge App",
+  "version": "1.0.0",
+  "author": "mihai",
+  "license": "MIT",
+  "description": "A small hidden bullet on a screen edge. Hover it to slide out one pinned app; Escape or a click on the bullet tucks it away again.",
+  "kinds": [
+    "service"
+  ],
+  "entryPoints": {
+    "service": "Service.qml"
+  }
+}

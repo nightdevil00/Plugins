@@ -1,9 +1,9 @@
 # Plugins
 
-Sixteen [Omarchy](https://omarchy.org/) shell plugins — bar widgets, panels,
+Seventeen [Omarchy](https://omarchy.org/) shell plugins — bar widgets, panels,
 overlays and services, written in QML for Quickshell.
 
-All sixteen live here, one subdirectory each.
+All seventeen live here, one subdirectory each.
 
 ## The map
 
@@ -17,9 +17,10 @@ graph TB
     mihai_spotlight["Spotlight"]
     mihai_picker["Wallpaper Picker"]
   end
-  subgraph services["Background services · 2"]
+  subgraph services["Background services · 3"]
     white_nights["No Sleep"]
     mihai_ytmusic["YouTube Music"]
+    mihai_edgeapp["Edge App"]
   end
   subgraph bar["Bar widgets · 10"]
     custom_2048["2048"]
@@ -45,6 +46,7 @@ graph TB
 | **Background services** | | | |
 | [`white.nights`](white.nights/) · [No Sleep](white.nights/) | `white.nights` | `service, bar-widget` | Block suspend and hibernate so the system stays on with the screen off. The idle cycle (screensaver, lock, display off) keeps running normally. |
 | [`mihai.ytmusic`](mihai.ytmusic/) · [YouTube Music](mihai.ytmusic/) | `mihai.ytmusic` | `service, bar-widget` | YouTube Music as a bar-anchored Chromium app window, with playback that continues while the dropdown is hidden. |
+| [`mihai.edgeapp`](mihai.edgeapp/) · [Edge App](mihai.edgeapp/) | `mihai.edgeapp` | `service` | A hidden bullet on the left or right screen edge. Click it to slide one pinned app out; Escape or another click tucks it away. Right-click for settings. |
 | **Bar widgets** | | | |
 | [`custom-2048`](custom-2048/) · [2048](custom-2048/) | `terminal.2048` | `bar-widget` | Theme-aware terminal 2048 that fills the screen. Pick a board size and join the tiles. |
 | [`better.displays`](better.displays/) · [Better Displays](better.displays/) | `better.displays` | `bar-widget` | Per-monitor resolution, scale, position, transform and per-terminal font sizes from the bar. |
