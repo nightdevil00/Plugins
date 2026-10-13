@@ -5,6 +5,8 @@ overlays and services, written in QML for Quickshell.
 
 All eighteen live here, one subdirectory each.
 
+![Card Switcher fanning open windows like a poker hand](mihai.cards/screenshots/poker.png)
+
 ## The map
 
 Each plugin appears under its primary kind; the table lists every kind it registers.

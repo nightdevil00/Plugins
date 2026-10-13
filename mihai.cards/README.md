@@ -4,6 +4,8 @@
 
 A poker-style window switcher for Omarchy. A three-finger swipe up fans every open window out like a hand of cards, with a live thumbnail, the app icon, and the title on each card.
 
+![Card Switcher fanning open windows like a poker hand](screenshots/poker.png)
+
 ## Installing
 
 ```sh
