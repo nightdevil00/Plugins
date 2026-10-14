@@ -55,7 +55,6 @@ exec "$HOME/llama.cpp/build/bin/llama-server" \
   -fa on \
   --parallel 1 \
   --reasoning off \
-  --device Vulkan1 \
   --host 127.0.0.1 \
   --port 8095 \
   --alias saluki-27b

@@ -73,6 +73,12 @@ MODELS = [
     {"id": "gemma4-e2b", "name": "Gemma 4 E2B it", "tag": "Gemma",
      "size": "3.1 GB", "port": 8083, "script": "gemma4-e2b.sh",
      "opencode": "local-gemma4/gemma-4-e2b"},
+    {"id": "lfm2.5-2.6b", "name": "LFM2.5-2.6B", "tag": "2.6B",
+     "size": "1.6 GB", "port": 8096, "script": "lfm2.5-2.6b.sh",
+     "opencode": "local-lfm/lfm2.5-2.6b"},
+    {"id": "minicpm5-2b", "name": "MiniCPM5-2B", "tag": "MC5",
+     "size": "2.7 GB", "port": 8097, "script": "minicpm5-2b.sh",
+     "opencode": "local-minicpm/minicpm5-2b"},
 ]
 
 
