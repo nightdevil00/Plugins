@@ -19,4 +19,4 @@ exec "$HOME/llama.cpp/build/bin/llama-server" \
   --chat-template-kwargs '{"enable_thinking": false}' \
   --host 127.0.0.1 \
   --port 8083 \
-  --alias gemma-4-e2b
+  --alias gemma-4-e2b "$@"

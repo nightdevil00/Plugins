@@ -17,4 +17,4 @@ exec "$HOME/llama.cpp/build/bin/llama-server" \
   --jinja \
   --host 127.0.0.1 \
   --port 8082 \
-  --alias qwen3-coder-30b
+  --alias qwen3-coder-30b "$@"

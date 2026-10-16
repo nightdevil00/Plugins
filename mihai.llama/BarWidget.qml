@@ -15,6 +15,9 @@ BarWidget {
 
   property var record: ({})
   property var prevStates: ({})
+  property var prevPresent: ({})
+  property string lastAction: ""
+  property string inFlightAction: ""
   property bool loading: false
   property variant actionCommand: []
   property variant notifyCommand: []
@@ -24,6 +27,7 @@ BarWidget {
   readonly property string buttonFontFamily: bar ? bar.fontFamily : Style.font.family
 
   readonly property int refreshIntervalSec: Math.max(3, Number(setting("refreshIntervalSec", 3) || 3))
+  readonly property int idleSleepSec: Math.max(0, Number(setting("idleSleepSec", 0) || 0))
 
   // The control script ships next to this widget; resolve its path from the
   // entry point URL rather than assuming a fixed location. It never writes
@@ -60,6 +64,13 @@ BarWidget {
     return ms.length > 0 ? String(ms[0].tag) : ""
   }
 
+  function downloadingTag() {
+    var ms = root.record.models || []
+    for (var i = 0; i < ms.length; i++)
+      if (ms[i].downloading) return String(ms[i].tag)
+    return ""
+  }
+
   function gpuFreeMb() {
     var g = root.record.gpu || {}
     return Number(g.total_mb || 0) - Number(g.used_mb || 0)
@@ -71,6 +82,7 @@ BarWidget {
     var tags = root.loadedTags()
     if (tags.length > 0) return tags.join("+")
     if (root.startingTag() !== "") return root.startingTag() + "…"
+    if (root.downloadingTag() !== "") return "↓" + root.downloadingTag()
     return "off"
   }
 
@@ -80,10 +92,14 @@ BarWidget {
     var lines = ["local llama"]
     var tags = root.loadedTags()
     var st = root.startingTag()
+    var dl = root.downloadingTag()
     if (tags.length > 0) lines.push("loaded: " + tags.join(", "))
     else if (st !== "") lines.push("loading model " + st + "…")
     else lines.push("no model loaded")
+    if (dl !== "") lines.push("downloading model " + dl + "…")
     lines.push(Math.round(root.gpuFreeMb() / 1024) + " GB VRAM free")
+    if (root.idleSleepSec > 0)
+      lines.push("auto-sleep after " + root.idleSleepSec + "s idle")
     return lines.join("\n")
   }
 
@@ -113,9 +129,14 @@ BarWidget {
   function close() { root.closePanel() }
   function toggle() { root.togglePanel() }
 
-  // `action` is "load" or "unload"; the status timer reflects the change.
+  // `action` is "load", "unload", "download" or "cancel"; the status timer
+  // reflects the change. Load carries the idle-sleep setting through to the
+  // control script, which only passes it on when the launcher forwards "$@".
   function doAction(action, modelId) {
-    root.actionCommand = ["python3", root.scriptPath, action, modelId]
+    var cmd = ["python3", root.scriptPath, action, modelId]
+    if (action === "load" && root.idleSleepSec > 0) cmd.push(String(root.idleSleepSec))
+    root.lastAction = action
+    root.actionCommand = cmd
     if (!actionProc.running) actionProc.running = true
   }
 
@@ -180,6 +201,17 @@ BarWidget {
         if (!notifyProc.running) notifyProc.running = true
       }
       root.prevStates[m.id] = m.state
+
+      var wasPresent = root.prevPresent[m.id]
+      if (m.present === true && wasPresent === false && root.lastAction === "download") {
+        root.notifyCommand = [
+          "notify-send", "-a", "mihai.llama",
+          m.name + " downloaded",
+          "Click Load to start it."
+        ]
+        if (!notifyProc.running) notifyProc.running = true
+      }
+      root.prevPresent[m.id] = m.present === true
     }
     root.record = parsed
   }
@@ -189,10 +221,24 @@ BarWidget {
 
     command: root.actionCommand
 
+    onStarted: root.inFlightAction = root.lastAction
     onExited: function(exitCode) { root.refresh() }
 
     stdout: StdioCollector {
       waitForEnd: true
+      onStreamFinished: {
+        var parsed = null
+        try { parsed = JSON.parse(text) } catch (e) { parsed = null }
+        if (!parsed || parsed.ok === true) return
+        // Surface the actionable failures (a missing GGUF, a download with no
+        // source). "already running"/"not running" are expected and stay quiet.
+        var action = root.inFlightAction
+        if (action !== "load" && action !== "download") return
+        var msg = String(parsed.error || "failed")
+        if (parsed.file) msg = parsed.file + " is not downloaded"
+        root.notifyCommand = ["notify-send", "-a", "mihai.llama", "local llama", msg]
+        if (!notifyProc.running) notifyProc.running = true
+      }
     }
   }
 

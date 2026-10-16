@@ -18,4 +18,4 @@ exec "$HOME/llama.cpp/build/bin/llama-server" \
   --reasoning off \
   --host 127.0.0.1 \
   --port 8096 \
-  --alias lfm2.5-2.6b
+  --alias lfm2.5-2.6b "$@"

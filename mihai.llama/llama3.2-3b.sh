@@ -12,4 +12,4 @@ exec "$HOME/llama.cpp/build/bin/llama-server" \
   --jinja \
   --host 127.0.0.1 \
   --port 8085 \
-  --alias llama3.2-3b
+  --alias llama3.2-3b "$@"

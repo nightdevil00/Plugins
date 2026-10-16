@@ -6,6 +6,8 @@ A bar widget + panel that boots and stops **local [llama.cpp](https://github.com
 
 Nothing occupies RAM or VRAM by itself — the widget reports **off** and every model is idle until you click **Load**. Pick a model in the panel, click Load, and once it reports **loaded** you can select it in opencode (`/models`). Unload frees the memory again.
 
+The panel is also a **model manager**: it marks every preset **downloaded** or **missing** (reading the GGUF path straight out of each launcher), badges how much of it lands in VRAM, and fetches a missing GGUF with one click. An optional idle timer lets a resident model sleep and free its memory on its own.
+
 It ships with **eighteen launchers tuned for a GTX 1650 Ti (4 GB class)** — fourteen usable as opencode models, four chat-only because they don't survive tool calling. The same flow and control script work for any llama.cpp build: edit the launchers in `~/llama-serve` to point at your own GGUFs and ports.
 
 ## Installing
@@ -190,8 +192,12 @@ The control script (`llama_ctl.py`) lives inside the plugin folder — but its *
   gemma3-12b.sh             chat-only, not in the panel
   stop.sh                   stop every llama-server
   logs/<model-id>.log       server stdout/stderr
+  logs/<model-id>.download.log  curl output while a GGUF downloads
   load.<model-id>.mark      "starting" marker, written on load, removed on unload
+  download.<model-id>.mark  in-flight download marker (URL, byte count, pid)
 ```
+
+Each launcher ends its `exec` with `"$@"`, so the control script can append `--sleep-idle-seconds N` on load without editing the preset. A launcher copied from an older version of this plugin will not have it — re-copy them to pick up auto-sleep.
 
 `install.sh` copies the launchers into `~/.config/omarchy/plugins/mihai.llama/`; copy them to `~/llama-serve` once:
 
@@ -271,12 +277,39 @@ Read the failure modes carefully:
 ## Usage
 
 - **Left click** the bar button opens the panel; **right click** refreshes status.
-- The button reads `off` (nothing resident), a tag like `4B` (loaded), or `4B…` while one is starting.
-- In the panel, **Load** starts the server (no waiting; the widget tracks the transition), **Unload** shuts it down and frees RAM/VRAM.
-- A desktop notification fires the moment a model flips to **loaded**.
+- The button reads `off` (nothing resident), a tag like `4B` (loaded), `4B…` while one is starting, or `↓4B` while a model is downloading.
+- The panel lists **READY** models (already on disk) above **NOT DOWNLOADED** ones, each with a `VRAM` / `partial` / `CPU` badge showing how the preset places the model.
+- In the panel, **Load** starts the server (no waiting; the widget tracks the transition), **Unload** shuts it down and frees RAM/VRAM, **Download** fetches a missing GGUF, **Cancel** stops an in-flight download.
+- A desktop notification fires the moment a model flips to **loaded** or finishes **downloading**, and when you click Load on a model that is not on disk yet.
 - Status refreshes every `refreshIntervalSec` (default 3, minimum 3) and the panel reflects live states.
 
 States come from `llama_ctl.py status`: `loaded` (HTTP `/health` OK on the model's port), `starting` (a `llama-server` pid owns the port, or the load marker is under 120 s old — covers boot and crash-on-start), or `idle`. Port ownership is checked against `/proc/<pid>/cmdline` by name + exact `--port` argument, never by a fuzzy command-line substring, so a status poller can never mistake itself for a real server.
+
+## Model manager
+
+`status` reports more than the running state — it reads each launcher on disk and adds:
+
+| Field | Meaning |
+| --- | --- |
+| `present` / `bytes` | the `-m` GGUF exists in `~/models`; its real on-disk size |
+| `path` | the exact GGUF file the launcher expects |
+| `ngl` / `gpu` | the launcher's `-ngl`, bucketed as `vram` (`-ngl 99`, fully resident), `partial` (split onto the CPU), or `cpu` (`-ngl 0`) |
+| `downloading` / `downloadedBytes` / `totalBytes` | live download progress |
+| `hasSource` | a Hugging Face URL is known for it (see `sources.json`) |
+
+Because `-m` and `-ngl` are parsed from the launcher, retuning a preset — dropping `-ngl`, adding a flag — is reflected in the panel on the next poll without touching `llama_ctl.py`.
+
+### Downloading a missing model
+
+The panel's **Download** button runs the control script's `download` command: it `curl`s the GGUF from the URL in **`sources.json`** into `~/models`, resuming a partial file with `-C -`. The download lands in a `.part` file and is renamed into place only on success, so a half-written GGUF is never mistaken for a finished one. A marker (`~/llama-serve/download.<id>.mark`) carries the byte count for the progress line; **Cancel** kills the curl, drops the `.part` and clears the marker.
+
+`sources.json` maps each model id to its Hugging Face URL and is deliberately a plain data file rather than code — fix or add a URL there without touching `llama_ctl.py`. A preset with no entry simply shows *no download source* instead of a button.
+
+### Auto-sleep an idle model
+
+Recent llama.cpp builds can unload a model after a period of inactivity and reload it on the next request (`--sleep-idle-seconds`). Set **Auto-sleep a loaded model after idle** in the widget settings (0 = off) and the panel passes that value through on every Load, so a model you forget about frees its VRAM by itself instead of pinning the card until you remember to Unload.
+
+This rides on the launcher forwarding extra arguments: each launcher ends with `"$@"` after its own flags, so the control script can append `--sleep-idle-seconds N` without editing the preset. A launcher without `"$@"` ignores the flag (the model just never sleeps); `status` reports `forwardsArgs` so you can tell which one you have.
 
 ## CLI control
 
@@ -285,9 +318,14 @@ The control script is yours outside the widget too:
 ```sh
 python3 ~/.config/omarchy/plugins/mihai.llama/llama_ctl.py status   # JSON snapshot
 python3 ~/.config/omarchy/plugins/mihai.llama/llama_ctl.py load qwen3-4b
+python3 ~/.config/omarchy/plugins/mihai.llama/llama_ctl.py load qwen3-4b 300   # sleep after 5m idle
 python3 ~/.config/omarchy/plugins/mihai.llama/llama_ctl.py unload qwen3-8b
 python3 ~/.config/omarchy/plugins/mihai.llama/llama_ctl.py stop     # all servers
+python3 ~/.config/omarchy/plugins/mihai.llama/llama_ctl.py download qwen3-8b   # fetch the GGUF
+python3 ~/.config/omarchy/plugins/mihai.llama/llama_ctl.py cancel   qwen3-8b   # stop a download
 ```
+
+The optional seconds argument to `load` can also come from the `MIHAI_LLAMA_IDLE_SLEEP` environment variable. `download` reads its URL from `sources.json` beside the script and writes into `~/models`.
 
 Model ids (panel presets only): `qwen3-1.7b`, `qwen3-4b`, `qwen3-8b`, `oxcoder-9b`, `qwen3-14b`, `qwen3-coder-30b`, `gemma4-e2b`, `gpt-oss-20b`, `spark-2.5-4b`, `spark-2.5-1.7b`, `qwen3.5-9b-kimi-k3`, `saluki-27b`, `lfm2.5-2.6b`, `minicpm5-2b`. The chat-only models (`llama3.2-3b`, `lfm2.5-8b`, `nemotron-nano`, `gemma3-12b`) are intentionally absent — run their launchers by hand.
 
@@ -300,4 +338,4 @@ Two sizing rules that cost time to rediscover on a 4 GB card:
 - **Set `-ngl` low enough for the KV cache to fit too, not just the weights.** A model at `-ngl 16` may place weights fine and then die allocating the context (`failed to allocate buffer for kv cache`). If that happens, drop `-ngl` *and* `-c` together.
 - **MoE models can be impossible to offload entirely.** gpt-oss packs each expert into one ~8.8 GB tensor, so *any* nonzero `-ngl` requests a `cudaMalloc` larger than the whole card and the server exits at load. It must run `-ngl 0` on a 4 GB card. Qwen3-Coder-30B has the same shape but smaller experts, so `-ngl 8` works.
 
-If you add a model, add it to `MODELS` in `llama_ctl.py` (id, port and script must match the launcher), add a provider in `opencode.json`, and verify tool calling before you trust it.
+If you add a model, add it to `MODELS` in `llama_ctl.py` (id, port and script must match the launcher), add a provider in `opencode.json`, and verify tool calling before you trust it. Give it an entry in `sources.json` too if you want a Download button; its `path` and `gpu` badge are read from the launcher, so there is nothing else to keep in sync. End the launcher's `exec` with `"$@"` to opt into auto-sleep.

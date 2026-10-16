@@ -18,4 +18,4 @@ exec "$HOME/llama.cpp/build/bin/llama-server" \
   --chat-template-kwargs '{"enable_thinking": false}' \
   --host 127.0.0.1 \
   --port 8088 \
-  --alias lfm2.5-8b
+  --alias lfm2.5-8b "$@"

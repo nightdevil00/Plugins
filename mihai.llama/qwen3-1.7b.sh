@@ -21,4 +21,4 @@ exec "$HOME/llama.cpp/build/bin/llama-server" \
   --chat-template-kwargs '{"enable_thinking": false}' \
   --host 127.0.0.1 \
   --port 8084 \
-  --alias qwen3-1.7b
+  --alias qwen3-1.7b "$@"

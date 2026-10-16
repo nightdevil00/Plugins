@@ -39,4 +39,4 @@ exec "$HOME/llama.cpp/build/bin/llama-server" \
   --reasoning off \
   --host 127.0.0.1 \
   --port 8093 \
-  --alias oxcoder-9b
+  --alias oxcoder-9b "$@"

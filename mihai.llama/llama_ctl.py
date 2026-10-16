@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
-"""Status and control for the local llama.cpp servers used by opencode.
+"""Status, control and downloads for the local llama.cpp servers used by opencode.
 
 Commands:
-  status                 JSON snapshot: per-model state + GPU memory
-  load <model-id>        boot the model's llama-server in the background (no wait)
-  unload <model-id>      kill that model's llama-server, freeing RAM/VRAM
-  stop                   stop every llama-server
+  status                    JSON snapshot: per-model state, disk presence, fit + GPU/RAM
+  load <model-id> [secs]    boot the model's llama-server in the background (no wait);
+                            `secs` (optional) asks llama-server to sleep after that
+                            many idle seconds, freeing VRAM until the next request
+  unload <model-id>         kill that model's llama-server, freeing RAM/VRAM
+  stop                      stop every llama-server
+  download <model-id>       fetch the model's GGUF into ~/models (resumable, background)
+  cancel <model-id>         stop an in-flight download and drop its partial file
 """
 import json
 import os
+import re
 import signal
 import subprocess
 import sys
@@ -18,6 +23,7 @@ import urllib.request
 HOME = os.path.expanduser("~")
 SERVE_DIR = os.path.join(HOME, "llama-serve")
 LOGS_DIR = os.path.join(SERVE_DIR, "logs")
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Only models verified to emit real OpenAI tool calls are listed here. opencode
 # is an agent, so a model that cannot call tools is not usable as a provider -
@@ -82,12 +88,31 @@ MODELS = [
 ]
 
 
+def load_sources():
+    """id -> Hugging Face URL for the model's GGUF. Ships as sources.json next
+    to this script; keep it out of llama_ctl.py so a wrong URL is a one-line
+    fix rather than a code edit. Missing file simply means no Download button."""
+    try:
+        with open(os.path.join(SCRIPT_DIR, "sources.json")) as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+SOURCES = load_sources()
+
+
 def find_model(mid):
     for m in MODELS:
         if m["id"] == mid:
             return m
     raise SystemExit(f"unknown model: {mid}")
 
+
+# --------------------------------------------------------------------------- #
+# llama-server process / health probes
+# --------------------------------------------------------------------------- #
 
 def llama_pids():
     """All running llama-server processes, matched by name (not -f, so a
@@ -148,6 +173,109 @@ def model_state(m):
     return "idle"
 
 
+# --------------------------------------------------------------------------- #
+# Launcher introspection: where the GGUF lives, and how much goes on the GPU
+# --------------------------------------------------------------------------- #
+
+def launcher_path(m):
+    return os.path.join(SERVE_DIR, m["script"])
+
+
+def parse_launcher(m):
+    """Read the launcher on disk for its `-m` model path, its `-ngl` layer count
+    and whether it forwards extra args ("$@"). Deriving these from the script
+    the server actually runs keeps the panel honest when you retune a preset."""
+    info = {"model": None, "ngl": None, "forwardsArgs": False}
+    try:
+        with open(launcher_path(m)) as f:
+            text = f.read()
+    except OSError:
+        return info
+
+    mm = re.search(r'(?:^|\s)-m\s+"?([^"\s]+\.gguf)"?', text)
+    if mm:
+        p = mm.group(1).replace("$HOME", HOME)
+        if p.startswith("~"):
+            p = os.path.join(HOME, p[2:])
+        info["model"] = p
+
+    ng = re.search(r'(?:^|\s)(?:-ngl|--n-gpu-layers)\s+(-?\d+)', text)
+    if ng:
+        info["ngl"] = int(ng.group(1))
+
+    info["forwardsArgs"] = '"$@"' in text
+    return info
+
+
+def gpu_class(ngl):
+    """How the preset places the model: fully in VRAM, split onto the CPU, or
+    entirely on the CPU. Read off -ngl, so it matches the README's own wording."""
+    if ngl is None:
+        return "unknown"
+    if ngl <= 0:
+        return "cpu"
+    if ngl >= 99:
+        return "vram"
+    return "partial"
+
+
+# --------------------------------------------------------------------------- #
+# Disk presence + download bookkeeping
+# --------------------------------------------------------------------------- #
+
+def dl_marker(m):
+    return os.path.join(SERVE_DIR, "download." + m["id"] + ".mark")
+
+
+def part_path(target):
+    return target + ".part" if target else None
+
+
+def read_json(path):
+    try:
+        with open(path) as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return None
+
+
+def remote_size(url):
+    """Content-Length of the resolved download, or None if the HEAD fails."""
+    try:
+        req = urllib.request.Request(url, method="HEAD",
+                                     headers={"User-Agent": "mihai.llama"})
+        with urllib.request.urlopen(req, timeout=8) as r:
+            cl = r.headers.get("Content-Length")
+            return int(cl) if cl and cl.isdigit() else None
+    except Exception:
+        return None
+
+
+def disk_info(m):
+    """Presence, on-disk bytes and download progress for one model."""
+    target = parse_launcher(m)["model"]
+    part = part_path(target)
+    present = bool(target) and os.path.isfile(target) and os.path.getsize(target) > 0
+    downloading = os.path.exists(dl_marker(m))
+    out = {
+        "present": present, "path": target, "bytes": None,
+        "downloading": downloading, "downloadedBytes": None, "totalBytes": None,
+        "hasSource": m["id"] in SOURCES,
+    }
+    if present:
+        out["bytes"] = os.path.getsize(target)
+    elif downloading:
+        dlm = read_json(dl_marker(m)) or {}
+        out["totalBytes"] = dlm.get("total")
+        if part and os.path.exists(part):
+            out["downloadedBytes"] = os.path.getsize(part)
+    return out
+
+
+# --------------------------------------------------------------------------- #
+# Host memory + GPU
+# --------------------------------------------------------------------------- #
+
 def gpu_info():
     try:
         out = subprocess.run(
@@ -160,19 +288,58 @@ def gpu_info():
         return {"used_mb": 0, "total_mb": 0}
 
 
+def ram_info():
+    try:
+        vals = {}
+        with open("/proc/meminfo") as f:
+            for line in f:
+                key, _, rest = line.partition(":")
+                vals[key.strip()] = int(rest.split()[0])  # kB
+        return {"total_mb": vals.get("MemTotal", 0) // 1024,
+                "available_mb": vals.get("MemAvailable", 0) // 1024}
+    except Exception:
+        return {"total_mb": 0, "available_mb": 0}
+
+
+# --------------------------------------------------------------------------- #
+# Commands
+# --------------------------------------------------------------------------- #
+
 def cmd_status():
     models = []
     for m in MODELS:
         pid = model_pid(m)
-        models.append({
+        entry = {
             "id": m["id"], "name": m["name"], "tag": m["tag"],
             "size": m["size"], "port": m["port"],
             "opencode": m["opencode"], "state": model_state(m), "pid": pid,
-        })
-    print(json.dumps({"models": models, "gpu": gpu_info(), "ready": True}))
+        }
+        info = parse_launcher(m)
+        entry["ngl"] = info["ngl"]
+        entry["gpu"] = gpu_class(info["ngl"])
+        entry["forwardsArgs"] = info["forwardsArgs"]
+        entry.update(disk_info(m))
+        models.append(entry)
+    print(json.dumps({"models": models, "gpu": gpu_info(),
+                      "ram": ram_info(), "ready": True}))
 
 
-def cmd_load(mid):
+def resolve_idle_seconds(arg):
+    """Idle-sleep seconds from the argv value or MIHAI_LLAMA_IDLE_SLEEP. 0 or
+    negative disables it; anything unparseable is treated as disabled."""
+    for cand in (arg, os.environ.get("MIHAI_LLAMA_IDLE_SLEEP")):
+        if cand is None:
+            continue
+        try:
+            v = int(cand)
+        except (TypeError, ValueError):
+            continue
+        if v > 0:
+            return v
+    return 0
+
+
+def cmd_load(mid, idle_arg=None):
     m = find_model(mid)
     if model_pid(m) is not None:
         print(json.dumps({"ok": False, "error": "already running"}))
@@ -181,15 +348,29 @@ def cmd_load(mid):
     if age is not None and age < 120:
         print(json.dumps({"ok": False, "error": "already starting"}))
         return
+
+    info = parse_launcher(m)
+    target = info["model"]
+    if target and not os.path.isfile(target):
+        print(json.dumps({"ok": False, "error": "model not downloaded",
+                          "file": os.path.basename(target)}))
+        return
+
+    extra = []
+    secs = resolve_idle_seconds(idle_arg)
+    if secs > 0:
+        # Honoured only if the launcher ends with "$@"; harmless otherwise.
+        extra = ["--sleep-idle-seconds", str(secs)]
+
     os.makedirs(LOGS_DIR, exist_ok=True)
     os.makedirs(SERVE_DIR, exist_ok=True)
     with open(marker(m), "w") as f:
         f.write(str(int(time.time())))
     log = open(os.path.join(LOGS_DIR, m["id"] + ".log"), "ab")
     subprocess.Popen(
-        ["bash", os.path.join(SERVE_DIR, m["script"])],
+        ["bash", launcher_path(m)] + extra,
         start_new_session=True, stdout=log, stderr=log)
-    print(json.dumps({"ok": True, "model": m["id"],
+    print(json.dumps({"ok": True, "model": m["id"], "idleSleepSec": secs,
                       "log": os.path.join(LOGS_DIR, m["id"] + ".log")}))
 
 
@@ -214,16 +395,101 @@ def cmd_stop():
     print(json.dumps({"ok": True}))
 
 
+def cmd_download(mid):
+    m = find_model(mid)
+    src = SOURCES.get(mid)
+    if not src:
+        print(json.dumps({"ok": False, "error": "no download source"}))
+        return
+    target = parse_launcher(m)["model"]
+    if not target:
+        print(json.dumps({"ok": False,
+                          "error": "launcher has no -m model path"}))
+        return
+    if os.path.isfile(target) and os.path.getsize(target) > 0:
+        print(json.dumps({"ok": False, "error": "already downloaded"}))
+        return
+    if os.path.exists(dl_marker(m)):
+        print(json.dumps({"ok": False, "error": "already downloading"}))
+        return
+
+    os.makedirs(os.path.dirname(target), exist_ok=True)
+    os.makedirs(LOGS_DIR, exist_ok=True)
+    part = part_path(target)
+    total = remote_size(src)
+    log = os.path.join(LOGS_DIR, m["id"] + ".download.log")
+
+    # Marker first, so a poll during the curl sees the download; the shell
+    # removes it when it is done (moved into place or failed).
+    with open(dl_marker(m), "w") as f:
+        json.dump({"url": src, "file": target, "part": part, "total": total,
+                   "started": int(time.time())}, f)
+
+    # curl into a .part file and move it into place only on success, so a
+    # half-written GGUF is never mistaken for a downloaded one; -C - resumes.
+    shell = (
+        'curl -L --fail --retry 3 --retry-delay 2 --connect-timeout 20 -C - '
+        '-o "$2" -- "$1" >> "$3" 2>&1 && mv -f -- "$2" "$4"; rm -f -- "$5"'
+    )
+    subprocess.Popen(
+        ["bash", "-c", shell, "dl", src, part, log, target, dl_marker(m)],
+        start_new_session=True,
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    print(json.dumps({"ok": True, "model": m["id"], "file": target,
+                      "totalBytes": total, "log": log}))
+
+
+def curl_pids(part):
+    """The curl/bash processes downloading into `part`, matched by the unique
+    .part path so cancel never has to trust a pid recorded earlier."""
+    if not part:
+        return []
+    try:
+        out = subprocess.run(["pgrep", "-f", "--", part],
+                             capture_output=True, text=True).stdout
+        return [int(x) for x in out.split() if x.isdigit()]
+    except Exception:
+        return []
+
+
+def cmd_cancel(mid):
+    m = find_model(mid)
+    if not os.path.exists(dl_marker(m)):
+        print(json.dumps({"ok": False, "error": "not downloading"}))
+        return
+    target = parse_launcher(m)["model"]
+    part = part_path(target)
+    for pid in curl_pids(part):
+        try:
+            os.kill(pid, signal.SIGTERM)
+        except OSError:
+            pass
+    for path in filter(None, [part]):
+        try:
+            os.remove(path)
+        except OSError:
+            pass
+    try:
+        os.remove(dl_marker(m))
+    except OSError:
+        pass
+    print(json.dumps({"ok": True, "model": m["id"]}))
+
+
 def main():
     cmd = sys.argv[1] if len(sys.argv) > 1 else "status"
     if cmd == "status":
         cmd_status()
     elif cmd == "load":
-        cmd_load(sys.argv[2])
+        cmd_load(sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else None)
     elif cmd == "unload":
         cmd_unload(sys.argv[2])
     elif cmd == "stop":
         cmd_stop()
+    elif cmd == "download":
+        cmd_download(sys.argv[2])
+    elif cmd == "cancel":
+        cmd_cancel(sys.argv[2])
     else:
         raise SystemExit(f"unknown command: {cmd}")
 

@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "id": "mihai.llama",
   "name": "local llama",
-  "version": "1.5.0",
+  "version": "2.0.0",
   "author": "mihai",
   "license": "MIT",
-  "description": "Load and unload local llama.cpp model servers from the Omarchy bar. Fourteen presets are verified to emit real OpenAI tool calls and so work as opencode models (Qwen3 1.7B/4B/8B/14B, OxCoder-9B, Qwen3-Coder-30B-A3B, Gemma 4 E2B, gpt-oss-20b, Spark-X2.5 1.7B/4B, Qwen3.5-9B Kimi-k3, Underdog Saluki 27B, LFM2.5-2.6B, MiniCPM5-2B); four more ship as chat-only launchers because they don't survive tool calling. Nothing occupies RAM or VRAM until you pick a model and click Load.",
+  "description": "Load, unload and download local llama.cpp model servers from the Omarchy bar. Fourteen presets are verified to emit real OpenAI tool calls and so work as opencode models (Qwen3 1.7B/4B/8B/14B, OxCoder-9B, Qwen3-Coder-30B-A3B, Gemma 4 E2B, gpt-oss-20b, Spark-X2.5 1.7B/4B, Qwen3.5-9B Kimi-k3, Underdog Saluki 27B, LFM2.5-2.6B, MiniCPM5-2B); four more ship as chat-only launchers because they don't survive tool calling. The panel marks each preset downloaded or missing, badging how much lands in VRAM, and fetches a missing GGUF with one click. Nothing occupies RAM or VRAM until you pick a model and click Load, and an optional idle timer lets a resident model sleep on its own.",
   "kinds": [
     "bar-widget"
   ],
@@ -24,7 +24,8 @@
     ],
     "allowMultiple": false,
     "defaults": {
-      "refreshIntervalSec": 3
+      "refreshIntervalSec": 3,
+      "idleSleepSec": 0
     },
     "schema": [
       {
@@ -35,6 +36,15 @@
         "max": 300,
         "step": 1,
         "defaultValue": 3
+      },
+      {
+        "key": "idleSleepSec",
+        "type": "integer",
+        "label": "Auto-sleep a loaded model after idle (seconds, 0 = off)",
+        "min": 0,
+        "max": 86400,
+        "step": 30,
+        "defaultValue": 0
       }
     ]
   }

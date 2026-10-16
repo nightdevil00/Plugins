@@ -56,4 +56,4 @@ exec "$HOME/llama.cpp/build/bin/llama-server" \
   --reasoning off \
   --host 127.0.0.1 \
   --port 8094 \
-  --alias qwen3.5-9b-kimi-k3
+  --alias qwen3.5-9b-kimi-k3 "$@"

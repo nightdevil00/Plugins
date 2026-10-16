@@ -57,4 +57,4 @@ exec "$HOME/llama.cpp/build/bin/llama-server" \
   --reasoning off \
   --host 127.0.0.1 \
   --port 8095 \
-  --alias saluki-27b
+  --alias saluki-27b "$@"

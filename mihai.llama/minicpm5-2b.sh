@@ -13,4 +13,4 @@ exec "$HOME/llama.cpp/build/bin/llama-server" \
   --jinja \
   --host 127.0.0.1 \
   --port 8097 \
-  --alias minicpm5-2b
+  --alias minicpm5-2b "$@"

@@ -15,4 +15,4 @@ exec "$HOME/llama.cpp/build/bin/llama-server" \
   --reasoning-budget 0 \
   --host 127.0.0.1 \
   --port 8089 \
-  --alias gemma3-12b
+  --alias gemma3-12b "$@"

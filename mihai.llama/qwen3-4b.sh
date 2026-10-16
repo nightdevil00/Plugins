@@ -19,4 +19,4 @@ exec "$HOME/llama.cpp/build/bin/llama-server" \
   --jinja \
   --host 127.0.0.1 \
   --port 8080 \
-  --alias qwen3-4b
+  --alias qwen3-4b "$@"

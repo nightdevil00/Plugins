@@ -61,7 +61,7 @@ graph TB
 | [`pick.screenshot`](pick.screenshot/) · [Screenshot Picker](pick.screenshot/) | `pick.screenshot` | `bar-widget` | Quick screenshot region, fullscreen, or window. |
 | [`tlp.battery`](tlp.battery/) · [TLP Battery](tlp.battery/) | `tlp.battery` | `bar-widget` | TLP-backed battery, power profile, and charge limit. |
 | [`mihai.opencode-usage`](mihai.opencode-usage/) · [opencode usage](mihai.opencode-usage/) | `mihai.opencode-usage` | `bar-widget` | opencode session usage in a native Custom DHH Distro bar panel: today's prompts, sessions, and tokens, a seven-day chart, the per-model and per-agent breakdown, and all-time totals. |
-| [`mihai.llama`](mihai.llama/) · [local llama](mihai.llama/) | `mihai.llama` | `bar-widget` | Boot and stop local llama.cpp model servers for opencode on demand. Nothing occupies RAM or VRAM until you click Load; the widget shows which model is resident (needs llama.cpp + model GGUFs — see its README). |
+| [`mihai.llama`](mihai.llama/) · [local llama](mihai.llama/) | `mihai.llama` | `bar-widget` | Model manager for local llama.cpp servers: boot and stop them for opencode on demand, see which GGUFs are on disk and which still need a one-click download, badge how much lands in VRAM, and let a resident model auto-sleep after an idle period. Nothing occupies RAM or VRAM until you click Load (needs llama.cpp + model GGUFs — see its README). |
 
 ## Installing
 

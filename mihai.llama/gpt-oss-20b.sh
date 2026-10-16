@@ -19,4 +19,4 @@ exec "$HOME/llama.cpp/build/bin/llama-server" \
   --jinja \
   --host 127.0.0.1 \
   --port 8090 \
-  --alias gpt-oss-20b
+  --alias gpt-oss-20b "$@"
