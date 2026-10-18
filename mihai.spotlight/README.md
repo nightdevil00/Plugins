@@ -134,6 +134,17 @@ The list lives in `bangs.txt` (1.3 MB, 13,489 bangs), loaded from disk the first
 - `fd` (included with Omarchy; used for file search)
 - `wl-copy` from `wl-clipboard` (to copy calculation results)
 
+## Compatibility — Qt 6.12
+
+Qt 6.12's QtQuick registers a built-in `Color` QML type that shadows the shell's
+`qs.Commons` `Color` palette singleton, so every `Color.*` binding quietly becomes
+`undefined` and the overlay renders blank (omacom/omarchy#14560). The Omarchy
+Qt 6.12 fix renames that singleton to `ShellColor`, and Spotlight already uses
+`ShellColor.menu.*` (background, text, border, scrim, selectedBackground,
+selectedText). Run your shell with that fix in place — the
+`omarchy-shell-fix-qt612` workaround or a newer omarchy that exposes
+`qs.Commons.ShellColor` — so the plugin loads on Qt 6.12.
+
 ## Removal
 
 ```sh
