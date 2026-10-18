@@ -464,8 +464,8 @@ Panel {
           // Backdrop, so the canvas reads as "the desktop" rather than a gap.
           Rectangle {
             anchors.fill: parent
-            color: Style.normalFillFor(root.bar.foreground, ShellColor.accent)
-            border.color: Style.normalBorderFor(root.bar.foreground, ShellColor.accent)
+            color: Style.normalFillFor(root.bar.foreground, Color.accent)
+            border.color: Style.normalBorderFor(root.bar.foreground, Color.accent)
             border.width: 1
             radius: Style.cornerRadius
           }
@@ -531,11 +531,11 @@ Panel {
                 anchors.fill: parent
                 radius: Math.max(2, Style.cornerRadius)
                 color: root.selected === dlg.monName
-                  ? Style.selectedFillFor(root.bar.foreground, ShellColor.accent)
-                  : Style.normalFillFor(root.bar.foreground, ShellColor.accent)
+                  ? Style.selectedFillFor(root.bar.foreground, Color.accent)
+                  : Style.normalFillFor(root.bar.foreground, Color.accent)
                 border.color: root.selected === dlg.monName
-                  ? Style.selectedBorderFor(root.bar.foreground, ShellColor.accent)
-                  : Style.normalBorderFor(root.bar.foreground, ShellColor.accent)
+                  ? Style.selectedBorderFor(root.bar.foreground, Color.accent)
+                  : Style.normalBorderFor(root.bar.foreground, Color.accent)
                 border.width: 1
                 opacity: dlg.isDragged ? 0.85 : 1.0
 
@@ -643,7 +643,7 @@ Panel {
             height: preview ? preview.h : 0
             radius: Math.max(2, Style.cornerRadius)
             color: "transparent"
-            border.color: Style.selectedBorderFor(root.bar.foreground, ShellColor.accent)
+            border.color: Style.selectedBorderFor(root.bar.foreground, Color.accent)
             border.width: 1
             opacity: root.dragName !== "" && preview !== null ? 0.9 : 0.0
 
