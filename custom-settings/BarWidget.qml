@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import qs.Ui
 import qs.Commons
+import qs.Commons as Commons
 
 BarWidget {
     id: root
@@ -17,7 +18,7 @@ BarWidget {
         anchors.centerIn: parent
 
         text: "󰒓"
-        color: (root.bar && root.barForeground) ? root.barForeground : ShellColor.foreground
+        color: (root.bar && root.barForeground) ? root.barForeground : Commons.Color.foreground
         font.family: root.bar ? root.bar.fontFamily : Style.font.family
         font.pixelSize: Style.font.icon
 

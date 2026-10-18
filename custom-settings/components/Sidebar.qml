@@ -3,6 +3,7 @@ import qs.Commons
 import "../model"
 import "../model/Schema.js" as Schema
 import "."
+import qs.Commons as Commons
 
 Item {
   id: root
@@ -21,9 +22,9 @@ Item {
 
   Rectangle {
     anchors.fill: parent
-    color: Util.alpha(ShellColor.foreground, 0.03)
+    color: Util.alpha(Commons.Color.foreground, 0.03)
     border.width: 1
-    border.color: Util.alpha(ShellColor.foreground, 0.06)
+    border.color: Util.alpha(Commons.Color.foreground, 0.06)
   }
 
   Column {
@@ -43,7 +44,7 @@ Item {
           text: "\ue900"
           font.family: "omarchy"
           font.pixelSize: Style.font.displayLarge
-          color: ShellColor.accent
+          color: Commons.Color.accent
         }
         Column {
           anchors.verticalCenter: parent.verticalCenter
@@ -53,13 +54,13 @@ Item {
             font.family: Style.font.family
             font.pixelSize: Style.font.heading
             font.weight: Font.Bold
-            color: ShellColor.foreground
+            color: Commons.Color.foreground
           }
           Text {
             text: "Settings"
             font.family: Style.font.family
             font.pixelSize: Style.font.bodySmall
-            color: ShellColor.accent
+            color: Commons.Color.accent
           }
         }
       }

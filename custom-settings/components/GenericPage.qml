@@ -4,6 +4,7 @@ import qs.Commons
 import "../model"
 import "../model/Schema.js" as Schema
 import "."
+import qs.Commons as Commons
 
 // Renders any schema page: groups in order, rows within each group, controls
 // chosen from the setting type. One component covers Appearance, Window,
@@ -45,7 +46,7 @@ Item {
           font.family: Style.font.family
           font.pixelSize: Style.font.caption
           font.letterSpacing: 1.2
-          color: ShellColor.muted
+          color: Commons.Color.muted
         }
 
         Repeater {
@@ -93,7 +94,7 @@ Item {
             font.family: Style.font.family
             font.pixelSize: Style.font.caption
             font.letterSpacing: 1.2
-            color: ShellColor.muted
+            color: Commons.Color.muted
           }
 
           Repeater {

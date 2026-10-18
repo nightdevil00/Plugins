@@ -3,6 +3,7 @@ import QtQuick.Controls
 import qs.Commons
 import "../model"
 import "../components"
+import qs.Commons as Commons
 
 Item {
   id: root
@@ -64,16 +65,16 @@ Item {
           font.family: Style.font.family
           font.pixelSize: Style.font.caption
           font.letterSpacing: 1.2
-          color: ShellColor.muted
+          color: Commons.Color.muted
         }
 
         Rectangle {
           width: col.width
           height: barCol.implicitHeight + 28
           radius: Style.cornerRadius > 0 ? Math.min(20, Style.cornerRadius) : 6
-          color: Util.alpha(ShellColor.foreground, 0.04)
+          color: Util.alpha(Commons.Color.foreground, 0.04)
           border.width: 1
-          border.color: Util.alpha(ShellColor.foreground, 0.07)
+          border.color: Util.alpha(Commons.Color.foreground, 0.07)
 
           Column {
             id: barCol
@@ -93,7 +94,7 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 font.family: Style.font.family
                 font.pixelSize: Style.font.body
-                color: ShellColor.foreground
+                color: Commons.Color.foreground
               }
               SegmentedControl {
                 options: [
@@ -116,7 +117,7 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 font.family: Style.font.family
                 font.pixelSize: Style.font.body
-                color: ShellColor.foreground
+                color: Commons.Color.foreground
               }
               SwitchControl {
                 checked: Omarchy.barTransparent
@@ -144,7 +145,7 @@ Item {
             font.family: Style.font.family
             font.pixelSize: Style.font.caption
             font.letterSpacing: 1.2
-            color: ShellColor.muted
+            color: Commons.Color.muted
           }
 
           Repeater {
@@ -155,7 +156,7 @@ Item {
               width: groupCol.width
               height: 52
               radius: 0
-              color: pluginMouse.containsMouse ? Util.alpha(ShellColor.foreground, 0.04) : "transparent"
+              color: pluginMouse.containsMouse ? Util.alpha(Commons.Color.foreground, 0.04) : "transparent"
 
               Row {
                 anchors.fill: parent
@@ -171,13 +172,13 @@ Item {
                     text: pluginRow.modelData.name
                     font.family: Style.font.family
                     font.pixelSize: Style.font.subtitle
-                    color: ShellColor.foreground
+                    color: Commons.Color.foreground
                   }
                   Text {
                     text: pluginRow.modelData.id
                     font.family: Style.font.family
                     font.pixelSize: Style.font.caption
-                    color: ShellColor.muted
+                    color: Commons.Color.muted
                   }
                 }
 

@@ -4,6 +4,7 @@ import Quickshell.Hyprland
 import Quickshell.Io
 import Quickshell.Wayland
 import qs.Commons
+import qs.Commons as Commons
 
 // A bullet on the left or right edge, halfway down the screen. Hovering it
 // slides the chosen app out beside it; the app stays until Escape or a click
@@ -354,7 +355,7 @@ Item {
           width: root.bulletSize
           height: root.bulletSize
           radius: width / 2
-          color: Color.accent
+          color: Commons.Color.accent
           opacity: hover.hovered || root.shown || root.menuOpen && root.menuScreen === strip.modelData ? 1 : 0
 
           Behavior on opacity {
@@ -417,8 +418,8 @@ Item {
         Rectangle {
           anchors.fill: parent
           radius: Style.cornerRadius
-          color: Color.popups.background
-          border.color: Color.popups.border
+          color: Commons.Color.popups.background
+          border.color: Commons.Color.popups.border
           border.width: Style.normalBorderWidth
 
           focus: true
@@ -432,7 +433,7 @@ Item {
             Text {
               textFormat: Text.PlainText
               text: "Edge App"
-              color: Color.popups.text
+              color: Commons.Color.popups.text
               font.family: Style.font.family
               font.pixelSize: Style.font.body
               font.bold: true
@@ -441,7 +442,7 @@ Item {
             Text {
               textFormat: Text.PlainText
               text: "Side"
-              color: Color.muted
+              color: Commons.Color.muted
               font.family: Style.font.family
               font.pixelSize: Style.font.body
             }
@@ -458,15 +459,15 @@ Item {
                   width: 120
                   height: 32
                   radius: Style.cornerRadius
-                  color: (root.leftSide ? "left" : "right") === modelData ? Color.accent : "transparent"
-                  border.color: Color.popups.border
+                  color: (root.leftSide ? "left" : "right") === modelData ? Commons.Color.accent : "transparent"
+                  border.color: Commons.Color.popups.border
                   border.width: Style.normalBorderWidth
 
                   Text {
                     anchors.centerIn: parent
                     textFormat: Text.PlainText
                     text: modelData === "left" ? "Left" : "Right"
-                    color: (root.leftSide ? "left" : "right") === modelData ? Color.popups.background : Color.popups.text
+                    color: (root.leftSide ? "left" : "right") === modelData ? Commons.Color.popups.background : Commons.Color.popups.text
                     font.family: Style.font.family
                     font.pixelSize: Style.font.body
                   }
@@ -483,7 +484,7 @@ Item {
             Text {
               textFormat: Text.PlainText
               text: "Open on"
-              color: Color.muted
+              color: Commons.Color.muted
               font.family: Style.font.family
               font.pixelSize: Style.font.body
             }
@@ -500,15 +501,15 @@ Item {
                   width: 120
                   height: 32
                   radius: Style.cornerRadius
-                  color: (root.hoverTrigger ? "hover" : "click") === modelData ? Color.accent : "transparent"
-                  border.color: Color.popups.border
+                  color: (root.hoverTrigger ? "hover" : "click") === modelData ? Commons.Color.accent : "transparent"
+                  border.color: Commons.Color.popups.border
                   border.width: Style.normalBorderWidth
 
                   Text {
                     anchors.centerIn: parent
                     textFormat: Text.PlainText
                     text: modelData === "click" ? "Click" : "Hover"
-                    color: (root.hoverTrigger ? "hover" : "click") === modelData ? Color.popups.background : Color.popups.text
+                    color: (root.hoverTrigger ? "hover" : "click") === modelData ? Commons.Color.popups.background : Commons.Color.popups.text
                     font.family: Style.font.family
                     font.pixelSize: Style.font.body
                   }
@@ -525,7 +526,7 @@ Item {
             Text {
               textFormat: Text.PlainText
               text: "App"
-              color: Color.muted
+              color: Commons.Color.muted
               font.family: Style.font.family
               font.pixelSize: Style.font.body
             }
@@ -535,7 +536,7 @@ Item {
               height: 32
               radius: Style.cornerRadius
               color: root.appListOpen ? Style.hoverFill : "transparent"
-              border.color: Color.popups.border
+              border.color: Commons.Color.popups.border
               border.width: Style.normalBorderWidth
 
               Text {
@@ -545,7 +546,7 @@ Item {
                 elide: Text.ElideRight
                 textFormat: Text.PlainText
                 text: root.edgeEntry ? root.edgeEntry.name : (root.appKey || "Choose an app")
-                color: Color.popups.text
+                color: Commons.Color.popups.text
                 font.family: Style.font.family
                 font.pixelSize: Style.font.body
               }
@@ -563,7 +564,7 @@ Item {
               height: 32
               radius: Style.cornerRadius
               color: "transparent"
-              border.color: Color.popups.border
+              border.color: Commons.Color.popups.border
               border.width: Style.normalBorderWidth
 
               TextInput {
@@ -572,7 +573,7 @@ Item {
                 anchors.fill: parent
                 anchors.margins: Style.spacing.sm
                 focus: menu.visible && root.appListOpen
-                color: Color.popups.text
+                color: Commons.Color.popups.text
                 font.family: Style.font.family
                 font.pixelSize: Style.font.body
                 clip: true
@@ -584,7 +585,7 @@ Item {
                   anchors.verticalCenter: parent.verticalCenter
                   textFormat: Text.PlainText
                   text: "Search apps"
-                  color: Color.muted
+                  color: Commons.Color.muted
                   font: search.font
                 }
               }
@@ -624,7 +625,7 @@ Item {
                   elide: Text.ElideRight
                   textFormat: Text.PlainText
                   text: modelData.name
-                  color: Color.popups.text
+                  color: Commons.Color.popups.text
                   font.family: Style.font.family
                   font.pixelSize: Style.font.body
                 }
@@ -644,14 +645,14 @@ Item {
               height: 32
               radius: Style.cornerRadius
               color: closeMouse.containsMouse ? Style.hoverFill : "transparent"
-              border.color: Color.popups.border
+              border.color: Commons.Color.popups.border
               border.width: Style.normalBorderWidth
 
               Text {
                 anchors.centerIn: parent
                 textFormat: Text.PlainText
                 text: "Close (Esc)"
-                color: Color.popups.text
+                color: Commons.Color.popups.text
                 font.family: Style.font.family
                 font.pixelSize: Style.font.body
               }

@@ -3,6 +3,7 @@ import QtQuick.Controls
 import qs.Commons
 import "../model"
 import "../components"
+import qs.Commons as Commons
 
 Item {
   id: root
@@ -86,9 +87,9 @@ Item {
           width: col.width
           height: content.height + 16
           radius: Style.cornerRadius > 0 ? Math.min(20, Style.cornerRadius) : 6
-          color: Util.alpha(ShellColor.foreground, 0.04)
+          color: Util.alpha(Commons.Color.foreground, 0.04)
           border.width: 1
-          border.color: Util.alpha(ShellColor.foreground, 0.07)
+          border.color: Util.alpha(Commons.Color.foreground, 0.07)
 
           readonly property bool enabledHere: SettingsStore.monitorValue(modelData, "disabled", false) === false
 
@@ -115,13 +116,13 @@ Item {
                   font.family: Style.font.family
                   font.pixelSize: Style.font.title
                   font.weight: Font.DemiBold
-                  color: ShellColor.foreground
+                  color: Commons.Color.foreground
                 }
                 Text {
                   text: card.modelData.description + "  ·  " + card.modelData.width + "×" + card.modelData.height
                   font.family: Style.font.family
                   font.pixelSize: Style.font.bodySmall
-                  color: ShellColor.muted
+                  color: Commons.Color.muted
                 }
               }
 
@@ -137,7 +138,7 @@ Item {
                   text: card.expanded ? "▲" : "▼"
                   font.family: Style.font.family
                   font.pixelSize: Style.font.bodySmall
-                  color: ShellColor.muted
+                  color: Commons.Color.muted
                 }
                 MouseArea {
                   anchors.fill: parent
@@ -154,14 +155,14 @@ Item {
                 radius: Style.cornerRadius > 0 ? Math.min(12, Math.round(Style.cornerRadius * 0.5)) : 4
                 visible: SettingsStore.isMonitorManaged(card.modelData.name)
                 anchors.verticalCenter: parent.verticalCenter
-                color: resetMouse.containsMouse ? Util.alpha(ShellColor.foreground, 0.12) : Util.alpha(ShellColor.foreground, 0.06)
+                color: resetMouse.containsMouse ? Util.alpha(Commons.Color.foreground, 0.12) : Util.alpha(Commons.Color.foreground, 0.06)
                 Text {
                   id: resetText
                   anchors.centerIn: parent
                   text: "Reset"
                   font.family: Style.font.family
                   font.pixelSize: Style.font.bodySmall
-                  color: ShellColor.foreground
+                  color: Commons.Color.foreground
                 }
                 MouseArea {
                   id: resetMouse
@@ -187,7 +188,7 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 font.family: Style.font.family
                 font.pixelSize: Style.font.body
-                color: ShellColor.foreground
+                color: Commons.Color.foreground
               }
             }
 
@@ -216,7 +217,7 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     font.family: Style.font.family
                     font.pixelSize: Style.font.body
-                    color: ShellColor.muted
+                    color: Commons.Color.muted
                   }
                   SegmentedControl {
                     options: root.modeOptions(card.modelData)
@@ -236,7 +237,7 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     font.family: Style.font.family
                     font.pixelSize: Style.font.body
-                    color: ShellColor.muted
+                    color: Commons.Color.muted
                   }
                   SegmentedControl {
                     options: [
@@ -262,7 +263,7 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     font.family: Style.font.family
                     font.pixelSize: Style.font.body
-                    color: ShellColor.muted
+                    color: Commons.Color.muted
                   }
                   SegmentedControl {
                     options: root.transformOptions(card.modelData)
@@ -282,14 +283,14 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     font.family: Style.font.family
                     font.pixelSize: Style.font.body
-                    color: ShellColor.muted
+                    color: Commons.Color.muted
                   }
                   Text {
                     text: "X"
                     anchors.verticalCenter: parent.verticalCenter
                     font.family: Style.font.family
                     font.pixelSize: Style.font.bodySmall
-                    color: ShellColor.muted
+                    color: Commons.Color.muted
                   }
                   ValueSlider {
                     width: 150
@@ -305,7 +306,7 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     font.family: Style.font.family
                     font.pixelSize: Style.font.bodySmall
-                    color: ShellColor.muted
+                    color: Commons.Color.muted
                   }
                   ValueSlider {
                     width: 150

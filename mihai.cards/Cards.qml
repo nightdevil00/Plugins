@@ -4,6 +4,7 @@ import Quickshell.Wayland
 import QtQuick
 import qs.Commons
 import qs.Ui
+import qs.Commons as Commons
 
 Item {
   id: root
@@ -15,12 +16,12 @@ Item {
   property int selectedIndex: 0
   property var windows: []
 
-  property color background: Color.menu.background
-  property color foreground: Color.menu.text
-  property color border: Color.menu.border
-  property color selectedBackground: Color.menu.selectedBackground
-  readonly property color selectedText: Color.menu.selectedText
-  property color scrim: Color.menu.scrim
+  property color background: Commons.Color.menu.background
+  property color foreground: Commons.Color.menu.text
+  property color border: Commons.Color.menu.border
+  property color selectedBackground: Commons.Color.menu.selectedBackground
+  readonly property color selectedText: Commons.Color.menu.selectedText
+  property color scrim: Commons.Color.menu.scrim
   property string fontFamily: Style.font.menuFamily
 
   readonly property int cardWidth: Style.space(220)

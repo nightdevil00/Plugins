@@ -4,6 +4,7 @@ import Quickshell
 import Quickshell.Io
 import qs.Commons
 import qs.Ui
+import qs.Commons as Commons
 
 // The opencode usage popup: one hero for today, a seven-day chart, the
 // per-model and per-agent breakdown, and an all-time footer. Everything is a
@@ -27,8 +28,8 @@ Panel {
   readonly property var totals: record && record.totals ? record.totals : {}
 
   readonly property bool ready: record.ready === true
-  readonly property color foreground: bar ? bar.foreground : Color.foreground
-  readonly property color urgent: bar ? bar.urgent : Color.urgent
+  readonly property color foreground: bar ? bar.foreground : Commons.Color.foreground
+  readonly property color urgent: bar ? bar.urgent : Commons.Color.urgent
   readonly property color dim: Qt.darker(foreground, 1.55)
   readonly property color track: Util.alpha(foreground, 0.12)
   readonly property string fontFamily: bar ? bar.fontFamily : Style.font.family

@@ -4,6 +4,7 @@ import Quickshell.Io
 import qs.Ui
 import qs.Commons
 import "Model.js" as Model
+import qs.Commons as Commons
 
 Panel {
   id: root
@@ -419,7 +420,7 @@ Panel {
 
     hasCursor: rowSelected
     foreground: root.foreground
-    accent: ShellColor.accent
+    accent: Commons.Color.accent
     // BorderSurface reports no implicitWidth and a Column does not stretch its
     // children, so without this the row is zero-width and nothing in it — glyph,
     // title, or the MouseArea — is on screen to click.
@@ -489,7 +490,7 @@ Panel {
 
     hasCursor: rowSelected
     foreground: root.foreground
-    accent: ShellColor.accent
+    accent: Commons.Color.accent
     width: parent ? parent.width : 0
     implicitHeight: Math.max(label.implicitHeight, hintLabel.implicitHeight) + Style.spacing.rowPaddingX
 
@@ -559,7 +560,7 @@ Panel {
       visible: noteRow.actionText !== ""
       text: noteRow.actionText
       foreground: root.foreground
-      accent: ShellColor.accent
+      accent: Commons.Color.accent
       fontFamily: root.fontFamily
       onClicked: noteRow.actionClicked()
     }

@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import qs.Commons
+import qs.Commons as Commons
 
 // Panel entry point. The shell mounts this once (keepLoaded) and calls open() /
 // close() when the gear is clicked or `omarchy-shell shell toggle` runs. The UI
@@ -39,7 +40,7 @@ Item {
   FloatingWindow {
     id: window
     title: "Omarchy Settings"
-    color: ShellColor.background
+    color: Commons.Color.background
     implicitWidth: 1080
     implicitHeight: 720
     minimumSize: Qt.size(900, 580)

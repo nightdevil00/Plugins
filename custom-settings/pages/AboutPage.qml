@@ -4,6 +4,7 @@ import Quickshell
 import qs.Commons
 import "../model"
 import "../components"
+import qs.Commons as Commons
 
 Item {
   id: root
@@ -27,7 +28,7 @@ Item {
         font.family: Style.font.family
         font.pixelSize: Style.font.display
         font.weight: Font.Bold
-        color: ShellColor.foreground
+        color: Commons.Color.foreground
       }
 
       Text {
@@ -36,16 +37,16 @@ Item {
         wrapMode: Text.WordWrap
         font.family: Style.font.family
         font.pixelSize: Style.font.body
-        color: ShellColor.muted
+        color: Commons.Color.muted
       }
 
       Rectangle {
         width: parent.width
         height: facts.implicitHeight + 32
         radius: Style.cornerRadius > 0 ? Math.min(20, Style.cornerRadius) : 6
-        color: Util.alpha(ShellColor.foreground, 0.04)
+        color: Util.alpha(Commons.Color.foreground, 0.04)
         border.width: 1
-        border.color: Util.alpha(ShellColor.foreground, 0.07)
+        border.color: Util.alpha(Commons.Color.foreground, 0.07)
 
         Grid {
           id: facts
@@ -58,23 +59,23 @@ Item {
           columnSpacing: 28
           rowSpacing: 12
 
-          Text { text: "Omarchy"; font.family: Style.font.family; font.pixelSize: Style.font.body; color: ShellColor.muted }
-          Text { text: Omarchy.version.length > 0 ? Omarchy.version : "—"; font.family: Style.font.family; font.pixelSize: Style.font.body; color: ShellColor.foreground }
+          Text { text: "Omarchy"; font.family: Style.font.family; font.pixelSize: Style.font.body; color: Commons.Color.muted }
+          Text { text: Omarchy.version.length > 0 ? Omarchy.version : "—"; font.family: Style.font.family; font.pixelSize: Style.font.body; color: Commons.Color.foreground }
 
-          Text { text: "Theme"; font.family: Style.font.family; font.pixelSize: Style.font.body; color: ShellColor.muted }
-          Text { text: Omarchy.theme.length > 0 ? Omarchy.theme : "—"; font.family: Style.font.family; font.pixelSize: Style.font.body; color: ShellColor.foreground }
+          Text { text: "Theme"; font.family: Style.font.family; font.pixelSize: Style.font.body; color: Commons.Color.muted }
+          Text { text: Omarchy.theme.length > 0 ? Omarchy.theme : "—"; font.family: Style.font.family; font.pixelSize: Style.font.body; color: Commons.Color.foreground }
 
-          Text { text: "Font"; font.family: Style.font.family; font.pixelSize: Style.font.body; color: ShellColor.muted }
-          Text { text: Omarchy.font.length > 0 ? Omarchy.font : "—"; font.family: Style.font.family; font.pixelSize: Style.font.body; color: ShellColor.foreground }
+          Text { text: "Font"; font.family: Style.font.family; font.pixelSize: Style.font.body; color: Commons.Color.muted }
+          Text { text: Omarchy.font.length > 0 ? Omarchy.font : "—"; font.family: Style.font.family; font.pixelSize: Style.font.body; color: Commons.Color.foreground }
 
-          Text { text: "Monitors"; font.family: Style.font.family; font.pixelSize: Style.font.body; color: ShellColor.muted }
-          Text { text: String(Omarchy.monitors.length); font.family: Style.font.family; font.pixelSize: Style.font.body; color: ShellColor.foreground }
+          Text { text: "Monitors"; font.family: Style.font.family; font.pixelSize: Style.font.body; color: Commons.Color.muted }
+          Text { text: String(Omarchy.monitors.length); font.family: Style.font.family; font.pixelSize: Style.font.body; color: Commons.Color.foreground }
 
-          Text { text: "Managed settings"; font.family: Style.font.family; font.pixelSize: Style.font.body; color: ShellColor.muted }
-          Text { text: String(SettingsStore.managedCount()); font.family: Style.font.family; font.pixelSize: Style.font.body; color: ShellColor.foreground }
+          Text { text: "Managed settings"; font.family: Style.font.family; font.pixelSize: Style.font.body; color: Commons.Color.muted }
+          Text { text: String(SettingsStore.managedCount()); font.family: Style.font.family; font.pixelSize: Style.font.body; color: Commons.Color.foreground }
 
-          Text { text: "Config"; font.family: Style.font.family; font.pixelSize: Style.font.body; color: ShellColor.muted }
-          Text { text: "~/.config/hypr/settings.lua"; font.family: Style.font.family; font.pixelSize: Style.font.body; color: ShellColor.foreground }
+          Text { text: "Config"; font.family: Style.font.family; font.pixelSize: Style.font.body; color: Commons.Color.muted }
+          Text { text: "~/.config/hypr/settings.lua"; font.family: Style.font.family; font.pixelSize: Style.font.body; color: Commons.Color.foreground }
         }
       }
 
@@ -82,9 +83,9 @@ Item {
         width: parent.width
         height: systemCol.implicitHeight + 32
         radius: Style.cornerRadius > 0 ? Math.min(20, Style.cornerRadius) : 6
-        color: Util.alpha(ShellColor.foreground, 0.04)
+        color: Util.alpha(Commons.Color.foreground, 0.04)
         border.width: 1
-        border.color: Util.alpha(ShellColor.foreground, 0.07)
+        border.color: Util.alpha(Commons.Color.foreground, 0.07)
 
         Column {
           id: systemCol
@@ -103,14 +104,14 @@ Item {
               font.family: Style.font.family
               font.pixelSize: Style.font.title
               font.weight: Font.DemiBold
-              color: ShellColor.foreground
+              color: Commons.Color.foreground
             }
             Text {
               text: "fastfetch"
               anchors.verticalCenter: parent.verticalCenter
               font.family: Style.font.family
               font.pixelSize: Style.font.caption
-              color: ShellColor.muted
+              color: Commons.Color.muted
             }
           }
 
@@ -118,7 +119,7 @@ Item {
             text: Omarchy.fastfetchText.length > 0 ? Omarchy.fastfetchText : "Reading system information…"
             font.family: Style.font.family
             font.pixelSize: Style.font.bodySmall
-            color: Omarchy.fastfetchText.length > 0 ? ShellColor.foreground : ShellColor.muted
+            color: Omarchy.fastfetchText.length > 0 ? Commons.Color.foreground : Commons.Color.muted
             textFormat: Text.PlainText
             wrapMode: Text.NoWrap
           }

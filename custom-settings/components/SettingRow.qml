@@ -3,6 +3,7 @@ import QtQuick.Controls
 import qs.Commons
 import "../model"
 import "."
+import qs.Commons as Commons
 
 // A single schema-driven setting. The control is chosen from the setting's
 // type; the row owns reset and the label/description column.
@@ -33,7 +34,7 @@ Item {
     anchors.leftMargin: -12
     anchors.rightMargin: -12
     radius: Style.cornerRadius > 0 ? Math.round(Style.cornerRadius * 0.4) : 4
-    color: rowMouse.containsMouse ? Util.alpha(ShellColor.foreground, 0.04) : "transparent"
+    color: rowMouse.containsMouse ? Util.alpha(Commons.Color.foreground, 0.04) : "transparent"
   }
 
   MouseArea {
@@ -66,7 +67,7 @@ Item {
           font.family: Style.font.family
           font.pixelSize: Style.font.subtitle
           font.weight: Font.Medium
-          color: ShellColor.foreground
+          color: Commons.Color.foreground
           anchors.verticalCenter: parent.verticalCenter
         }
         Rectangle {
@@ -74,7 +75,7 @@ Item {
           width: managedText.implicitWidth + 12
           height: 18
           radius: height / 2
-          color: Util.alpha(ShellColor.accent, 0.16)
+          color: Util.alpha(Commons.Color.accent, 0.16)
           anchors.verticalCenter: parent.verticalCenter
           Text {
             id: managedText
@@ -82,7 +83,7 @@ Item {
             text: "managed"
             font.family: Style.font.family
             font.pixelSize: Style.font.caption
-            color: ShellColor.accent
+            color: Commons.Color.accent
           }
         }
       }
@@ -94,7 +95,7 @@ Item {
         wrapMode: Text.WordWrap
         font.family: Style.font.family
         font.pixelSize: Style.font.bodySmall
-        color: ShellColor.muted
+        color: Commons.Color.muted
       }
     }
 
@@ -126,7 +127,7 @@ Item {
         text: root.displayValue()
         font.family: Style.font.family
         font.pixelSize: Style.font.body
-        color: ShellColor.muted
+        color: Commons.Color.muted
         width: 56
         horizontalAlignment: Text.AlignRight
         anchors.verticalCenter: parent.verticalCenter
@@ -151,21 +152,21 @@ Item {
         text: root.val !== undefined ? String(root.val) : ""
         font.family: Style.font.family
         font.pixelSize: Style.font.body
-        color: ShellColor.foreground
+        color: Commons.Color.foreground
         selectByMouse: true
         leftPadding: 10
         rightPadding: 10
         topPadding: 6
         bottomPadding: 6
-        placeholderTextColor: Util.alpha(ShellColor.foreground, 0.35)
+        placeholderTextColor: Util.alpha(Commons.Color.foreground, 0.35)
         onEditingFinished: {
           if (text !== root.val) root.changed(text)
         }
         background: Rectangle {
           radius: Style.cornerRadius > 0 ? Math.min(10, Math.round(Style.cornerRadius * 0.45)) : 3
-          color: Util.alpha(ShellColor.foreground, 0.06)
+          color: Util.alpha(Commons.Color.foreground, 0.06)
           border.width: field.activeFocus ? 1 : 0
-          border.color: ShellColor.accent
+          border.color: Commons.Color.accent
         }
       }
     }
@@ -179,13 +180,13 @@ Item {
       Rectangle {
         anchors.fill: parent
         radius: height / 2
-        color: resetMouse.containsMouse ? Util.alpha(ShellColor.foreground, 0.12) : "transparent"
+        color: resetMouse.containsMouse ? Util.alpha(Commons.Color.foreground, 0.12) : "transparent"
         Text {
           anchors.centerIn: parent
           text: "󰑙"
           font.family: Style.font.family
           font.pixelSize: Style.font.bodySmall
-          color: resetMouse.containsMouse ? ShellColor.foreground : ShellColor.muted
+          color: resetMouse.containsMouse ? Commons.Color.foreground : Commons.Color.muted
         }
       }
       MouseArea {

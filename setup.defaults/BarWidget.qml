@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Io
 import qs.Commons
 import qs.Ui
+import qs.Commons as Commons
 
 BarWidget {
   id: root
@@ -56,7 +57,7 @@ BarWidget {
     tooltipText: "Default Apps"
     active: root.opened
     useActiveColor: true
-    activeColor: ShellColor.accent
+    activeColor: Commons.Color.accent
     onPressed: function(b) { root.togglePanel() }
   }
 }

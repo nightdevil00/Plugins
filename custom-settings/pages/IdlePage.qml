@@ -2,6 +2,7 @@ import QtQuick
 import qs.Commons
 import "../model"
 import "../components"
+import qs.Commons as Commons
 
 Item {
   id: root
@@ -18,16 +19,16 @@ Item {
       font.family: Style.font.family
       font.pixelSize: Style.font.caption
       font.letterSpacing: 1.2
-      color: ShellColor.muted
+      color: Commons.Color.muted
     }
 
     Rectangle {
       width: parent.width
       height: timingCol.implicitHeight + 32
       radius: Style.cornerRadius > 0 ? Math.min(20, Style.cornerRadius) : 6
-      color: Util.alpha(ShellColor.foreground, 0.04)
+      color: Util.alpha(Commons.Color.foreground, 0.04)
       border.width: 1
-      border.color: Util.alpha(ShellColor.foreground, 0.07)
+      border.color: Util.alpha(Commons.Color.foreground, 0.07)
 
       Column {
         id: timingCol
@@ -48,13 +49,13 @@ Item {
               text: "Screensaver"
               font.family: Style.font.family
               font.pixelSize: Style.font.subtitle
-              color: ShellColor.foreground
+              color: Commons.Color.foreground
             }
             Text {
               text: "Minutes of inactivity before the screen dims."
               font.family: Style.font.family
               font.pixelSize: Style.font.bodySmall
-              color: ShellColor.muted
+              color: Commons.Color.muted
             }
           }
           Text {
@@ -64,7 +65,7 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             font.family: Style.font.family
             font.pixelSize: Style.font.body
-            color: ShellColor.muted
+            color: Commons.Color.muted
           }
           ValueSlider {
             id: screensaverSlider
@@ -89,13 +90,13 @@ Item {
               text: "Lock"
               font.family: Style.font.family
               font.pixelSize: Style.font.subtitle
-              color: ShellColor.foreground
+              color: Commons.Color.foreground
             }
             Text {
               text: "Minutes of inactivity before the session locks."
               font.family: Style.font.family
               font.pixelSize: Style.font.bodySmall
-              color: ShellColor.muted
+              color: Commons.Color.muted
             }
           }
           Text {
@@ -105,7 +106,7 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             font.family: Style.font.family
             font.pixelSize: Style.font.body
-            color: ShellColor.muted
+            color: Commons.Color.muted
           }
           ValueSlider {
             id: lockSlider
@@ -129,7 +130,7 @@ Item {
       font.family: Style.font.family
       font.pixelSize: Style.font.caption
       font.letterSpacing: 1.2
-      color: ShellColor.muted
+      color: Commons.Color.muted
     }
 
     Row {
@@ -150,7 +151,7 @@ Item {
       wrapMode: Text.WordWrap
       font.family: Style.font.family
       font.pixelSize: Style.font.bodySmall
-      color: Util.alpha(ShellColor.muted, 0.8)
+      color: Util.alpha(Commons.Color.muted, 0.8)
     }
   }
 }

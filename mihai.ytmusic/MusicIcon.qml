@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Shapes
 import qs.Commons
+import qs.Commons as Commons
 
 // YouTube Music mark: rounded square with a play-triangle cutout.
 // Drawn as a single even-odd silhouette so it reads like the other
@@ -9,7 +10,7 @@ Item {
   id: root
 
   property real iconSize: Style.font.icon
-  property color color: Color.foreground
+  property color color: Commons.Color.foreground
 
   width: iconSize
   height: iconSize

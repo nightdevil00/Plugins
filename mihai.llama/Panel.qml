@@ -4,6 +4,7 @@ import Quickshell
 import Quickshell.Io
 import qs.Commons
 import qs.Ui
+import qs.Commons as Commons
 
 // The local llama popup: every verified preset, split into what is already on
 // disk (Load / Unload) and what still needs fetching (Download), with a badge
@@ -22,8 +23,8 @@ Panel {
   readonly property var record: hostWidget ? hostWidget.record : ({})
   readonly property var models: record && record.models ? record.models : []
   readonly property bool ready: record.ready === true
-  readonly property color foreground: bar ? bar.foreground : Color.foreground
-  readonly property color urgent: bar ? bar.urgent : Color.urgent
+  readonly property color foreground: bar ? bar.foreground : Commons.Color.foreground
+  readonly property color urgent: bar ? bar.urgent : Commons.Color.urgent
   readonly property color dim: Qt.darker(foreground, 1.55)
   readonly property string fontFamily: bar ? bar.fontFamily : Style.font.family
 
@@ -339,8 +340,8 @@ Panel {
   component ModelRow: Item {
     id: modelRow
     property var m: null
-    property color foreground: Color.foreground
-    property color urgent: Color.urgent
+    property color foreground: Commons.Color.foreground
+    property color urgent: Commons.Color.urgent
     property color dim: Qt.darker(foreground, 1.55)
     property string fontFamily: Style.font.family
     signal loadRequested()
@@ -506,8 +507,8 @@ Panel {
     id: btn
     property string labelText: ""
     property bool enabledFlag: true
-    property color fill: Color.foreground
-    property color foreground: Color.foreground
+    property color fill: Commons.Color.foreground
+    property color foreground: Commons.Color.foreground
     property color dim: Qt.darker(foreground, 1.55)
     property string fontFamily: Style.font.family
     signal clicked

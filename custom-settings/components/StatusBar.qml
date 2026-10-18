@@ -1,6 +1,7 @@
 import QtQuick
 import qs.Commons
 import "../model"
+import qs.Commons as Commons
 
 Item {
   id: root
@@ -11,7 +12,7 @@ Item {
     anchors.left: parent.left
     anchors.right: parent.right
     height: 1
-    color: Util.alpha(ShellColor.foreground, 0.08)
+    color: Util.alpha(Commons.Color.foreground, 0.08)
   }
 
   Row {
@@ -24,8 +25,8 @@ Item {
       height: 7
       radius: 4
       anchors.verticalCenter: parent.verticalCenter
-      color: SettingsStore.errors.length > 0 ? ShellColor.urgent
-        : (SettingsStore.applying ? ShellColor.accent : Util.alpha(ShellColor.foreground, 0.35))
+      color: SettingsStore.errors.length > 0 ? Commons.Color.urgent
+        : (SettingsStore.applying ? Commons.Color.accent : Util.alpha(Commons.Color.foreground, 0.35))
     }
 
     Text {
@@ -35,7 +36,7 @@ Item {
       anchors.verticalCenter: parent.verticalCenter
       font.family: Style.font.family
       font.pixelSize: Style.font.bodySmall
-      color: SettingsStore.errors.length > 0 ? ShellColor.urgent : ShellColor.muted
+      color: SettingsStore.errors.length > 0 ? Commons.Color.urgent : Commons.Color.muted
       elide: Text.ElideRight
       width: Math.min(implicitWidth, root.width - hints.width - 60)
     }
@@ -48,6 +49,6 @@ Item {
     text: "↑↓/Tab navigate   ←→ adjust   Enter toggle   Esc close"
     font.family: Style.font.family
     font.pixelSize: Style.font.bodySmall
-    color: Util.alpha(ShellColor.muted, 0.7)
+    color: Util.alpha(Commons.Color.muted, 0.7)
   }
 }

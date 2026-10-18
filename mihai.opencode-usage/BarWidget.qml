@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Io
 import qs.Commons
 import qs.Ui
+import qs.Commons as Commons
 
 // Bar button for opencode usage: a robot mark, and today's token total when
 // the bar is horizontal. Left click opens the panel; right click refreshes.
@@ -16,7 +17,7 @@ BarWidget {
   property bool loading: false
 
   readonly property string glyph: "\uf1b0"
-  readonly property color buttonForeground: bar ? bar.foreground : Color.foreground
+  readonly property color buttonForeground: bar ? bar.foreground : Commons.Color.foreground
   readonly property string buttonFontFamily: bar ? bar.fontFamily : Style.font.family
 
   readonly property int refreshIntervalSec: Math.max(15, Number(setting("refreshIntervalSec", 60)))

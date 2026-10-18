@@ -1,6 +1,7 @@
 import QtQuick
 import qs.Commons
 import "../model"
+import qs.Commons as Commons
 
 Item {
   id: root
@@ -23,7 +24,7 @@ Item {
       font.family: Style.font.family
       font.pixelSize: Style.font.display
       font.weight: Font.Bold
-      color: ShellColor.foreground
+      color: Commons.Color.foreground
     }
     Text {
       text: root.description
@@ -31,7 +32,7 @@ Item {
       elide: Text.ElideRight
       font.family: Style.font.family
       font.pixelSize: Style.font.body
-      color: ShellColor.muted
+      color: Commons.Color.muted
     }
   }
 
@@ -47,7 +48,7 @@ Item {
       anchors.verticalCenter: parent.verticalCenter
       font.family: Style.font.family
       font.pixelSize: Style.font.bodySmall
-      color: ShellColor.muted
+      color: Commons.Color.muted
     }
 
     Rectangle {
@@ -55,7 +56,7 @@ Item {
       width: resetText.implicitWidth + 24
       height: 30
       radius: Style.cornerRadius > 0 ? Math.min(12, Math.round(Style.cornerRadius * 0.5)) : 4
-      color: resetMouse.containsMouse ? Util.alpha(ShellColor.foreground, 0.12) : Util.alpha(ShellColor.foreground, 0.06)
+      color: resetMouse.containsMouse ? Util.alpha(Commons.Color.foreground, 0.12) : Util.alpha(Commons.Color.foreground, 0.06)
       anchors.verticalCenter: parent.verticalCenter
       Text {
         id: resetText
@@ -63,7 +64,7 @@ Item {
         text: "Reset all"
         font.family: Style.font.family
         font.pixelSize: Style.font.body
-        color: ShellColor.foreground
+        color: Commons.Color.foreground
       }
       MouseArea {
         id: resetMouse

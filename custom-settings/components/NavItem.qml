@@ -1,5 +1,6 @@
 import QtQuick
 import qs.Commons
+import qs.Commons as Commons
 
 // One entry in the left rail. Selected uses a soft accent wash; hover uses a
 // faint foreground wash. Focus is an accent ring, never confused with hover.
@@ -21,10 +22,10 @@ Item {
     anchors.fill: parent
     radius: root._radius
     color: root.selected
-      ? Util.alpha(ShellColor.accent, 0.16)
-      : (root.hot ? Util.alpha(ShellColor.foreground, 0.06) : "transparent")
+      ? Util.alpha(Commons.Color.accent, 0.16)
+      : (root.hot ? Util.alpha(Commons.Color.foreground, 0.06) : "transparent")
     border.width: root.activeFocus ? 1 : 0
-    border.color: Util.alpha(ShellColor.accent, 0.9)
+    border.color: Util.alpha(Commons.Color.accent, 0.9)
     Behavior on color { ColorAnimation { duration: 120 } }
 
     Row {
@@ -40,7 +41,7 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         font.family: Style.font.family
         font.pixelSize: Style.font.icon
-        color: root.selected ? ShellColor.accent : (root.hot ? ShellColor.foreground : ShellColor.muted)
+        color: root.selected ? Commons.Color.accent : (root.hot ? Commons.Color.foreground : Commons.Color.muted)
       }
       Text {
         text: root.label
@@ -48,7 +49,7 @@ Item {
         font.family: Style.font.family
         font.pixelSize: Style.font.subtitle
         font.weight: root.selected ? Font.DemiBold : Font.Normal
-        color: root.selected ? ShellColor.foreground : (root.hot ? ShellColor.foreground : ShellColor.muted)
+        color: root.selected ? Commons.Color.foreground : (root.hot ? Commons.Color.foreground : Commons.Color.muted)
         elide: Text.ElideRight
         width: parent.width - parent.spacing - 24
       }

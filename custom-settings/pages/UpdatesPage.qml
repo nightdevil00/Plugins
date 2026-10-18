@@ -3,6 +3,7 @@ import QtQuick.Controls
 import qs.Commons
 import "../model"
 import "../components"
+import qs.Commons as Commons
 
 Item {
   id: root
@@ -27,9 +28,9 @@ Item {
         width: parent.width
         height: statusCol.implicitHeight + 32
         radius: Style.cornerRadius > 0 ? Math.min(20, Style.cornerRadius) : 6
-        color: Util.alpha(ShellColor.foreground, 0.04)
+        color: Util.alpha(Commons.Color.foreground, 0.04)
         border.width: 1
-        border.color: Util.alpha(ShellColor.foreground, 0.07)
+        border.color: Util.alpha(Commons.Color.foreground, 0.07)
 
         Column {
           id: statusCol
@@ -45,7 +46,7 @@ Item {
             font.family: Style.font.family
             font.pixelSize: Style.font.title
             font.weight: Font.DemiBold
-            color: ShellColor.foreground
+            color: Commons.Color.foreground
           }
 
           Grid {
@@ -54,17 +55,17 @@ Item {
             columnSpacing: 28
             rowSpacing: 10
 
-            Text { text: "Version"; font.family: Style.font.family; font.pixelSize: Style.font.body; color: ShellColor.muted }
-            Text { text: Omarchy.version.length > 0 ? Omarchy.version : "—"; font.family: Style.font.family; font.pixelSize: Style.font.body; color: ShellColor.foreground }
+            Text { text: "Version"; font.family: Style.font.family; font.pixelSize: Style.font.body; color: Commons.Color.muted }
+            Text { text: Omarchy.version.length > 0 ? Omarchy.version : "—"; font.family: Style.font.family; font.pixelSize: Style.font.body; color: Commons.Color.foreground }
 
-            Text { text: "Channel"; font.family: Style.font.family; font.pixelSize: Style.font.body; color: ShellColor.muted }
-            Text { text: Omarchy.channel.length > 0 ? Omarchy.channel : "—"; font.family: Style.font.family; font.pixelSize: Style.font.body; color: ShellColor.foreground }
+            Text { text: "Channel"; font.family: Style.font.family; font.pixelSize: Style.font.body; color: Commons.Color.muted }
+            Text { text: Omarchy.channel.length > 0 ? Omarchy.channel : "—"; font.family: Style.font.family; font.pixelSize: Style.font.body; color: Commons.Color.foreground }
 
-            Text { text: "Branch"; font.family: Style.font.family; font.pixelSize: Style.font.body; color: ShellColor.muted }
-            Text { text: Omarchy.branch.length > 0 ? Omarchy.branch : "—"; font.family: Style.font.family; font.pixelSize: Style.font.body; color: ShellColor.foreground }
+            Text { text: "Branch"; font.family: Style.font.family; font.pixelSize: Style.font.body; color: Commons.Color.muted }
+            Text { text: Omarchy.branch.length > 0 ? Omarchy.branch : "—"; font.family: Style.font.family; font.pixelSize: Style.font.body; color: Commons.Color.foreground }
 
-            Text { text: "Packages"; font.family: Style.font.family; font.pixelSize: Style.font.body; color: ShellColor.muted }
-            Text { text: Omarchy.lastUpdate.length > 0 ? Omarchy.lastUpdate : "—"; font.family: Style.font.family; font.pixelSize: Style.font.body; color: ShellColor.foreground }
+            Text { text: "Packages"; font.family: Style.font.family; font.pixelSize: Style.font.body; color: Commons.Color.muted }
+            Text { text: Omarchy.lastUpdate.length > 0 ? Omarchy.lastUpdate : "—"; font.family: Style.font.family; font.pixelSize: Style.font.body; color: Commons.Color.foreground }
           }
 
           Text {
@@ -74,7 +75,7 @@ Item {
               : (Omarchy.updatesAvailable ? Omarchy.updateSummary : "Omarchy is up to date")
             font.family: Style.font.family
             font.pixelSize: Style.font.body
-            color: Omarchy.updatesAvailable ? ShellColor.accent : ShellColor.muted
+            color: Omarchy.updatesAvailable ? Commons.Color.accent : Commons.Color.muted
           }
         }
       }
@@ -83,9 +84,9 @@ Item {
         width: parent.width
         height: channelRow.implicitHeight + 32
         radius: Style.cornerRadius > 0 ? Math.min(20, Style.cornerRadius) : 6
-        color: Util.alpha(ShellColor.foreground, 0.04)
+        color: Util.alpha(Commons.Color.foreground, 0.04)
         border.width: 1
-        border.color: Util.alpha(ShellColor.foreground, 0.07)
+        border.color: Util.alpha(Commons.Color.foreground, 0.07)
 
         Row {
           id: channelRow
@@ -103,7 +104,7 @@ Item {
               text: "Release channel"
               font.family: Style.font.family
               font.pixelSize: Style.font.subtitle
-              color: ShellColor.foreground
+              color: Commons.Color.foreground
             }
             Text {
               width: parent.width
@@ -111,7 +112,7 @@ Item {
               text: "Switching opens a terminal to confirm and repoint the packages."
               font.family: Style.font.family
               font.pixelSize: Style.font.bodySmall
-              color: ShellColor.muted
+              color: Commons.Color.muted
             }
           }
 
@@ -134,9 +135,9 @@ Item {
         width: parent.width
         height: actionCol.implicitHeight + 32
         radius: Style.cornerRadius > 0 ? Math.min(20, Style.cornerRadius) : 6
-        color: Util.alpha(ShellColor.foreground, 0.04)
+        color: Util.alpha(Commons.Color.foreground, 0.04)
         border.width: 1
-        border.color: Util.alpha(ShellColor.foreground, 0.07)
+        border.color: Util.alpha(Commons.Color.foreground, 0.07)
 
         Column {
           id: actionCol
@@ -152,7 +153,7 @@ Item {
             font.family: Style.font.family
             font.pixelSize: Style.font.title
             font.weight: Font.DemiBold
-            color: ShellColor.foreground
+            color: Commons.Color.foreground
           }
 
           Row {

@@ -1,5 +1,6 @@
 import QtQuick
 import qs.Commons
+import qs.Commons as Commons
 
 Item {
   id: root
@@ -37,12 +38,12 @@ Item {
     anchors.right: parent.right
     height: 4
     radius: 2
-    color: Util.alpha(ShellColor.foreground, 0.12)
+    color: Util.alpha(Commons.Color.foreground, 0.12)
 
     Rectangle {
       height: parent.height
       radius: parent.radius
-      color: ShellColor.accent
+      color: Commons.Color.accent
       width: parent.width * root.progress
     }
   }
@@ -52,9 +53,9 @@ Item {
     width: root.hot || root.activeFocus ? 16 : 13
     height: width
     radius: width / 2
-    color: ShellColor.foreground
+    color: Commons.Color.foreground
     border.width: root.activeFocus ? 2 : 0
-    border.color: ShellColor.accent
+    border.color: Commons.Color.accent
     anchors.verticalCenter: parent.verticalCenter
     x: Math.max(0, Math.min(parent.width - width, parent.width * root.progress - width / 2))
     Behavior on width { NumberAnimation { duration: 100 } }

@@ -4,6 +4,7 @@ import qs.Commons
 import "../model"
 import "../model/Schema.js" as Schema
 import "."
+import qs.Commons as Commons
 
 Item {
   id: root
@@ -34,7 +35,7 @@ Item {
     text: "No settings match \"" + root.query + "\""
     font.family: Style.font.family
     font.pixelSize: Style.font.body
-    color: ShellColor.muted
+    color: Commons.Color.muted
   }
 
   Flickable {
@@ -69,7 +70,7 @@ Item {
             font.family: Style.font.family
             font.pixelSize: Style.font.caption
             font.letterSpacing: 1.2
-            color: ShellColor.muted
+            color: Commons.Color.muted
           }
 
           SettingRow {

@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Io
 import qs.Ui
 import qs.Commons
+import qs.Commons as Commons
 
 Panel {
   id: root
@@ -29,9 +30,9 @@ Panel {
 
   ListModel { id: appModel }
 
-  readonly property color fg: bar ? bar.foreground : ShellColor.popups.text
-  readonly property color bg: ShellColor.popups.background
-  readonly property color accent: ShellColor.accent
+  readonly property color fg: bar ? bar.foreground : Commons.Color.popups.text
+  readonly property color bg: Commons.Color.popups.background
+  readonly property color accent: Commons.Color.accent
   readonly property string fontFam: bar ? bar.fontFamily : Style.font.family
 
   function reloadApps() {
@@ -156,7 +157,7 @@ Panel {
               height: 42
               radius: Style.space(10)
               color: modelData.id === root.selectedCategory
-                ? ShellColor.accent
+                ? Commons.Color.accent
                 : Qt.rgba(root.fg.r, root.fg.g, root.fg.b, 0.08)
               border.width: 1
               border.color: Qt.rgba(root.fg.r, root.fg.g, root.fg.b, 0.18)
@@ -205,17 +206,17 @@ Panel {
               height: 32
               radius: Style.space(6)
               color: modelData.id === root.currentDefault
-                ? Qt.rgba(ShellColor.accent.r, ShellColor.accent.g, ShellColor.accent.b, 0.22)
+                ? Qt.rgba(Commons.Color.accent.r, Commons.Color.accent.g, Commons.Color.accent.b, 0.22)
                 : "transparent"
               border.width: modelData.id === root.currentDefault ? 1 : 0
-              border.color: ShellColor.accent
+              border.color: Commons.Color.accent
               Text {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.left: parent.left
                 anchors.leftMargin: Style.space(10)
                 textFormat: Text.PlainText
                 text: modelData.name
-                color: modelData.id === root.currentDefault ? ShellColor.accent : root.fg
+                color: modelData.id === root.currentDefault ? Commons.Color.accent : root.fg
                 font.family: root.fontFam
                 font.pixelSize: Style.font.body
                 elide: Text.ElideRight
@@ -228,7 +229,7 @@ Panel {
                 anchors.rightMargin: Style.space(10)
                 textFormat: Text.PlainText
                 text: "✓"
-                color: ShellColor.accent
+                color: Commons.Color.accent
                 font.family: root.fontFam
                 font.pixelSize: Style.font.body
                 visible: modelData.id === root.currentDefault

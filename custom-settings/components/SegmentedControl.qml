@@ -1,5 +1,6 @@
 import QtQuick
 import qs.Commons
+import qs.Commons as Commons
 
 // Immediate segmented choice. Left/Right changes the selection straight away —
 // no separate "move cursor then confirm" step.
@@ -46,8 +47,8 @@ Item {
 
         readonly property bool isSelected: String(modelData.value) === String(root.value)
         color: isSelected
-          ? Util.alpha(ShellColor.accent, 0.9)
-          : (cellMouse.containsMouse ? Util.alpha(ShellColor.foreground, 0.12) : Util.alpha(ShellColor.foreground, 0.06))
+          ? Util.alpha(Commons.Color.accent, 0.9)
+          : (cellMouse.containsMouse ? Util.alpha(Commons.Color.foreground, 0.12) : Util.alpha(Commons.Color.foreground, 0.06))
         Behavior on color { ColorAnimation { duration: 110 } }
 
         Text {
@@ -57,7 +58,7 @@ Item {
           font.family: root.fontFamily
           font.pixelSize: root.fontSize
           font.weight: parent.isSelected ? Font.DemiBold : Font.Normal
-          color: parent.isSelected ? ShellColor.background : ShellColor.foreground
+          color: parent.isSelected ? Commons.Color.background : Commons.Color.foreground
         }
 
         MouseArea {
@@ -81,7 +82,7 @@ Item {
     radius: Style.cornerRadius > 0 ? Math.min(12, Math.round(Style.cornerRadius * 0.5)) : 5
     color: "transparent"
     border.width: root.activeFocus ? 1 : 0
-    border.color: Util.alpha(ShellColor.accent, 0.9)
+    border.color: Util.alpha(Commons.Color.accent, 0.9)
     visible: root.activeFocus
   }
 

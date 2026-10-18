@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import qs.Ui
 import qs.Commons
+import qs.Commons as Commons
 
 BarWidget {
   id: root
@@ -62,7 +63,7 @@ BarWidget {
           implicitHeight: row.implicitHeight + Style.space(12)
           radius: Style.cornerRadius
           color: mouseArea.containsMouse
-            ? Style.hoverFillFor(root.bar.foreground, Color.accent)
+            ? Style.hoverFillFor(root.bar.foreground, Commons.Color.accent)
             : "transparent"
 
           Row {

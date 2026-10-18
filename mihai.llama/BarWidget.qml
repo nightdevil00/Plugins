@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Io
 import qs.Commons
 import qs.Ui
+import qs.Commons as Commons
 
 // Bar button for the local llama servers: a server glyph, and the loaded
 // model's tag (or "…" while one is loading, "off" when none is resident).
@@ -23,7 +24,7 @@ BarWidget {
   property variant notifyCommand: []
 
   readonly property string glyph: "\uf233"
-  readonly property color buttonForeground: bar ? bar.foreground : Color.foreground
+  readonly property color buttonForeground: bar ? bar.foreground : Commons.Color.foreground
   readonly property string buttonFontFamily: bar ? bar.fontFamily : Style.font.family
 
   readonly property int refreshIntervalSec: Math.max(3, Number(setting("refreshIntervalSec", 3) || 3))
