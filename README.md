@@ -25,7 +25,7 @@ graph TB
     mihai_ytmusic["YouTube Music"]
     mihai_edgeapp["Edge App"]
   end
-  subgraph bar["Bar widgets · 10"]
+  subgraph bar["Bar widgets · 11"]
     custom_2048["2048"]
     better_displays["Better Displays"]
     bt_codecs["Bluetooth codec"]
@@ -36,6 +36,7 @@ graph TB
     tlp_battery["TLP Battery"]
     mihai_opencode_usage["opencode usage"]
     mihai_llama["local llama"]
+    mihai_runcat["RunCat"]
   end
 ```
 
@@ -62,6 +63,7 @@ graph TB
 | [`tlp.battery`](tlp.battery/) · [TLP Battery](tlp.battery/) | `tlp.battery` | `bar-widget` | TLP-backed battery, power profile, and charge limit. |
 | [`mihai.opencode-usage`](mihai.opencode-usage/) · [opencode usage](mihai.opencode-usage/) | `mihai.opencode-usage` | `bar-widget` | opencode session usage in a native Custom DHH Distro bar panel: today's prompts, sessions, and tokens, a seven-day chart, the per-model and per-agent breakdown, and all-time totals. |
 | [`mihai.llama`](mihai.llama/) · [local llama](mihai.llama/) | `mihai.llama` | `bar-widget` | Model manager for local llama.cpp servers: boot and stop them for opencode on demand, see which GGUFs are on disk and which still need a one-click download, badge how much lands in VRAM, and let a resident model auto-sleep after an idle period. Nothing occupies RAM or VRAM until you click Load (needs llama.cpp + model GGUFs — see its README). |
+| [`mihai.runcat`](mihai.runcat/) · [RunCat](mihai.runcat/) | `mihai.runcat` | `bar-widget` | A running cat whose speed follows CPU usage, ported from the GNOME RunCat extension. Left click opens btop in your default terminal. |
 
 ## Installing
 
@@ -113,6 +115,7 @@ Plugins/
   mihai.opencode-usage/
   mihai.llama/
   mihai.picker/
+  mihai.runcat/
   mihai.spotlight/
   mihai.ytmusic/
   pick.screenshot/

@@ -6,6 +6,8 @@ A running cat in the Omarchy bar, ported from the GNOME RunCat extension. The
 cat runs faster as CPU usage rises and rests when the machine is idle. Left
 click opens `btop` in your default terminal.
 
+![RunCat in the top bar](preview.png)
+
 ## Installing
 
 ```sh
