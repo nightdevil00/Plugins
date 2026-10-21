@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "mihai.runcat",
+  "name": "RunCat",
+  "version": "0.1.0",
+  "author": "nightdevil00",
+  "license": "GPL-3.0-only",
+  "description": "A running cat in the bar whose speed follows CPU usage. Click to open btop.",
+  "kinds": ["bar-widget"],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "keepLoaded": false,
+  "barWidget": {
+    "displayName": "RunCat",
+    "description": "Running cat that speeds up with CPU load. Click to open btop.",
+    "category": "System",
+    "allowMultiple": false,
+    "defaultSection": "right"
+  }
+}
